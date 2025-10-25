@@ -1,14 +1,232 @@
 .room-page {
-  display: flex;
-  flex-direction: column;
+  width: 100%;
   height: 100vh;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f5f5f7;
+  display: flex;
+  background-color: var(--bg-primary);
 }
 
-.main-area {
+/* Sidebar */
+.room-sidebar {
+  width: 280px;
+  background-color: var(--bg-tertiary);
   display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+}
+
+.room-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+}
+
+.room-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.room-id {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-btn {
+  padding: 2px 8px;
+  background-color: var(--bg-tertiary);
+  border-radius: 4px;
+  font-size: 11px;
+  transition: background-color 0.2s;
+}
+
+.copy-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+/* User List */
+.user-list {
   flex: 1;
-  gap: 1rem;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.user-list-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  transition: background-color 0.2s;
+}
+
+.user-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5865f2, #7289da);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  position: relative;
+}
+
+.user-status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  border: 2px solid var(--bg-tertiary);
+}
+
+.user-status.online {
+  background-color: var(--success);
+}
+
+.user-status.offline {
+  background-color: var(--text-muted);
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.user-role {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Main Content Area */
+.room-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Top Bar */
+.room-topbar {
+  height: 56px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.room-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.room-topbar-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.language-selector {
+  padding: 8px 16px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.language-selector:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent-primary);
+}
+
+.room-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-btn {
+  padding: 8px 16px;
+  background-color: var(--bg-tertiary);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.topbar-btn.danger {
+  background-color: var(--danger);
+  color: white;
+}
+
+.topbar-btn.danger:hover {
+  background-color: #c93a3c;
+}
+
+/* Content Area */
+.room-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Right Sidebar */
+.room-right-sidebar {
+  width: 320px;
+  background-color: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  padding: 8px;
+  background-color: var(--bg-tertiary);
+  border-radius: 6px;
+  z-index: 10;
+}
+
+.sidebar-toggle:hover {
+  background-color: var(--bg-hover);
 }

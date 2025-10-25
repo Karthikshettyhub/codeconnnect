@@ -1,10 +1,17 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
     <App />
-  </StrictMode>,
-)
+  </React.StrictMode>
+);
+
+// Note: When integrating with backend later:
+// 1. Add Socket.IO client for real-time collaboration
+// 2. Add WebRTC for video/audio streaming
+// 3. Add state management (Context API or Redux)
+// 4. Add authentication
+// 5. Connect API endpoints for room management
