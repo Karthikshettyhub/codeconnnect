@@ -1,0 +1,20 @@
+.code-editor {
+  flex: 2;
+  background: #1e1e2f;
+  padding: 1rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.code-editor textarea {
+  width: 100%;
+  height: 100%;
+  background: #1e1e2f;
+  color: #fff;
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  border: none;
+  outline: none;
+  resize: none;
+}

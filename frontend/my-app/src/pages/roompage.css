@@ -1,0 +1,14 @@
+.room-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f5f5f7;
+}
+
+.main-area {
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+}
