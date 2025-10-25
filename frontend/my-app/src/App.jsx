@@ -6,7 +6,7 @@ import  RoomPage  from "./pages/roompage.jsx"
 const App = () => {
   return (
     <RoomProvider>
-      {/* <CodeEditor /> */}
+      {/* <Homepage /> */}
       <RoomPage />
     </RoomProvider>
 
