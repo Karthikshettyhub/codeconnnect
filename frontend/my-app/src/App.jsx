@@ -24,11 +24,25 @@ function App() {
 
   return (
     <RoomProvider>
-      {/* <CodeEditor /> */}
+      {/* <Homepage /> */}
       <RoomPage />
     </RoomProvider>
 
   )
+    <div className="app">
+      {currentPage === 'home' ? (
+        <Homepage 
+          onJoinRoom={handleJoinRoom}
+          onCreateRoom={handleCreateRoom}
+        />
+      ) : (
+        <RoomPage 
+          roomId={currentRoomId}
+          onLeave={handleLeaveRoom}
+        />
+      )}
+    </div>
+  );
 }
 
 export default App;
