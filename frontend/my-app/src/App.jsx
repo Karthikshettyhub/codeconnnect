@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './App.css';
 import Homepage from './pages/homepage';
 import RoomPage from './pages/roompage';
+// import { RoomProvider } from './context/RoomContext'; // Add this import if you have a RoomProvider
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
