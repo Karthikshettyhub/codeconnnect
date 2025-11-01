@@ -23,6 +23,12 @@ function App() {
   };
 
   return (
+    <RoomProvider>
+      {/* <Homepage /> */}
+      <RoomPage />
+    </RoomProvider>
+
+  )
     <div className="app">
       {currentPage === 'home' ? (
         <Homepage 
