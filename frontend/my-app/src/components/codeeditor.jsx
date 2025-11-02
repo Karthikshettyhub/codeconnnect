@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './codeeditor.css';
 
-const CodeEditor = ({ language }) => {
+const CodeEditor = ({ language = 'javascript' }) => {  // ✅ Added default value
   const [code, setCode] = useState('// Start coding here...\n');
   const [lineCount, setLineCount] = useState(1);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
@@ -64,12 +64,25 @@ const CodeEditor = ({ language }) => {
     return icons[language] || '📄';
   };
 
+  const getFileExtension = () => {
+    const extensions = {
+      javascript: 'js',
+      python: 'py',
+      java: 'java',
+      cpp: 'cpp',
+      go: 'go',
+      rust: 'rs',
+      typescript: 'ts'
+    };
+    return extensions[language] || 'txt';
+  };
+
   return (
     <div className="code-editor-container">
       <div className="code-editor-header">
         <div className="editor-tab active">
           <span>{getLanguageIcon()}</span>
-          <span>main.{language === 'javascript' ? 'js' : language === 'python' ? 'py' : language}</span>
+          <span>main.{getFileExtension()}</span>
           <span className="tab-close">×</span>
         </div>
       </div>

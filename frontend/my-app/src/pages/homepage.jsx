@@ -1,98 +1,88 @@
 import React, { useState } from 'react';
+import { useRoom } from '../contexts/roomcontext';
 import './homepage.css';
 
 const Homepage = ({ onJoinRoom, onCreateRoom }) => {
   const [roomId, setRoomId] = useState('');
+  const [username, setUsername] = useState('');
+  const [mode, setMode] = useState('join'); // 'join' or 'create'
+  const { createRoom, joinRoom } = useRoom();
 
-  const handleJoin = () => {
-    if (roomId.trim()) {
-      onJoinRoom(roomId.trim());
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!roomId.trim() || !username.trim()) {
+      alert('Please enter both room ID and username');
+      return;
+    }
+
+    if (mode === 'create') {
+      createRoom(roomId, username);
+      onCreateRoom(roomId);
+    } else {
+      joinRoom(roomId, username);
+      onJoinRoom(roomId);
     }
   };
 
-  const handleCreate = () => {
-    // Generate random room ID
-    const newRoomId = Math.random().toString(36).substring(2, 10).toUpperCase();
-    onCreateRoom(newRoomId);
+  const generateRoomId = () => {
+    const id = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setRoomId(id);
   };
 
   return (
     <div className="homepage">
-      <div className="homepage-content">
-        <h1 className="homepage-title">CodeCollab</h1>
-        <p className="homepage-subtitle">
-          Code together in real-time with voice, video, and collaborative editing.
-          Perfect for pair programming, interviews, and team projects.
-        </p>
+      <div className="homepage-container">
+        <h1>CodeCollab</h1>
+        <p>Real-time collaborative coding platform</p>
 
-        <div className="homepage-actions">
-          <button 
-            className="homepage-btn homepage-btn-primary"
-            onClick={handleCreate}
+        <div className="mode-selector">
+          <button
+            className={mode === 'join' ? 'active' : ''}
+            onClick={() => setMode('join')}
+          >
+            Join Room
+          </button>
+          <button
+            className={mode === 'create' ? 'active' : ''}
+            onClick={() => setMode('create')}
           >
             Create Room
           </button>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Username</label>
             <input
               type="text"
-              placeholder="Enter Room ID"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-              onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
-              style={{
-                padding: '16px',
-                fontSize: '16px',
-                borderRadius: '8px',
-                border: '2px solid var(--bg-tertiary)',
-                backgroundColor: 'var(--bg-secondary)',
-                color: 'var(--text-primary)',
-                minWidth: '200px'
-              }}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
             />
-            <button 
-              className="homepage-btn homepage-btn-secondary"
-              onClick={handleJoin}
-              disabled={!roomId.trim()}
-              style={{ opacity: roomId.trim() ? 1 : 0.5 }}
-            >
-              Join
-            </button>
           </div>
-        </div>
 
-        <div className="homepage-features">
-          <div className="feature-card">
-            <div className="feature-icon">💻</div>
-            <div className="feature-title">Live Code Editor</div>
-            <div className="feature-description">
-              Real-time collaborative code editing with syntax highlighting
+          <div className="form-group">
+            <label>Room ID</label>
+            <div className="room-id-input">
+              <input
+                type="text"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+                placeholder={mode === 'create' ? 'Generate or enter room ID' : 'Enter room ID'}
+              />
+              {mode === 'create' && (
+                <button type="button" onClick={generateRoomId}>
+                  Generate
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="feature-card">
-            <div className="feature-icon">💬</div>
-            <div className="feature-title">Team Chat</div>
-            <div className="feature-description">
-              Communicate with your team while coding together
-            </div>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">📹</div>
-            <div className="feature-title">Video & Voice</div>
-            <div className="feature-description">
-              High-quality video calls and voice chat built-in
-            </div>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon">🚀</div>
-            <div className="feature-title">Instant Setup</div>
-            <div className="feature-description">
-              No downloads needed. Create a room and start coding
-            </div>
-          </div>
-        </div>
+          <button type="submit" className="submit-button">
+            {mode === 'create' ? 'Create Room' : 'Join Room'}
+          </button>
+        </form>
       </div>
     </div>
   );
