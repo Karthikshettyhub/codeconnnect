@@ -1,99 +1,118 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import socketService from '../services/socket';
 
 const RoomContext = createContext();
 
 export const useRoom = () => {
   const context = useContext(RoomContext);
   if (!context) {
-    throw new Error('useRoom must be used within a RoomProvider');
+    throw new Error('useRoom must be used within RoomProvider');
   }
   return context;
 };
 
 export const RoomProvider = ({ children }) => {
-  const [roomId, setRoomId] = useState(null);
+  const [currentRoom, setCurrentRoom] = useState(null);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [code, setCode] = useState('');
-  const [language, setLanguage] = useState('javascript');
+  const [username, setUsername] = useState('');
   const [isConnected, setIsConnected] = useState(false);
 
-  // Placeholder for Socket.IO connection
   useEffect(() => {
-    if (roomId) {
-      // TODO: Connect to Socket.IO server
-      // const socket = io('your-backend-url');
-      
-      // socket.on('connect', () => {
-      //   setIsConnected(true);
-      //   socket.emit('join-room', roomId);
-      // });
-      
-      // socket.on('user-joined', (user) => {
-      //   setUsers(prev => [...prev, user]);
-      // });
-      
-      // socket.on('user-left', (userId) => {
-      //   setUsers(prev => prev.filter(u => u.id !== userId));
-      // });
-      
-      // socket.on('code-change', (newCode) => {
-      //   setCode(newCode);
-      // });
-      
-      // socket.on('new-message', (message) => {
-      //   setMessages(prev => [...prev, message]);
-      // });
-      
-      // return () => socket.disconnect();
-    }
-  }, [roomId]);
+    // Connect to socket when component mounts
+    socketService.connect();
+    setIsConnected(true);
 
-  const joinRoom = (id) => {
-    setRoomId(id);
+    // Setup event listeners
+    socketService.onRoomCreated((data) => {
+      console.log('Room created:', data);
+      setCurrentRoom(data.roomId);
+      setUsers(data.users);
+    });
+
+    socketService.onRoomJoined((data) => {
+      console.log('Room joined:', data);
+      setCurrentRoom(data.roomId);
+      setUsers(data.users);
+    });
+
+    socketService.onUserJoined((data) => {
+      console.log('User joined:', data.username);
+      setUsers((prev) => [...prev, { username: data.username }]);
+      addSystemMessage(`${data.username} joined the room`);
+    });
+
+    socketService.onUserLeft((data) => {
+      console.log('User left:', data.username);
+      setUsers((prev) => prev.filter((u) => u.username !== data.username));
+      addSystemMessage(`${data.username} left the room`);
+    });
+
+    socketService.onReceiveMessage((data) => {
+      console.log('Message received:', data);
+      setMessages((prev) => [...prev, data]);
+    });
+
+    socketService.onError((data) => {
+      console.error('Socket error:', data.message);
+      alert(data.message);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      socketService.disconnect();
+      setIsConnected(false);
+    };
+  }, []);
+
+  const addSystemMessage = (text) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        username: 'System',
+        message: text,
+        timestamp: Date.now(),
+        isSystem: true,
+      },
+    ]);
+  };
+
+  const createRoom = (roomId, userName) => {
+    setUsername(userName);
+    socketService.createRoom(roomId, userName);
+  };
+
+  const joinRoom = (roomId, userName) => {
+    setUsername(userName);
+    socketService.joinRoom(roomId, userName);
   };
 
   const leaveRoom = () => {
-    setRoomId(null);
-    setUsers([]);
-    setMessages([]);
-    setCode('');
-    setIsConnected(false);
+    if (currentRoom && username) {
+      socketService.leaveRoom(currentRoom, username);
+      setCurrentRoom(null);
+      setUsers([]);
+      setMessages([]);
+    }
   };
 
   const sendMessage = (message) => {
-    // TODO: Emit to socket
-    // socket.emit('send-message', { roomId, message });
-    setMessages(prev => [...prev, message]);
-  };
-
-  const updateCode = (newCode) => {
-    // TODO: Emit to socket
-    // socket.emit('code-change', { roomId, code: newCode });
-    setCode(newCode);
-  };
-
-  const changeLanguage = (newLanguage) => {
-    // TODO: Emit to socket
-    // socket.emit('language-change', { roomId, language: newLanguage });
-    setLanguage(newLanguage);
+    if (currentRoom && username && message.trim()) {
+      socketService.sendMessage(currentRoom, username, message);
+    }
   };
 
   const value = {
-    roomId,
+    currentRoom,
     users,
     messages,
-    code,
-    language,
+    username,
     isConnected,
+    createRoom,
     joinRoom,
     leaveRoom,
     sendMessage,
-    updateCode,
-    changeLanguage,
   };
 
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
 };
-
-export default RoomContext;

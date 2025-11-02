@@ -1,105 +1,47 @@
-import React, { useState } from 'react';
-import './roompage.css';
-import CodeEditor from '../components/codeeditor';
+import React from 'react';
+import { useRoom } from '../contexts/roomcontext';
 import ChatBox from '../components/chatbox';
-import VideoSection from '../components/videosection';
+import CodeEditor from '../components/codeeditor';
+import './roompage.css';
 
 const RoomPage = ({ roomId, onLeave }) => {
-  const [showChat, setShowChat] = useState(true);
-  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
-  const [users, setUsers] = useState([
-    { id: 1, name: 'You', role: 'Host', online: true },
-    { id: 2, name: 'User2', role: 'Member', online: true },
-    { id: 3, name: 'User3', role: 'Member', online: false },
-  ]);
+  const { users, username, leaveRoom } = useRoom();
 
-  const copyRoomId = () => {
-    navigator.clipboard.writeText(roomId);
-    alert('Room ID copied to clipboard!');
-  };
-
-  const handleLanguageChange = (e) => {
-    setSelectedLanguage(e.target.value);
-  };
-
-  const getInitials = (name) => {
-    return name.substring(0, 2).toUpperCase();
+  const handleLeave = () => {
+    leaveRoom();
+    onLeave();
   };
 
   return (
-    <div className="room-page">
-      {/* Left Sidebar - User List */}
-      <div className="room-sidebar">
-        <div className="room-header">
-          <div className="room-name">Coding Room</div>
-          <div className="room-id">
-            Room: {roomId}
-            <button className="copy-btn" onClick={copyRoomId}>
-              Copy
-            </button>
-          </div>
+    <div className="roompage">
+      <div className="roompage-header">
+        <div className="room-info">
+          <h2>Room: {roomId}</h2>
+          <span className="user-count">{users.length} user(s) online</span>
         </div>
-
-        <div className="user-list">
-          <div className="user-list-title">
-            Members — {users.filter(u => u.online).length}
-          </div>
-          {users.map(user => (
-            <div key={user.id} className="user-item">
-              <div className="user-avatar">
-                {getInitials(user.name)}
-                <div className={`user-status ${user.online ? 'online' : 'offline'}`}></div>
-              </div>
-              <div className="user-info">
-                <div className="user-name">{user.name}</div>
-                <div className="user-role">{user.role}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <button className="leave-button" onClick={handleLeave}>
+          Leave Room
+        </button>
       </div>
 
-      {/* Main Content */}
-      <div className="room-main">
-        {/* Top Bar */}
-        <div className="room-topbar">
-          <div className="room-topbar-left">
-            <div className="room-topbar-title"># code-editor</div>
-            <select 
-              className="language-selector"
-              value={selectedLanguage}
-              onChange={handleLanguageChange}
-            >
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
-              <option value="java">Java</option>
-              <option value="cpp">C++</option>
-              <option value="go">Go</option>
-              <option value="rust">Rust</option>
-              <option value="typescript">TypeScript</option>
-            </select>
-          </div>
-
-          <div className="room-topbar-right">
-            <button className="topbar-btn" onClick={() => setShowChat(!showChat)}>
-              {showChat ? '📝 Hide Chat' : '💬 Show Chat'}
-            </button>
-            <button className="topbar-btn danger" onClick={onLeave}>
-              🚪 Leave Room
-            </button>
-          </div>
+      <div className="roompage-content">
+        <div className="editor-section">
+          <CodeEditor />
         </div>
-
-        {/* Content Area */}
-        <div className="room-content">
-          <CodeEditor language={selectedLanguage} />
+        
+        <div className="sidebar">
+          <div className="users-list">
+            <h3>Users</h3>
+            {users.map((user, index) => (
+              <div key={index} className="user-item">
+                <span className="user-indicator"></span>
+                {user.username}
+                {user.username === username && ' (You)'}
+              </div>
+            ))}
+          </div>
           
-          {showChat && (
-            <div className="room-right-sidebar">
-              <VideoSection users={users.filter(u => u.online)} />
-              <ChatBox roomId={roomId} />
-            </div>
-          )}
+          <ChatBox />
         </div>
       </div>
     </div>
