@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRoom } from '../contexts/roomcontext';
+import { useNavigate } from 'react-router-dom';
 import './homepage.css';
 
-const Homepage = ({ onJoinRoom, onCreateRoom }) => {
+const Homepage = () => {
   const [roomId, setRoomId] = useState('');
   const [username, setUsername] = useState('');
-  const [mode, setMode] = useState('join'); // 'join' or 'create'
-  const { createRoom, joinRoom } = useRoom();
+  const [mode, setMode] = useState('join');
+  
+  const { createRoom, joinRoom, currentRoom } = useRoom();
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (!roomId.trim() || !username.trim()) {
       alert('Please enter both room ID and username');
       return;
@@ -18,10 +20,8 @@ const Homepage = ({ onJoinRoom, onCreateRoom }) => {
 
     if (mode === 'create') {
       createRoom(roomId, username);
-      onCreateRoom(roomId);
     } else {
       joinRoom(roomId, username);
-      onJoinRoom(roomId);
     }
   };
 
@@ -30,59 +30,64 @@ const Homepage = ({ onJoinRoom, onCreateRoom }) => {
     setRoomId(id);
   };
 
-  return (
-    <div className="homepage">
-      <div className="homepage-container">
-        <h1>CodeCollab</h1>
-        <p>Real-time collaborative coding platform</p>
+  // ✅ Navigate once room created / joined
+  useEffect(() => {
+    if (currentRoom) {
+      navigate(`/room/${currentRoom}`);
+    }
+  }, [currentRoom, navigate]);
 
-        <div className="mode-selector">
-          <button
-            className={mode === 'join' ? 'active' : ''}
+  return (
+    <div className="home-wrapper">
+      <div className="home-card">
+
+        <h1 className="home-title">CodeCollab</h1>
+        <p className="home-subtitle">Real-time collaborative coding</p>
+
+        <div className="mode-toggle">
+          <button 
+            className={`mode-btn ${mode === 'join' ? 'active' : ''}`} 
             onClick={() => setMode('join')}
           >
             Join Room
           </button>
-          <button
-            className={mode === 'create' ? 'active' : ''}
+          <button 
+            className={`mode-btn ${mode === 'create' ? 'active' : ''}`} 
             onClick={() => setMode('create')}
           >
             Create Room
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
+        <form onSubmit={handleSubmit} className="home-form">
+          <label>Username</label>
+          <input 
+            type="text"
+            value={username}
+            onChange={(e)=>setUsername(e.target.value)} 
+            placeholder="Enter your username"
+          />
+
+          <label>Room ID</label>
+          <div className="room-input-wrap">
+            <input 
+              type="text" 
+              value={roomId} 
+              onChange={(e)=>setRoomId(e.target.value)} 
+              placeholder={mode==='create' ? 'Generate or enter room ID' : 'Enter room ID'}
             />
+            {mode === 'create' && (
+              <button type="button" className="gen-btn" onClick={generateRoomId}>
+                Generate
+              </button>
+            )}
           </div>
 
-          <div className="form-group">
-            <label>Room ID</label>
-            <div className="room-id-input">
-              <input
-                type="text"
-                value={roomId}
-                onChange={(e) => setRoomId(e.target.value)}
-                placeholder={mode === 'create' ? 'Generate or enter room ID' : 'Enter room ID'}
-              />
-              {mode === 'create' && (
-                <button type="button" onClick={generateRoomId}>
-                  Generate
-                </button>
-              )}
-            </div>
-          </div>
-
-          <button type="submit" className="submit-button">
+          <button className="submit-btn" type="submit">
             {mode === 'create' ? 'Create Room' : 'Join Room'}
           </button>
         </form>
+
       </div>
     </div>
   );

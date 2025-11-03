@@ -1,15 +1,18 @@
 import React from 'react';
 import { useRoom } from '../contexts/roomcontext';
+import { useParams, useNavigate } from "react-router-dom";
 import ChatBox from '../components/chatbox';
 import CodeEditor from '../components/codeeditor';
 import './roompage.css';
 
-const RoomPage = ({ roomId, onLeave }) => {
+const RoomPage = () => {
   const { users, username, leaveRoom } = useRoom();
+  const { roomId } = useParams();
+  const navigate = useNavigate();
 
   const handleLeave = () => {
     leaveRoom();
-    onLeave();
+    navigate("/");
   };
 
   return (
@@ -28,20 +31,19 @@ const RoomPage = ({ roomId, onLeave }) => {
         <div className="editor-section">
           <CodeEditor />
         </div>
-        
+
         <div className="sidebar">
           <div className="users-list">
             <h3>Users</h3>
             {users.map((user, index) => (
               <div key={index} className="user-item">
-                <span className="user-indicator"></span>
-                {user.username}
-                {user.username === username && ' (You)'}
+                {user.username} {user.username === username && '(You)'}
               </div>
             ))}
           </div>
-          
-          <ChatBox />
+          <div className="chatbox">
+            <ChatBox />
+          </div>
         </div>
       </div>
     </div>

@@ -1,166 +1,107 @@
-/* src/pages/homepage.css */
-.homepage {
-  width: 100%;
-  height: 100vh;
+/* Full screen centered container */
+.home-wrapper {
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  position: relative;
-  overflow: hidden;
+  align-items: center;
+  height: 100vh;
+  background: #0e1220;
+  padding: 20px;
 }
 
-/* Animated background */
-.homepage::before {
-  content: '';
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(88, 101, 242, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(114, 137, 218, 0.3) 0%, transparent 50%);
-  animation: rotate 20s linear infinite;
+/* Card / form box */
+.home-card {
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 32px;
+  width: 350px;
+  color: white;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  text-align: center;
 }
 
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.homepage-container {
-  background: var(--bg-secondary);
-  padding: 48px 40px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  width: 480px;
-  max-width: 90%;
-  position: relative;
-  z-index: 1;
-}
-
-.homepage-container h1 {
-  font-size: 32px;
+/* Title & subtitle */
+.home-title {
+  font-size: 28px;
+  margin-bottom: 5px;
   font-weight: 700;
-  text-align: center;
-  margin-bottom: 8px;
-  background: linear-gradient(90deg, #5865f2, #7289da);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
-
-.homepage-container > p {
-  text-align: center;
-  color: var(--text-secondary);
-  margin-bottom: 32px;
-  font-size: 14px;
-}
-
-.mode-selector {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  background: var(--bg-tertiary);
-  padding: 4px;
-  border-radius: 8px;
-}
-
-.mode-selector button {
-  flex: 1;
-  padding: 10px 16px;
-  background: transparent;
-  color: var(--text-secondary);
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.mode-selector button.active {
-  background: var(--accent);
-  color: var(--text-primary);
-}
-
-.mode-selector button:hover:not(.active) {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.form-group {
+.home-subtitle {
+  color: #b5b9c9;
   margin-bottom: 20px;
 }
 
-.form-group label {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  letter-spacing: 0.5px;
+/* Mode buttons */
+.mode-toggle {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.mode-btn {
+  flex: 1;
+  background: #2a2f45;
+  color: #d6d9e7;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.mode-btn.active {
+  background: #6772ff;
+  color: white;
+  font-weight: bold;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 12px 14px;
-  background: var(--input-bg);
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--text-primary);
-  font-size: 16px;
-  transition: all 0.2s ease;
+/* Inputs */
+.home-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.home-form input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #3a3f58;
+  background: #181c2e;
+  color: white;
+  outline: none;
+}
+.home-form input:focus {
+  border: 1px solid #6772ff;
 }
 
-.form-group input:focus {
-  border-color: var(--accent);
-  background: var(--bg-tertiary);
-}
-
-.form-group input::placeholder {
-  color: var(--text-muted);
-}
-
-.room-id-input {
+/* Room ID input row */
+.room-input-wrap {
   display: flex;
   gap: 8px;
 }
-
-.room-id-input input {
-  flex: 1;
+.gen-btn {
+  background: #2a2f45;
+  border: none;
+  padding: 10px;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.gen-btn:hover {
+  background: #414868;
 }
 
-.room-id-input button {
-  padding: 12px 20px;
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
+/* Submit button */
+.submit-btn {
+  margin-top: 10px;
+  padding: 12px;
+  background: #6772ff;
+  border: none;
+  color: white;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
 }
-
-.room-id-input button:hover {
-  background: var(--bg-hover);
-}
-
-.submit-button {
-  width: 100%;
-  padding: 14px;
-  background: var(--accent);
-  color: var(--text-primary);
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 600;
-  margin-top: 24px;
-  transition: all 0.2s ease;
-}
-
-.submit-button:hover {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4);
-}
-
-.submit-button:active {
-  transform: translateY(0);
+.submit-btn:hover {
+  background: #5862e0;
 }

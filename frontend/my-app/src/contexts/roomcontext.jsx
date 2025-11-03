@@ -17,6 +17,7 @@ export const RoomProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState('');
   const [isConnected, setIsConnected] = useState(false);
+  const [code, setCode] = useState('');
 
   useEffect(() => {
     // Connect to socket when component mounts
@@ -53,10 +54,22 @@ export const RoomProvider = ({ children }) => {
       setMessages((prev) => [...prev, data]);
     });
 
+    socketService.onCodeReceive((data) => {
+      console.log('Code received:', data);
+      setCode(data.code);
+      // Handle code update if needed
+    });
+
+    socketService.onCodeReceive((data) => {
+      console.log("Code received from room:", data);
+      setCode(data.code);
+    });
+
     socketService.onError((data) => {
       console.error('Socket error:', data.message);
       alert(data.message);
     });
+
 
     // Cleanup on unmount
     return () => {
@@ -102,6 +115,11 @@ export const RoomProvider = ({ children }) => {
     }
   };
 
+  const sendCode = (newCode) => {
+    if (currentRoom) {
+      socketService.sendCode(currentRoom, newCode);
+    }
+  };
   const value = {
     currentRoom,
     users,
@@ -112,6 +130,8 @@ export const RoomProvider = ({ children }) => {
     joinRoom,
     leaveRoom,
     sendMessage,
+    code,        // ✅ Add this
+    sendCode,    // ✅ Add this
   };
 
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
