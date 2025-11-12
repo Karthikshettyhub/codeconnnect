@@ -1,87 +1,89 @@
-/* Main page */
+/* === Main Page === */
 .roompage {
   height: 100vh;
   display: flex;
   flex-direction: column;
   background: #121212;
   color: #fff;
+  overflow: hidden;
 }
 
-/* Header */
+/* === Header (Only Leave Button) === */
 .roompage-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  padding: 12px 20px;
+  padding: 10px 20px;
   background: #1e1e1e;
   border-bottom: 1px solid #333;
   flex-shrink: 0;
+  height: 50px;
 }
 
-/* Body layout */
+/* === Main Layout (Editor + Chat) === */
 .roompage-content {
   flex: 1;
   display: flex;
   gap: 12px;
   padding: 10px;
-  overflow: hidden; /* prevents page scroll */
-}
-
-/* Code editor takes more space */
-.editor-section {
-  flex: 3.5;
-  border-radius: 8px;
   overflow: hidden;
 }
 
-/* Sidebar fixed layout */
-.sidebar {
+/* === Code Editor Section === */
+.editor-section {
+  flex: 3.5; /* takes most of width */
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === Chat Section === */
+.chat-section {
   flex: 1.2;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  height: 100%;
-}
-
-/* Users block */
-.users-list {
   background: #1e1e1e;
-  padding: 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid #333;
-  flex: 0.35;                    /* fixed % height */
-  overflow-y: auto;             /* only this scrolls */
+  overflow: hidden;
+  min-width: 280px;
 }
 
-/* Chatbox container */
-.sidebar > .chatbox {
-  flex: 0.65;                    /* chat gets 65% */
-  display: flex;
-  flex-direction: column;
-  min-height: 0;                /* FIX for overflow */
-}
-
-/* Users text */
-.user-item {
-  padding: 5px 0;
-  font-size: 14px;
+/* Chat header */
+.chat-header {
+  background: #2a2a2a;
+  padding: 10px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 15px;
   border-bottom: 1px solid #333;
 }
-.user-item:last-child {
-  border-bottom: none;
+
+/* Chat content wrapper (ChatBox component area) */
+.chatbox-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* 👈 Push messages to bottom */
+  padding: 10px;
+  overflow-y: auto; /* enable scrolling when messages overflow */
+  scroll-behavior: smooth;
 }
 
-/* Leave Button */
+/* === Leave Button === */
 .leave-button {
   background: #ff4d4d;
   border: none;
-  padding: 8px 15px;
+  padding: 8px 18px;
   border-radius: 6px;
   cursor: pointer;
   color: #fff;
   font-weight: 600;
-  transition: 0.2s ease;
+  font-size: 15px;
+  transition: background 0.2s ease;
 }
+
 .leave-button:hover {
   background: #d93636;
 }

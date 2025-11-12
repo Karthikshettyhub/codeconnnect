@@ -55,12 +55,6 @@ export const RoomProvider = ({ children }) => {
     });
 
     socketService.onCodeReceive((data) => {
-      console.log('Code received:', data);
-      setCode(data.code);
-      // Handle code update if needed
-    });
-
-    socketService.onCodeReceive((data) => {
       console.log("Code received from room:", data);
       setCode(data.code);
     });
@@ -130,8 +124,8 @@ export const RoomProvider = ({ children }) => {
     joinRoom,
     leaveRoom,
     sendMessage,
-    code,        // ✅ Add this
-    sendCode,    // ✅ Add this
+    code,     
+    sendCode,   
   };
 
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;

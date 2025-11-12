@@ -2,33 +2,33 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRoom } from '../contexts/roomcontext';
 import './chatbox.css';
 
-const ChatBox = () => {
+const ChatBox = ({ onLeave }) => {
   const { messages, sendMessage, username } = useRoom();
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSend = (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
-
-    sendMessage(inputMessage); // ✅ Uses context → goes to socketService
+    sendMessage(inputMessage);
     setInputMessage('');
   };
 
   return (
     <div className="chatbox">
+      {/* === Header with Leave Button === */}
       <div className="chatbox-header">
-        <h3>Chat</h3>
+        <h3>💬 Chat</h3>
+        <button className="leave-button" onClick={onLeave}>
+          Leave
+        </button>
       </div>
-      
+
+      {/* === Chat Messages === */}
       <div className="chatbox-messages">
         {messages.map((msg, index) => (
           <div
@@ -45,13 +45,13 @@ const ChatBox = () => {
                 </span>
               </div>
             )}
-
             <div className="message-content">{msg.message}</div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
+      {/* === Input Box === */}
       <form className="chatbox-input" onSubmit={handleSend}>
         <input
           type="text"
