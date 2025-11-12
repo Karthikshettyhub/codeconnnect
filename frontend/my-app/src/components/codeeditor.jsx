@@ -1,28 +1,29 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Editor from '@monaco-editor/react';  // ✅ Import Monaco
 import './codeeditor.css';
+import { useRoom } from "../contexts/roomcontext";
 
-const CodeEditor = ({ language = 'javascript' }) => {  // ✅ Added default value
-  const [code, setCode] = useState('// Start coding here...\n');
+
+const CodeEditor = ({ language = 'javascript' }) => {
+
   const [lineCount, setLineCount] = useState(1);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
-  const textareaRef = useRef(null);
+  const { code, sendCode } = useRoom(); // ✅ get shared code + sendCode
+  const [localCode, setLocalCode] = useState(code);
+
 
   useEffect(() => {
-    const lines = code.split('\n').length;
-    setLineCount(lines);
+    setLocalCode(code);
   }, [code]);
 
-  const handleCodeChange = (e) => {
-    setCode(e.target.value);
+  const handleEditorChange = (value) => {
+    setLocalCode(value);
+    sendCode(value);
   };
 
-  const handleCursorChange = (e) => {
-    const textarea = e.target;
-    const textBeforeCursor = textarea.value.substring(0, textarea.selectionStart);
-    const lines = textBeforeCursor.split('\n');
-    const line = lines.length;
-    const column = lines[lines.length - 1].length + 1;
-    setCursorPosition({ line, column });
+  const handleCursorMove = (e) => {
+    const { lineNumber, column } = e.position;
+    setCursorPosition({ line: lineNumber, column });
   };
 
   const handleCopy = () => {
@@ -40,7 +41,7 @@ const CodeEditor = ({ language = 'javascript' }) => {  // ✅ Added default valu
       rust: 'rs',
       typescript: 'ts'
     };
-    
+
     const ext = extensions[language] || 'txt';
     const blob = new Blob([code], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -88,30 +89,26 @@ const CodeEditor = ({ language = 'javascript' }) => {  // ✅ Added default valu
       </div>
 
       <div className="editor-actions">
-        <button className="editor-action-btn" onClick={handleCopy}>
-          📋 Copy
-        </button>
-        <button className="editor-action-btn" onClick={handleDownload}>
-          💾 Download
-        </button>
+        <button className="editor-action-btn" onClick={handleCopy}>📋 Copy</button>
+        <button className="editor-action-btn" onClick={handleDownload}>💾 Download</button>
       </div>
 
       <div className="code-editor-wrapper">
-        <div className="line-numbers">
-          {Array.from({ length: lineCount }, (_, i) => (
-            <div key={i + 1}>{i + 1}</div>
-          ))}
-        </div>
-        <textarea
-          ref={textareaRef}
-          className="code-editor editor-with-numbers"
-          value={code}
-          onChange={handleCodeChange}
-          onKeyUp={handleCursorChange}
-          onClick={handleCursorChange}
-          spellCheck="false"
-          placeholder="Start typing your code..."
+        {/* ✅ Monaco Editor */}
+        <Editor
+          height="400px"
+          language={language}
+          value={localCode}
+          onChange={handleEditorChange}
+          onCursorPositionChange={handleCursorMove}
+          theme="vs-dark"
+          options={{
+            minimap: { enabled: false },
+            fontSize: 14,
+            automaticLayout: true,
+          }}
         />
+
       </div>
 
       <div className="code-editor-footer">
@@ -122,6 +119,7 @@ const CodeEditor = ({ language = 'javascript' }) => {  // ✅ Added default valu
             <span>You are editing</span>
           </div>
         </div>
+
         <div className="editor-info">
           <span>Ln {cursorPosition.line}, Col {cursorPosition.column}</span>
           <span>{language.toUpperCase()}</span>

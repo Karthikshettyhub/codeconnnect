@@ -17,10 +17,10 @@ const ChatBox = () => {
 
   const handleSend = (e) => {
     e.preventDefault();
-    if (inputMessage.trim()) {
-      sendMessage(inputMessage);
-      setInputMessage('');
-    }
+    if (!inputMessage.trim()) return;
+
+    sendMessage(inputMessage); // ✅ Uses context → goes to socketService
+    setInputMessage('');
   };
 
   return (
@@ -33,16 +33,19 @@ const ChatBox = () => {
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`message ${msg.isSystem ? 'system-message' : ''} ${
-              msg.username === username ? 'own-message' : ''
-            }`}
+            className={`message 
+              ${msg.isSystem ? 'system-message' : ''} 
+              ${msg.username === username ? 'own-message' : ''}`}
           >
-            <div className="message-header">
-              <span className="message-username">{msg.username}</span>
-              <span className="message-time">
-                {new Date(msg.timestamp).toLocaleTimeString()}
-              </span>
-            </div>
+            {!msg.isSystem && (
+              <div className="message-header">
+                <span className="message-username">{msg.username}</span>
+                <span className="message-time">
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+            )}
+
             <div className="message-content">{msg.message}</div>
           </div>
         ))}

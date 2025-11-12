@@ -67,6 +67,12 @@ module.exports = (io) => {
         console.log(`Room ${roomId} deleted as it became empty.`);
       }
     });
+    socket.on("code-send", ({ roomId, code }) => {
+      console.log(`Code update in ${roomId}`);
+
+      socket.to(roomId).emit("code-receive", { code });
+    });
+
 
     // EVENT 5: DISCONNECT
     socket.on('disconnect', () => {
