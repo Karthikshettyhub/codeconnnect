@@ -85,5 +85,5 @@ class RoomManager {
     }
   }
   
-  module.exports = new RoomManager();
+ module.exports = new RoomManager();
   

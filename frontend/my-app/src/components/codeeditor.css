@@ -1,233 +1,40 @@
-/* ---------- Container ---------- */
-.code-editor-container {
+.editor-container {
   display: flex;
   flex-direction: column;
-  background-color: #1e1e1e;
-  border-radius: 6px;
-  width: 100%;
   height: 100%;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-/* ---------- Header ---------- */
-.code-editor-header {
-  height: 40px;
-  background-color: #252526;
-  border-bottom: 1px solid #3e3e42;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  gap: 8px;
-  box-sizing: border-box;
-}
-
-.editor-tab {
-  padding: 8px 16px;
-  background-color: #2d2d30;
-  border-radius: 4px 4px 0 0;
-  font-size: 13px;
-  color: #cccccc;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.editor-tab.active {
-  background-color: #1e1e1e;
-  color: white;
-}
-
-.editor-tab:hover:not(.active) {
-  background-color: #383838;
-}
-
-.tab-close {
-  font-size: 16px;
-  color: #858585;
-  padding: 0 4px;
-}
-
-.tab-close:hover {
-  color: white;
-}
-
-/* ---------- Editor ---------- */
-.code-editor-wrapper {
-  position: relative;
-  width: 100%;
-  background-color: #1e1e1e;
-  box-sizing: border-box;
-  border-bottom: 1px solid #3e3e42;
-}
-
-/* Monaco Editor Area */
-.code-editor {
-  width: 100%;
-  height: 100%;
-  background-color: #1e1e1e;
-  color: #d4d4d4;
-  font-family: 'Fira Code', 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  padding: 16px;
-  border: none;
-  resize: none;
-  outline: none;
-  overflow: auto;
-}
-
-.code-editor::placeholder {
-  color: #6a6a6a;
-}
-
-/* ---------- Editor Buttons (Copy / Download / Run) ---------- */
-.editor-actions {
-  position: absolute;
-  top: 12px; /* ✅ perfectly positioned inside editor */
-  right: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 15;
-  background-color: rgba(37, 37, 38, 0.9);
-  padding: 6px 10px;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
-.editor-actions:hover {
-  background-color: rgba(37, 37, 38, 1);
-}
-
-.editor-action-btn {
-  padding: 6px 14px;
-  background-color: #2d2d30;
-  border: 1px solid #3e3e42;
-  border-radius: 4px;
-  color: #cccccc;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.editor-action-btn:hover {
-  background-color: #383838;
-  border-color: #007acc;
-  transform: translateY(-1px);
-}
-
-/* ---------- Run Button ---------- */
-.run-btn {
-  background-color: #4caf50;
-  border-color: #4caf50;
-  color: white;
-  font-weight: 600;
-}
-
-.run-btn:hover {
-  background-color: #45a049;
-  border-color: #45a049;
-}
-
-/* ---------- Output Section ---------- */
-.output-section {
-  background-color: #1e1e1e;
-  border-top: 1px solid #3e3e42;
-  padding: 12px 20px;
-  color: #dcdcdc;
-  font-family: 'Fira Code', monospace;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.output-header {
-  font-size: 13px;
-  font-weight: bold;
-  color: #00ff99;
-  margin-bottom: 6px;
-}
-
-.output-box {
-  background-color: #111;
-  color: #dcdcdc;
-  border: 1px solid #333;
-  border-radius: 6px;
-  padding: 10px;
-  min-height: 100px;
-  max-height: 200px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  font-size: 13px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* ---------- Footer ---------- */
-.code-editor-footer {
-  height: 32px;
-  background-color: #007acc;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  font-size: 12px;
-  color: white;
-  box-sizing: border-box;
-}
-
-.editor-status {
-  display: flex;
-  gap: 16px;
-}
-
-.editor-info {
-  display: flex;
-  gap: 16px;
-}
-
-.cursor-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.cursor-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.language-dropdown {
   background: #1e1e1e;
-  color: #fff;
-  border: 1px solid #333;
-  border-radius: 5px;
-  padding: 4px 8px;
-  margin: 0 10px;
-  font-family: inherit;
+}
+
+/* Header */
+.editor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #252526;
+  border-bottom: 1px solid #333;
+}
+
+.language-dropdown {
+  padding: 6px 12px;
+  background: #333;
+  color: white;
+  border-radius: 6px;
   cursor: pointer;
+  border: 1px solid #444;
 }
 
-.language-dropdown:hover {
-  background: #2a2a2a;
+.file-label {
+  color: #bbb;
+  font-size: 12px;
 }
 
-.file-name {
-  color: #ccc;
-  margin-left: 8px;
-  font-weight: bold;
+/* Monaco Editor */
+.editor-wrapper {
+  flex: 1;
+  min-height: 300px;
+  background: #1e1e1e;
+  border-bottom: 1px solid #333;
 }
 
+/* Compiler Panel sits below */

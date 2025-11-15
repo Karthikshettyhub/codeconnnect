@@ -1,7 +1,7 @@
 .chatbox {
   display: flex;
   flex-direction: column;
-  height: 60vh;
+  height: 100%; /* 👈 Take full height of parent container */
   background: #1e1e1e;
   border-radius: 10px;
   border: 1px solid #333;
@@ -9,10 +9,15 @@
   color: #fff;
 }
 
+/* Header */
 .chatbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 10px 15px;
   background: #252526;
   border-bottom: 1px solid #333;
+  flex-shrink: 0; /* 👈 Prevent header from shrinking */
 }
 
 .chatbox-header h3 {
@@ -21,11 +26,30 @@
   font-weight: 500;
 }
 
+/* Leave button styling */
+.leave-button {
+  background: #ff4c4c;
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.leave-button:hover {
+  background: #e04343;
+}
+
+/* Chat messages section */
 .chatbox-messages {
-  flex: 1;
+  flex: 1; /* 👈 Fill remaining vertical space */
   padding: 12px;
   overflow-y: auto;
   font-size: 14px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* message container */
@@ -72,11 +96,12 @@
   font-size: 14px;
 }
 
-/* input box */
+/* Input box */
 .chatbox-input {
   display: flex;
   border-top: 1px solid #333;
   background: #1e1e1e;
+  flex-shrink: 0; /* 👈 Keep it fixed height at bottom */
 }
 
 .chatbox-input input {

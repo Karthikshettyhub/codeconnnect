@@ -20,48 +20,63 @@ export const RoomProvider = ({ children }) => {
   const [code, setCode] = useState('');
 
   useEffect(() => {
-    // Connect to socket when component mounts
+    // Connect to socket
     socketService.connect();
     setIsConnected(true);
 
-    // Setup event listeners
+    // --------------------------------------------
+    // ⭐ AUTO REJOIN ROOM AFTER REFRESH
+    // --------------------------------------------
+    const savedRoom = localStorage.getItem("currentRoom");
+    const savedUser = localStorage.getItem("username");
+
+    if (savedRoom && savedUser) {
+      console.log("🔄 Auto-Rejoining room after refresh:", savedRoom);
+
+      setCurrentRoom(savedRoom);
+      setUsername(savedUser);
+
+      socketService.joinRoom(savedRoom, savedUser); // IMPORTANT
+    }
+    // --------------------------------------------
+
+    // Room created event
     socketService.onRoomCreated((data) => {
-      console.log('Room created:', data);
       setCurrentRoom(data.roomId);
       setUsers(data.users);
+
+      // Save for refresh
+      localStorage.setItem("currentRoom", data.roomId);
+      localStorage.setItem("username", data.username);
     });
 
+    // Room joined event
     socketService.onRoomJoined((data) => {
-      console.log('Room joined:', data);
       setCurrentRoom(data.roomId);
       setUsers(data.users);
+
+      // Save for refresh
+      localStorage.setItem("currentRoom", data.roomId);
     });
 
+    // User joined room
     socketService.onUserJoined((data) => {
-      console.log('User joined:', data.username);
       setUsers((prev) => [...prev, { username: data.username }]);
       addSystemMessage(`${data.username} joined the room`);
     });
 
     socketService.onUserLeft((data) => {
-      console.log('User left:', data.username);
       setUsers((prev) => prev.filter((u) => u.username !== data.username));
       addSystemMessage(`${data.username} left the room`);
     });
 
+    // Chat message received
     socketService.onReceiveMessage((data) => {
-      console.log('Message received:', data);
       setMessages((prev) => [...prev, data]);
     });
 
+    // Code received
     socketService.onCodeReceive((data) => {
-      console.log('Code received:', data);
-      setCode(data.code);
-      // Handle code update if needed
-    });
-
-    socketService.onCodeReceive((data) => {
-      console.log("Code received from room:", data);
       setCode(data.code);
     });
 
@@ -70,14 +85,14 @@ export const RoomProvider = ({ children }) => {
       alert(data.message);
     });
 
-
-    // Cleanup on unmount
+    // Cleanup
     return () => {
       socketService.disconnect();
       setIsConnected(false);
     };
   }, []);
 
+  // System message
   const addSystemMessage = (text) => {
     setMessages((prev) => [
       ...prev,
@@ -90,36 +105,56 @@ export const RoomProvider = ({ children }) => {
     ]);
   };
 
+  // Create room
   const createRoom = (roomId, userName) => {
     setUsername(userName);
+    setCurrentRoom(roomId);
+
+    localStorage.setItem("currentRoom", roomId);
+    localStorage.setItem("username", userName);
+
     socketService.createRoom(roomId, userName);
   };
 
+  // Join room
   const joinRoom = (roomId, userName) => {
     setUsername(userName);
+    setCurrentRoom(roomId);
+
+    localStorage.setItem("currentRoom", roomId);
+    localStorage.setItem("username", userName);
+
     socketService.joinRoom(roomId, userName);
   };
 
+  // Leave room
   const leaveRoom = () => {
     if (currentRoom && username) {
       socketService.leaveRoom(currentRoom, username);
-      setCurrentRoom(null);
-      setUsers([]);
-      setMessages([]);
     }
+
+    localStorage.removeItem("currentRoom");
+    localStorage.removeItem("username");
+
+    setCurrentRoom(null);
+    setUsers([]);
+    setMessages([]);
   };
 
+  // Send chat message
   const sendMessage = (message) => {
-    if (currentRoom && username && message.trim()) {
-      socketService.sendMessage(currentRoom, username, message);
-    }
+    if (!message.trim()) return;
+
+    socketService.sendMessage(currentRoom, username, message);
   };
 
+  // Send realtime code
   const sendCode = (newCode) => {
     if (currentRoom) {
       socketService.sendCode(currentRoom, newCode);
     }
   };
+
   const value = {
     currentRoom,
     users,
@@ -130,8 +165,8 @@ export const RoomProvider = ({ children }) => {
     joinRoom,
     leaveRoom,
     sendMessage,
-    code,        // ✅ Add this
-    sendCode,    // ✅ Add this
+    code,
+    sendCode,
   };
 
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
