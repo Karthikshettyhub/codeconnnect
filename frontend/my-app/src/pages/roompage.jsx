@@ -12,7 +12,9 @@ const RoomPage = () => {
 
   const handleLeave = () => {
     leaveRoom();
+    
     navigate("/");
+
   };
 
   return (
