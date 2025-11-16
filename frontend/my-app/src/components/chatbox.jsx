@@ -22,7 +22,7 @@ const ChatBox = ({ onLeave }) => {
     <div className="chatbox">
       {/* === Header with Leave Button === */}
       <div className="chatbox-header">
-        <h3>💬 Chat</h3>
+        <h3> Chat</h3>
         <button className="leave-button" onClick={onLeave}>
           Leave
         </button>

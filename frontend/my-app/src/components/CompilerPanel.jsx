@@ -25,19 +25,19 @@ const CompilerPanel = () => {
     const { code, language } = getCodeAndLanguage();
 
     if (!code.trim()) {
-      setOutput('⚠️ Please write code before running.');
+      setOutput('Please write code before running.');
       return;
     }
 
     setIsRunning(true);
-    setOutput('⏳ Running your code...');
+    setOutput('Running your code...');
     setError('');
 
     try {
       const result = await executeCode(code, language, input);
 
       if (!result) {
-        setError("❌ No response from Judge0 API");
+        setError("No response from Judge0 API");
         return;
       }
 
@@ -53,7 +53,7 @@ const CompilerPanel = () => {
       }
 
     } catch (err) {
-      setError("❌ Error: " + err.message);
+      setError("Error: " + err.message);
 
     } finally {
       setIsRunning(false);

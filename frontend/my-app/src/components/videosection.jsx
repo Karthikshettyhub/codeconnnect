@@ -48,7 +48,7 @@ const VideoSection = ({ users }) => {
             onClick={() => setIsScreenSharing(!isScreenSharing)}
             title={isScreenSharing ? 'Stop sharing' : 'Share screen'}
           >
-            🖥️
+            
           </button>
         </div>
       </div>
