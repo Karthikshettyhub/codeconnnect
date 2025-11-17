@@ -1,83 +1,81 @@
+// backend/src/socketHandler.js
+
 const roomManager = require('./roomManager');
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    // EVENT 1: CREATE ROOM
+    // CREATE ROOM
     socket.on('create-room', ({ roomId, username }) => {
-      console.log(`${username} requested to create room: ${roomId}`);
-
       const result = roomManager.createRoom(roomId, socket.id, username);
 
       if (result.success) {
         socket.join(roomId);
+
         socket.emit('room-created', {
           roomId,
           username,
           users: result.room.users,
         });
-        console.log(`Room created: ${roomId} by ${username}`);
       } else {
         socket.emit('error', { message: result.message });
       }
     });
 
-    // EVENT 2: JOIN ROOM
+    // JOIN ROOM
     socket.on('join-room', ({ roomId, username }) => {
-      console.log(`${username} requested to join room: ${roomId}`);
-
       const result = roomManager.joinRoom(roomId, socket.id, username);
 
       if (result.success) {
         socket.join(roomId);
+
         socket.emit('room-joined', {
           roomId,
           users: result.room.users,
         });
+
         socket.to(roomId).emit('user-joined', { username });
-        console.log(`${username} joined room ${roomId}`);
       } else {
         socket.emit('error', { message: result.message });
       }
     });
 
-    // EVENT 3: SEND MESSAGE
-    socket.on('send-message', ({ roomId, username, message }) => {
-      console.log(`Message in ${roomId} from ${username}: ${message}`);
-
-      io.to(roomId).emit('receive-message', {
+    // TEXT MESSAGE
+    socket.on("send-message", ({ roomId, username, message }) => {
+      io.to(roomId).emit("receive-message", {
         username,
         message,
         timestamp: Date.now(),
       });
     });
 
-    // EVENT 4: LEAVE ROOM
-    socket.on('leave-room', ({ roomId, username }) => {
-      console.log(`${username} leaving room: ${roomId}`);
-
-      const result = roomManager.leaveRoom(roomId, socket.id);
-
-      socket.leave(roomId);
-      socket.to(roomId).emit('user-left', { username });
-      console.log(`${username} left room ${roomId}`);
-
-      if (result.message.includes('Room deleted')) {
-        console.log(`Room ${roomId} deleted as it became empty.`);
-      }
-    });
+    // CODE SYNC
     socket.on("code-send", ({ roomId, code }) => {
-      console.log(`Code update in ${roomId}`);
-
       socket.to(roomId).emit("code-receive", { code });
     });
 
+    // ========= 🎤 VOICE CHAT EVENTS =========
 
-    // EVENT 5: DISCONNECT
-    socket.on('disconnect', () => {
-      console.log('User disconnected:', socket.id);
-      // Optional: track room memberships for cleanup if needed
+    // MIC ON
+    socket.on("voice-start", ({ roomId, username }) => {
+      socket.to(roomId).emit("voice-start", { username });
     });
+
+    // SENDING AUDIO CHUNKS
+    socket.on("voice-chunk", ({ roomId, username, chunk }) => {
+      socket.to(roomId).emit("voice-chunk", { username, chunk });
+    });
+
+    // MIC OFF
+    socket.on("voice-stop", ({ roomId, username }) => {
+      socket.to(roomId).emit("voice-stop", { username });
+    });
+
+    // USER DISCONNECT
+    socket.on("disconnect", () => {
+      console.log("User disconnected:", socket.id);
+    });
+
   });
 };
