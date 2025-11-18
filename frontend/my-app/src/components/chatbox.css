@@ -1,7 +1,9 @@
+/* chatbox.css - Your existing style + improvements */
+
 .chatbox {
   display: flex;
   flex-direction: column;
-  height: 100%; /* 👈 Take full height of parent container */
+  height: 100%;
   background: #1e1e1e;
   border-radius: 10px;
   border: 1px solid #333;
@@ -17,13 +19,39 @@
   padding: 10px 15px;
   background: #252526;
   border-bottom: 1px solid #333;
-  flex-shrink: 0; /* 👈 Prevent header from shrinking */
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
 }
 
 .chatbox-header h3 {
   font-size: 16px;
   margin: 0;
   font-weight: 500;
+}
+
+/* Connection Status - NEW */
+.connection-status {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.connection-status.connected {
+  background: rgba(67, 181, 129, 0.15);
+  color: #43b581;
+}
+
+.connection-status.disconnected {
+  background: rgba(255, 76, 76, 0.15);
+  color: #ff4c4c;
 }
 
 /* Leave button styling */
@@ -44,21 +72,49 @@
 
 /* Chat messages section */
 .chatbox-messages {
-  flex: 1; /* 👈 Fill remaining vertical space */
+  flex: 1;
   padding: 12px;
   overflow-y: auto;
   font-size: 14px;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+/* No messages placeholder - NEW */
+.no-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  text-align: center;
+  font-size: 14px;
+}
+
+.no-messages p {
+  margin: 0;
 }
 
 /* message container */
 .message {
-  margin-bottom: 10px;
   padding: 8px;
   background: #2a2d2e;
   border-radius: 6px;
   width: 90%;
+  animation: slideIn 0.2s ease-out;
+}
+
+/* Slide in animation - NEW */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* your messages aligned right */
@@ -73,6 +129,12 @@
   font-size: 12px;
   color: #c3c3c3;
   background: transparent !important;
+  padding: 6px 0;
+  width: 100%;
+}
+
+.system-content {
+  font-style: italic;
 }
 
 /* user & time */
@@ -94,6 +156,8 @@
 
 .message-content {
   font-size: 14px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 /* Input box */
@@ -101,7 +165,8 @@
   display: flex;
   border-top: 1px solid #333;
   background: #1e1e1e;
-  flex-shrink: 0; /* 👈 Keep it fixed height at bottom */
+  flex-shrink: 0;
+  position: relative;
 }
 
 .chatbox-input input {
@@ -113,22 +178,18 @@
   outline: none;
   font-size: 14px;
   border-top-left-radius: 10px;
+  transition: background 0.2s;
 }
 
-.chatbox-input button {
-  padding: 0 20px;
-  border: none;
-  background: #0078ff;
-  color: #fff;
-  cursor: pointer;
-  font-weight: bold;
-  border-top-right-radius: 10px;
-  transition: 0.2s ease;
+.chatbox-input input:focus {
+  background: #323436;
 }
 
-.chatbox-input button:hover {
-  background: #005fcc;
+.chatbox-input input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
+
 /* Microphone button */
 .mic-button {
   background: #444;
@@ -145,3 +206,137 @@
   background: #555;
 }
 
+.mic-button.recording {
+  background: #ff4c4c;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Send button */
+.send-button {
+  padding: 0 20px;
+  border: none;
+  background: #0078ff;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+  border-top-right-radius: 10px;
+  transition: 0.2s ease;
+}
+
+.send-button:hover:not(:disabled) {
+  background: #005fcc;
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #555;
+}
+
+/* Recording Indicator - NEW */
+.recording-indicator {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff4c4c;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Scrollbar */
+.chatbox-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chatbox-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatbox-messages::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+.chatbox-messages::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chatbox-header {
+    padding: 8px 12px;
+  }
+
+  .chatbox-header h3 {
+    font-size: 14px;
+  }
+
+  .leave-button {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .chatbox-messages {
+    padding: 10px;
+  }
+
+  .message {
+    padding: 6px 8px;
+  }
+
+  .message-content {
+    font-size: 13px;
+  }
+
+  .chatbox-input input {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .mic-button {
+    padding: 0 10px;
+    font-size: 16px;
+  }
+
+  .send-button {
+    padding: 0 15px;
+    font-size: 13px;
+  }
+}
