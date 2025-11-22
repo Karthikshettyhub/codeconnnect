@@ -1,4 +1,4 @@
-// src/contexts/roomcontext.jsx - DUPLICATE MESSAGES FIXED
+// src/contexts/roomcontext.jsx - FIXED WITH HISTORY LOADING
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import socketService from '../services/socket';
 
@@ -20,11 +20,9 @@ export const RoomProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [code, setCode] = useState('');
   
-  // CRITICAL: Prevent duplicate listener setup
   const listenersSetup = useRef(false);
 
   useEffect(() => {
-    // ⚠️ IMPORTANT: Only setup listeners ONCE
     if (listenersSetup.current) {
       console.log('⚠️ Listeners already setup, skipping...');
       return;
@@ -33,7 +31,6 @@ export const RoomProvider = ({ children }) => {
     listenersSetup.current = true;
     console.log('✅ Setting up socket listeners (ONCE)');
 
-    // Connect to socket
     socketService.connect();
     setIsConnected(true);
 
@@ -52,7 +49,7 @@ export const RoomProvider = ({ children }) => {
     }
 
     // ========================================
-    // SOCKET EVENT LISTENERS (Setup ONCE)
+    // SOCKET EVENT LISTENERS
     // ========================================
 
     // Room created
@@ -60,6 +57,11 @@ export const RoomProvider = ({ children }) => {
       console.log('✅ Room created:', data.roomId);
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
+      
+      // 🔥 Initialize with empty messages/code (new room)
+      setMessages(data.messages || []);
+      setCode(data.code || '');
+      
       localStorage.setItem("currentRoom", data.roomId);
       localStorage.setItem("username", data.username);
     };
@@ -67,8 +69,31 @@ export const RoomProvider = ({ children }) => {
     // Room joined
     const handleRoomJoined = (data) => {
       console.log('✅ Room joined:', data.roomId);
+      console.log('📥 Received history:', {
+        messages: data.messages?.length || 0,
+        codeLength: data.code?.length || 0,
+        users: data.users?.length || 0
+      });
+      
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
+      
+      // 🔥 Load message history from backend
+      if (data.messages && data.messages.length > 0) {
+        setMessages(data.messages);
+        console.log('✅ Loaded', data.messages.length, 'messages from backend');
+      } else {
+        setMessages([]);
+      }
+      
+      // 🔥 Load code from backend
+      if (data.code) {
+        setCode(data.code);
+        console.log('✅ Loaded code from backend (', data.code.length, 'chars)');
+      } else {
+        setCode('');
+      }
+      
       localStorage.setItem("currentRoom", data.roomId);
     };
 
@@ -103,15 +128,12 @@ export const RoomProvider = ({ children }) => {
       }]);
     };
 
-    // ⭐ CRITICAL: Message received handler with deduplication
+    // Message received
     const handleReceiveMessage = (data) => {
       console.log('💬 Message received:', data);
       
       setMessages((prev) => {
-        // Create unique ID for message
         const messageId = `${data.username}-${data.timestamp}-${data.message}`;
-        
-        // Check if this exact message already exists
         const isDuplicate = prev.some(msg => {
           const existingId = `${msg.username}-${msg.timestamp}-${msg.message}`;
           return existingId === messageId;
@@ -119,7 +141,7 @@ export const RoomProvider = ({ children }) => {
         
         if (isDuplicate) {
           console.log('⚠️ Duplicate message prevented:', messageId);
-          return prev; // Don't add duplicate
+          return prev;
         }
         
         console.log('✅ Adding new message:', messageId);
@@ -129,7 +151,7 @@ export const RoomProvider = ({ children }) => {
 
     // Code received
     const handleCodeReceive = (data) => {
-      console.log('📝 Code received');
+      console.log('📝 Code received:', data.code?.length || 0, 'chars');
       setCode(data.code);
     };
 
@@ -139,9 +161,7 @@ export const RoomProvider = ({ children }) => {
       alert(data.message);
     };
 
-    // ========================================
-    // REGISTER LISTENERS (Do NOT use arrow functions directly)
-    // ========================================
+    // Register listeners
     socketService.onRoomCreated(handleRoomCreated);
     socketService.onRoomJoined(handleRoomJoined);
     socketService.onUserJoined(handleUserJoined);
@@ -150,20 +170,14 @@ export const RoomProvider = ({ children }) => {
     socketService.onCodeReceive(handleCodeReceive);
     socketService.onError(handleError);
 
-    // ========================================
-    // CLEANUP: Remove listeners when unmounting
-    // ========================================
+    // Cleanup
     return () => {
       console.log('🧹 Cleaning up socket listeners');
-      
-      // Remove all listeners (if your socket service supports it)
-      // This prevents duplicate listeners on hot reload
       socketService.disconnect();
-      
       setIsConnected(false);
-      listenersSetup.current = false; // Reset for next mount
+      listenersSetup.current = false;
     };
-  }, []); // ⚠️ CRITICAL: Empty dependency array = runs ONCE
+  }, []);
 
   // ========================================
   // CONTEXT FUNCTIONS
@@ -200,17 +214,12 @@ export const RoomProvider = ({ children }) => {
     setCode('');
   };
 
-  // ⭐ IMPROVED: Send message (don't add locally, let server broadcast)
   const sendMessage = (message) => {
     if (!message.trim()) return;
-    
     console.log('📤 Sending message:', message);
-    
-    // Send to server - server will broadcast to everyone (including sender)
     socketService.sendMessage(currentRoom, username, message);
   };
 
-  // Send code with debouncing
   const sendCodeTimeout = useRef(null);
   const sendCode = (newCode) => {
     if (!currentRoom) return;

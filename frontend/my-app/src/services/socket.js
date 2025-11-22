@@ -1,8 +1,5 @@
 // frontend/src/services/socket.js
-
 import { io } from "socket.io-client";
-
-const SOCKET_URL = "http://localhost:5001";
 
 class SocketService {
   constructor() {
@@ -10,75 +7,135 @@ class SocketService {
   }
 
   connect() {
-    if (!this.socket) {
-      this.socket = io(SOCKET_URL, {
-        transports: ["websocket"],
-      });
+    if (this.socket?.connected) {
+      console.log("⚠️ Socket already connected:", this.socket.id);
+      return;
     }
-    return this.socket;
+
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5001";
+
+    this.socket = io(SOCKET_URL, {
+      transports: ["websocket", "polling"], // 🔥 Fallback added
+      withCredentials: true, // 🔥 Required if backend uses CORS with credentials
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+    });
+
+    this.socket.on("connect", () => {
+      console.log("🟢 Socket connected:", this.socket.id);
+    });
+
+    this.socket.on("disconnect", (reason) => {
+      console.log("🔴 Socket disconnected:", reason);
+    });
+
+    this.socket.on("connect_error", (error) => {
+      console.error("❌ Socket Connection Error:", error.message);
+    });
   }
 
-  // ROOM EVENTS
+  disconnect() {
+    if (!this.socket) return;
+    this.socket.disconnect();
+    console.log("🔌 Socket connection closed manually");
+  }
+
+  isConnected() {
+    return this.socket?.connected || false;
+  }
+
+  // ============================
+  // EMIT EVENTS
+  // ============================
+
   createRoom(roomId, username) {
-    this.socket.emit("create-room", { roomId, username });
+    this.socket?.emit("create-room", { roomId, username });
   }
 
   joinRoom(roomId, username) {
-    this.socket.emit("join-room", { roomId, username });
+    this.socket?.emit("join-room", { roomId, username });
   }
 
   leaveRoom(roomId, username) {
-    this.socket.emit("leave-room", { roomId, username });
+    this.socket?.emit("leave-room", { roomId, username });
   }
 
-  onRoomCreated(cb) { this.socket.on("room-created", cb); }
-  onRoomJoined(cb) { this.socket.on("room-joined", cb); }
-  onUserJoined(cb) { this.socket.on("user-joined", cb); }
-  onUserLeft(cb) { this.socket.on("user-left", cb); }
-
-  // CHAT EVENTS
+  // 🔥 Ensure backend uses "chat-message"
   sendMessage(roomId, username, message) {
-    this.socket.emit("send-message", { roomId, username, message });
+    this.socket?.emit("chat-message", { roomId, username, message });
   }
 
-  onReceiveMessage(cb) {
-    this.socket.on("receive-message", cb);
-  }
-
-  // CODE SYNC
   sendCode(roomId, code) {
-    this.socket.emit("code-send", { roomId, code });
-  }
-
-  onCodeReceive(cb) {
-    this.socket.on("code-receive", cb);
-  }
-
-  // ========= 🎤 VOICE EVENTS =========
-
-  sendVoiceStart(roomId, username) {
-    this.socket.emit("voice-start", { roomId, username });
+    this.socket?.emit("code-change", { roomId, code });
   }
 
   sendVoiceChunk(roomId, username, chunk) {
-    this.socket.emit("voice-chunk", { roomId, username, chunk });
+    this.socket?.emit("voice-chunk", { roomId, username, chunk });
+  }
+
+  sendVoiceStart(roomId, username) {
+    this.socket?.emit("voice-start", { roomId, username });
   }
 
   sendVoiceStop(roomId, username) {
-    this.socket.emit("voice-stop", { roomId, username });
+    this.socket?.emit("voice-stop", { roomId, username });
   }
 
-  onVoiceStart(cb) { this.socket.on("voice-start", cb); }
-  onVoiceChunk(cb) { this.socket.on("voice-chunk", cb); }
-  onVoiceStop(cb) { this.socket.on("voice-stop", cb); }
+  // ============================
+  // LISTENERS
+  // ============================
 
-  // ERRORS
-  onError(cb) { this.socket.on("error", cb); }
+  // To prevent duplicate listeners, always remove before binding again
+  listen(event, callback) {
+    this.socket?.off(event);
+    this.socket?.on(event, callback);
+  }
 
-  disconnect() {
-    this.socket.disconnect();
-    this.socket = null;
+  onRoomCreated(callback) {
+    this.listen("room-created", callback);
+  }
+
+  onRoomJoined(callback) {
+    this.listen("room-joined", callback);
+  }
+
+  onUserJoined(callback) {
+    this.listen("user-joined", callback);
+  }
+
+  onUserLeft(callback) {
+    this.listen("user-left", callback);
+  }
+
+  onReceiveMessage(callback) {
+    this.listen("receive-message", callback);
+  }
+
+  onCodeReceive(callback) {
+    this.listen("code-receive", callback);
+  }
+
+  onError(callback) {
+    this.listen("error", callback);
+  }
+
+  onVoiceChunk(callback) {
+    this.listen("voice-chunk", callback);
+  }
+
+  onVoiceStart(callback) {
+    this.listen("voice-start", callback);
+  }
+
+  onVoiceStop(callback) {
+    this.listen("voice-stop", callback);
+  }
+
+  removeAllListeners() {
+    this.socket?.removeAllListeners();
   }
 }
 
-export default new SocketService();
+const socketService = new SocketService();
+export default socketService;
