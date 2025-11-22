@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // src/contexts/roomcontext.jsx - FIXED WITH HISTORY LOADING
+=======
+// src/contexts/roomcontext.jsx
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import socketService from '../services/socket';
 
@@ -6,9 +10,7 @@ const RoomContext = createContext();
 
 export const useRoom = () => {
   const context = useContext(RoomContext);
-  if (!context) {
-    throw new Error('useRoom must be used within RoomProvider');
-  }
+  if (!context) throw new Error('useRoom must be used within RoomProvider');
   return context;
 };
 
@@ -19,6 +21,7 @@ export const RoomProvider = ({ children }) => {
   const [username, setUsername] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [code, setCode] = useState('');
+<<<<<<< HEAD
   
   const listenersSetup = useRef(false);
 
@@ -28,35 +31,45 @@ export const RoomProvider = ({ children }) => {
       return;
     }
     
+=======
+
+  const listenersSetup = useRef(false);
+
+  useEffect(() => {
+    if (listenersSetup.current) return;
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
     listenersSetup.current = true;
-    console.log('✅ Setting up socket listeners (ONCE)');
 
     socketService.connect();
     setIsConnected(true);
 
-    // Auto-rejoin after refresh
-    const savedRoom = localStorage.getItem("currentRoom");
-    const savedUser = localStorage.getItem("username");
+    // Restore only on page refresh (same tab)
+    const savedRoom = sessionStorage.getItem("currentRoom");
+    const savedUser = sessionStorage.getItem("username");
 
     if (savedRoom && savedUser) {
-      console.log("🔄 Auto-Rejoining room:", savedRoom);
       setCurrentRoom(savedRoom);
       setUsername(savedUser);
-      
+
       setTimeout(() => {
         socketService.joinRoom(savedRoom, savedUser);
-      }, 500);
+      }, 400);
     }
 
+<<<<<<< HEAD
     // ========================================
     // SOCKET EVENT LISTENERS
     // ========================================
+=======
+    // ================================
+    // SOCKET LISTENERS
+    // ================================
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
 
-    // Room created
     const handleRoomCreated = (data) => {
-      console.log('✅ Room created:', data.roomId);
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
+<<<<<<< HEAD
       
       // 🔥 Initialize with empty messages/code (new room)
       setMessages(data.messages || []);
@@ -64,10 +77,15 @@ export const RoomProvider = ({ children }) => {
       
       localStorage.setItem("currentRoom", data.roomId);
       localStorage.setItem("username", data.username);
+=======
+
+      sessionStorage.setItem("currentRoom", data.roomId);
+      sessionStorage.setItem("username", data.username);
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
     };
 
-    // Room joined
     const handleRoomJoined = (data) => {
+<<<<<<< HEAD
       console.log('✅ Room joined:', data.roomId);
       console.log('📥 Received history:', {
         messages: data.messages?.length || 0,
@@ -95,26 +113,21 @@ export const RoomProvider = ({ children }) => {
       }
       
       localStorage.setItem("currentRoom", data.roomId);
+=======
+      setCurrentRoom(data.roomId);
+      setUsers(data.users || []);
+
+      sessionStorage.setItem("currentRoom", data.roomId);
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
     };
 
-    // User joined
     const handleUserJoined = (data) => {
-      console.log('👋 User joined:', data.username);
-      setUsers((prev) => {
-        if (prev.some(u => u.username === data.username)) {
-          return prev;
-        }
+      setUsers(prev => {
+        if (prev.some(u => u.username === data.username)) return prev;
         return [...prev, { username: data.username }];
       });
-      
-      setMessages((prev) => [...prev, {
-        username: 'System',
-        message: `${data.username} joined the room`,
-        timestamp: Date.now(),
-        isSystem: true,
-      }]);
-    };
 
+<<<<<<< HEAD
     // User left
     const handleUserLeft = (data) => {
       console.log('👋 User left:', data.username);
@@ -142,26 +155,59 @@ export const RoomProvider = ({ children }) => {
         if (isDuplicate) {
           console.log('⚠️ Duplicate message prevented:', messageId);
           return prev;
+=======
+      setMessages(prev => [
+        ...prev,
+        {
+          username: "System",
+          message: `${data.username} joined`,
+          timestamp: Date.now(),
+          isSystem: true
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
         }
-        
-        console.log('✅ Adding new message:', messageId);
+      ]);
+    };
+
+    const handleUserLeft = (data) => {
+      setUsers(prev => prev.filter(u => u.username !== data.username));
+      setMessages(prev => [
+        ...prev,
+        {
+          username: "System",
+          message: `${data.username} left`,
+          timestamp: Date.now(),
+          isSystem: true
+        }
+      ]);
+    };
+
+    const handleReceiveMessage = (data) => {
+      setMessages(prev => {
+        const id = `${data.username}-${data.timestamp}-${data.message}`;
+        if (prev.some(msg => `${msg.username}-${msg.timestamp}-${msg.message}` === id))
+          return prev;
         return [...prev, data];
       });
     };
 
+<<<<<<< HEAD
     // Code received
     const handleCodeReceive = (data) => {
       console.log('📝 Code received:', data.code?.length || 0, 'chars');
       setCode(data.code);
     };
+=======
+    const handleCodeReceive = (data) => setCode(data.code);
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
 
-    // Error
     const handleError = (data) => {
-      console.error('❌ Socket error:', data.message);
       alert(data.message);
     };
 
+<<<<<<< HEAD
     // Register listeners
+=======
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
     socketService.onRoomCreated(handleRoomCreated);
     socketService.onRoomJoined(handleRoomJoined);
     socketService.onUserJoined(handleUserJoined);
@@ -170,44 +216,51 @@ export const RoomProvider = ({ children }) => {
     socketService.onCodeReceive(handleCodeReceive);
     socketService.onError(handleError);
 
+<<<<<<< HEAD
     // Cleanup
     return () => {
       console.log('🧹 Cleaning up socket listeners');
       socketService.disconnect();
       setIsConnected(false);
       listenersSetup.current = false;
+=======
+    return () => {
+      socketService.disconnect();
+      listenersSetup.current = false;
+      setIsConnected(false);
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
     };
   }, []);
 
-  // ========================================
-  // CONTEXT FUNCTIONS
-  // ========================================
+  // ================================
+  // FIXED FUNCTIONS
+  // ================================
 
   const createRoom = (roomId, userName) => {
-    console.log('🏠 Creating room:', roomId);
     setUsername(userName);
-    setCurrentRoom(roomId);
-    localStorage.setItem("currentRoom", roomId);
-    localStorage.setItem("username", userName);
+
+    // ❌ DO NOT setCurrentRoom here
+    // Wait for server confirmation
+
     socketService.createRoom(roomId, userName);
   };
 
   const joinRoom = (roomId, userName) => {
-    console.log('🚪 Joining room:', roomId);
     setUsername(userName);
-    setCurrentRoom(roomId);
-    localStorage.setItem("currentRoom", roomId);
-    localStorage.setItem("username", userName);
+
+    // ❌ DO NOT setCurrentRoom here
+    // If room doesn't exist → No redirect
+
     socketService.joinRoom(roomId, userName);
   };
 
   const leaveRoom = () => {
-    console.log('👋 Leaving room:', currentRoom);
     if (currentRoom && username) {
       socketService.leaveRoom(currentRoom, username);
     }
-    localStorage.removeItem("currentRoom");
-    localStorage.removeItem("username");
+
+    sessionStorage.clear();
+
     setCurrentRoom(null);
     setUsers([]);
     setMessages([]);
@@ -216,37 +269,41 @@ export const RoomProvider = ({ children }) => {
 
   const sendMessage = (message) => {
     if (!message.trim()) return;
+<<<<<<< HEAD
     console.log('📤 Sending message:', message);
+=======
+>>>>>>> 985c544244c31a0970545564036a76a881d76c5b
     socketService.sendMessage(currentRoom, username, message);
   };
 
   const sendCodeTimeout = useRef(null);
   const sendCode = (newCode) => {
-    if (!currentRoom) return;
     setCode(newCode);
-    
-    if (sendCodeTimeout.current) {
-      clearTimeout(sendCodeTimeout.current);
-    }
-    
+
+    if (sendCodeTimeout.current) clearTimeout(sendCodeTimeout.current);
+
     sendCodeTimeout.current = setTimeout(() => {
       socketService.sendCode(currentRoom, newCode);
     }, 300);
   };
 
-  const value = {
-    currentRoom,
-    users,
-    messages,
-    username,
-    isConnected,
-    createRoom,
-    joinRoom,
-    leaveRoom,
-    sendMessage,
-    code,
-    sendCode,
-  };
-
-  return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
+  return (
+    <RoomContext.Provider
+      value={{
+        currentRoom,
+        users,
+        messages,
+        username,
+        isConnected,
+        createRoom,
+        joinRoom,
+        leaveRoom,
+        sendMessage,
+        code,
+        sendCode,
+      }}
+    >
+      {children}
+    </RoomContext.Provider>
+  );
 };
