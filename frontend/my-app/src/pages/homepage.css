@@ -1,107 +1,219 @@
-/* Full screen centered container */
-.home-wrapper {
+/* ---------- GLOBAL ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: #0f0f0f;
+  color: #fff;
+}
+
+/* ---------- NAVBAR ---------- */
+.navbar {
+  width: 100%;
+  padding: 18px 32px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  height: 100vh;
-  background: #0e1220;
-  padding: 20px;
+  position: absolute;
+  top: 0;
 }
 
-/* Card / form box */
-.home-card {
-  background: rgba(255,255,255,0.07);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
-  padding: 32px;
-  width: 350px;
-  color: white;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-  text-align: center;
-}
-
-/* Title & subtitle */
-.home-title {
-  font-size: 28px;
-  margin-bottom: 5px;
-  font-weight: 700;
-}
-.home-subtitle {
-  color: #b5b9c9;
-  margin-bottom: 20px;
-}
-
-/* Mode buttons */
-.mode-toggle {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-.mode-btn {
-  flex: 1;
-  background: #2a2f45;
-  color: #d6d9e7;
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.mode-btn.active {
-  background: #6772ff;
-  color: white;
+.nav-logo {
+  font-size: 22px;
   font-weight: bold;
 }
 
-/* Inputs */
-.home-form {
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-login-btn,
+.logout-btn {
+  background: #1e1e1e;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  color: white;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.nav-login-btn:hover,
+.logout-btn:hover {
+  background: #007bff;
+  border-color: #007bff;
+}
+
+/* ---------- LOGIN DROPDOWN ---------- */
+.dropdown-login {
+  position: absolute;
+  right: 32px;
+  top: 70px;
+  width: 230px;
+  background: #1b1b1b;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #2b2b2b;
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-.home-form input {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #3a3f58;
-  background: #181c2e;
-  color: white;
-  outline: none;
-}
-.home-form input:focus {
-  border: 1px solid #6772ff;
+  animation: fadeIn 0.2s ease-in;
 }
 
-/* Room ID input row */
-.room-input-wrap {
-  display: flex;
-  gap: 8px;
-}
-.gen-btn {
-  background: #2a2f45;
-  border: none;
+.dropdown-login input {
   padding: 10px;
-  color: #fff;
-  border-radius: 8px;
+  background: #2b2b2b;
+  border: none;
+  border-radius: 6px;
+  color: white;
+}
+
+.dropdown-login button {
+  background: #007bff;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  color: white;
   cursor: pointer;
   transition: 0.2s;
 }
-.gen-btn:hover {
-  background: #414868;
+
+.dropdown-login button:hover {
+  background: #005fcc;
 }
 
-/* Submit button */
-.submit-btn {
-  margin-top: 10px;
+/* ---------- MAIN UI ---------- */
+.homepage-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 50px;
+}
+
+.home-card {
+  width: 430px;
+  background: #161616;
+  padding: 40px;
+  border-radius: 18px;
+  border: 1px solid #2b2b2b;
+  text-align: center;
+}
+
+.home-title {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.home-subtitle {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-bottom: 25px;
+}
+
+/* ---------- FORM ---------- */
+.home-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.home-form label {
+  text-align: left;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.home-form input {
   padding: 12px;
-  background: #6772ff;
+  background: #202020;
+  border: none;
+  border-radius: 10px;
+  color: white;
+}
+
+/* ---------- SWITCH ---------- */
+.mode-toggle {
+  display: flex;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  background: #2b2b2b;
+  border-radius: 8px;
   border: none;
   color: white;
-  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.mode-btn.active {
+  background: #007bff;
+}
+
+.submit-btn {
+  padding: 12px;
+  background: #00b853;
+  color: black;
+  border: none;
   border-radius: 10px;
   cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
   transition: 0.2s;
 }
+
 .submit-btn:hover {
-  background: #5862e0;
+  background: #009b45;
+}
+
+/* ---------- ROOM ID GENERATOR ---------- */
+.room-input-wrap {
+  display: flex;
+  gap: 10px;
+}
+
+.gen-btn {
+  background: #5050ff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.gen-btn:hover {
+  background: #3b3be8;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width: 600px) {
+  .home-card {
+    width: 90%;
+    padding: 25px;
+  }
+
+  .navbar {
+    padding: 14px 18px;
+  }
+
+  .dropdown-login {
+    right: 18px;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }

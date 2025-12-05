@@ -22,7 +22,7 @@ const extensions = {
 
 const CodeEditor = ({ language: initialLang = 'javascript' }) => {
   const [language, setLanguage] = useState(initialLang);
-  const { code, sendCode } = useRoom();
+  const { code, updateCodeRemote } = useRoom(); // Use updateCodeRemote here
   const [localCode, setLocalCode] = useState(code);
 
   // Sync with room code changes
@@ -37,7 +37,7 @@ const CodeEditor = ({ language: initialLang = 'javascript' }) => {
     if (!localCode || localCode.trim() === '') {
       const template = getStarterCode(language);
       setLocalCode(template);
-      sendCode(template);
+      updateCodeRemote(template); // Use updateCodeRemote here
       localStorage.setItem('currentCode', template);
       localStorage.setItem('currentLanguage', language);
     }
@@ -48,7 +48,7 @@ const CodeEditor = ({ language: initialLang = 'javascript' }) => {
     if (value === undefined || value === null) return;
     
     setLocalCode(value);
-    sendCode(value);
+    updateCodeRemote(value); // Use updateCodeRemote here
     localStorage.setItem('currentCode', value);
   };
 
@@ -72,7 +72,7 @@ const CodeEditor = ({ language: initialLang = 'javascript' }) => {
     
     const template = getStarterCode(newLang);
     setLocalCode(template);
-    sendCode(template);
+    updateCodeRemote(template); // Use updateCodeRemote here
     localStorage.setItem('currentCode', template);
   };
 
