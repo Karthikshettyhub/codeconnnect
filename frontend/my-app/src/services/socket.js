@@ -1,4 +1,4 @@
-// frontend/src/services/socket.js - WITH LANGUAGE SYNC + RUN CODE
+// frontend/src/services/socket.js
 import { io } from "socket.io-client";
 
 class SocketService {
@@ -12,8 +12,9 @@ class SocketService {
       return;
     }
 
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5001";
-    
+    const SOCKET_URL =
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:5001";
+
     this.socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
       withCredentials: true,
@@ -45,9 +46,8 @@ class SocketService {
     return this.socket?.connected || false;
   }
 
-  // ============================
-  // EMIT EVENTS
-  // ============================
+  // =================== EMIT EVENTS ===================
+
   createRoom(roomId, username) {
     this.socket?.emit("create-room", { roomId, username });
   }
@@ -68,88 +68,46 @@ class SocketService {
     this.socket?.emit("code-change", { roomId, code });
   }
 
-  // 🔥 NEW: Send language change
-  sendLanguageChange(roomId, language) {
-    this.socket?.emit("language-change", { roomId, language });
+  sendLanguage(roomId, language, username) {
+    this.socket?.emit("language-change", { roomId, language, username });
   }
 
-  // 🔥 NEW: Send run code request
   sendRunCode(roomId, code, language, input) {
     this.socket?.emit("run-code", { roomId, code, language, input });
   }
 
-  sendVoiceChunk(roomId, username, chunk) {
-    this.socket?.emit("voice-chunk", { roomId, username, chunk });
-  }
+  // =================== LISTENERS ===================
 
-  sendVoiceStart(roomId, username) {
-    this.socket?.emit("voice-start", { roomId, username });
-  }
-
-  sendVoiceStop(roomId, username) {
-    this.socket?.emit("voice-stop", { roomId, username });
-  }
-
-  // ============================
-  // LISTENERS
-  // ============================
   listen(event, callback) {
     this.socket?.off(event);
     this.socket?.on(event, callback);
   }
 
-  onRoomCreated(callback) {
-    this.listen("room-created", callback);
+  onRoomCreated(cb) {
+    this.listen("room-created", cb);
+  }
+  onRoomJoined(cb) {
+    this.listen("room-joined", cb);
+  }
+  onUserJoined(cb) {
+    this.listen("user-joined", cb);
+  }
+  onUserLeft(cb) {
+    this.listen("user-left", cb);
+  }
+  onReceiveMessage(cb) {
+    this.listen("receive-message", cb);
+  }
+  onCodeReceive(cb) {
+    this.listen("code-receive", cb);
   }
 
-  onRoomJoined(callback) {
-    this.listen("room-joined", callback);
+  onLanguageReceive(cb) {
+    this.listen("language-receive", cb);
   }
 
-  onUserJoined(callback) {
-    this.listen("user-joined", callback);
-  }
-
-  onUserLeft(callback) {
-    this.listen("user-left", callback);
-  }
-
-  onReceiveMessage(callback) {
-    this.listen("receive-message", callback);
-  }
-
-  onCodeReceive(callback) {
-    this.listen("code-receive", callback);
-  }
-
-  // 🔥 NEW: Listen for language changes
-  onLanguageReceive(callback) {
-    this.listen("language-receive", callback);
-  }
-
-  // 🔥 NEW: Listen for code output
-  onCodeOutput(callback) {
-    this.listen("code-output", callback);
-  }
-
-  onError(callback) {
-    this.listen("error", callback);
-  }
-
-  onVoiceChunk(callback) {
-    this.listen("voice-chunk", callback);
-  }
-
-  onVoiceStart(callback) {
-    this.listen("voice-start", callback);
-  }
-
-  onVoiceStop(callback) {
-    this.listen("voice-stop", callback);
-  }
-
-  removeAllListeners() {
-    this.socket?.removeAllListeners();
+  onError(cb) {
+    this.listen("error", cb);
   }
 }
 
