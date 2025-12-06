@@ -3,7 +3,7 @@ import React from 'react';
 import { useRoom } from '../contexts/roomcontext';
 import { useNavigate } from "react-router-dom";
 import ChatBox from '../components/chatbox';
-import CodeEditor from '../components/CodeEditor';
+import CodeEditor from '../components/codeeditor';
 import './roompage.css';
 
 const RoomPage = () => {

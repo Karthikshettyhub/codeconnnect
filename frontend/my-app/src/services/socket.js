@@ -1,4 +1,4 @@
-// frontend/src/services/socket.js
+// frontend/src/services/socket.js - WITH LANGUAGE SYNC + RUN CODE
 import { io } from "socket.io-client";
 
 class SocketService {
@@ -13,10 +13,10 @@ class SocketService {
     }
 
     const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5001";
-
+    
     this.socket = io(SOCKET_URL, {
-      transports: ["websocket", "polling"], // 🔥 Fallback added
-      withCredentials: true, // 🔥 Required if backend uses CORS with credentials
+      transports: ["websocket", "polling"],
+      withCredentials: true,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
@@ -48,7 +48,6 @@ class SocketService {
   // ============================
   // EMIT EVENTS
   // ============================
-
   createRoom(roomId, username) {
     this.socket?.emit("create-room", { roomId, username });
   }
@@ -61,13 +60,22 @@ class SocketService {
     this.socket?.emit("leave-room", { roomId, username });
   }
 
-  // 🔥 Ensure backend uses "chat-message"
   sendMessage(roomId, username, message) {
     this.socket?.emit("chat-message", { roomId, username, message });
   }
 
   sendCode(roomId, code) {
     this.socket?.emit("code-change", { roomId, code });
+  }
+
+  // 🔥 NEW: Send language change
+  sendLanguageChange(roomId, language) {
+    this.socket?.emit("language-change", { roomId, language });
+  }
+
+  // 🔥 NEW: Send run code request
+  sendRunCode(roomId, code, language, input) {
+    this.socket?.emit("run-code", { roomId, code, language, input });
   }
 
   sendVoiceChunk(roomId, username, chunk) {
@@ -85,8 +93,6 @@ class SocketService {
   // ============================
   // LISTENERS
   // ============================
-
-  // To prevent duplicate listeners, always remove before binding again
   listen(event, callback) {
     this.socket?.off(event);
     this.socket?.on(event, callback);
@@ -114,6 +120,16 @@ class SocketService {
 
   onCodeReceive(callback) {
     this.listen("code-receive", callback);
+  }
+
+  // 🔥 NEW: Listen for language changes
+  onLanguageReceive(callback) {
+    this.listen("language-receive", callback);
+  }
+
+  // 🔥 NEW: Listen for code output
+  onCodeOutput(callback) {
+    this.listen("code-output", callback);
   }
 
   onError(callback) {

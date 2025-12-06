@@ -3,6 +3,9 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const mongoose = require("mongoose");
+const authRoutes = require("./src/routes/authRoutes.js");
+
 
 const app = express();
 const server = http.createServer(app);
@@ -32,7 +35,8 @@ app.get('/', (req, res) => {
 });
 
 // ✅ Correct import (your file is socket.js, not socketHandler.js)
-const socketHandler = require('./src/socketHandler');
+const socketHandler = require('./src/socketHandler.js');
+
 
 socketHandler(io);
 
