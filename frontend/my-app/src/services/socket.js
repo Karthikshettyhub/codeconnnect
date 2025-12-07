@@ -13,7 +13,7 @@ class SocketService {
     }
 
     const SOCKET_URL =
-      import.meta.env.VITE_SOCKET_URL || "http://localhost:5001";
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
 
     this.socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
