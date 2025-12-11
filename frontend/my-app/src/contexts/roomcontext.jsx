@@ -7,6 +7,7 @@ import React, {
   useRef,
 } from "react";
 import socketService from "../services/socket";
+import webrtcService from "../services/webrtc";
 
 const RoomContext = createContext(null);
 
@@ -28,15 +29,12 @@ export const RoomProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const listenersSetup = useRef(false);
 
-  // track latest language to avoid duplicate popup
   const languageRef = useRef(language);
   useEffect(() => {
     languageRef.current = language;
   }, [language]);
 
-  // ----------------------------------------------------
-  // INIT SOCKET (RUNS ONLY ONCE)
-  // ----------------------------------------------------
+  // INIT SOCKET
   useEffect(() => {
     if (listenersSetup.current) return;
     listenersSetup.current = true;
@@ -44,21 +42,26 @@ export const RoomProvider = ({ children }) => {
     socketService.connect();
     setIsConnected(true);
 
+    // Initialize webrtc service (it will attach socket listeners)
+    webrtcService.init();
+
     const savedRoom = sessionStorage.getItem("currentRoom");
     const savedUser = sessionStorage.getItem("username");
 
     if (savedRoom && savedUser) {
       setCurrentRoom(savedRoom);
       setUsername(savedUser);
+
+      // ensure webrtc has the identity
+      webrtcService.setRoom(savedRoom);
+      webrtcService.setUsername(savedUser);
+
       setTimeout(() => {
         socketService.joinRoom(savedRoom, savedUser);
       }, 400);
     }
 
-    // ----------------------------------------------------
-    // HANDLERS
-    // ----------------------------------------------------
-
+    // handlers
     const handleRoomCreated = (data) => {
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
@@ -67,6 +70,10 @@ export const RoomProvider = ({ children }) => {
       setLanguage(data.language || "javascript");
       sessionStorage.setItem("currentRoom", data.roomId);
       sessionStorage.setItem("username", data.username);
+
+      // update webrtc identity
+      webrtcService.setRoom(data.roomId);
+      webrtcService.setUsername(data.username);
     };
 
     const handleRoomJoined = (data) => {
@@ -76,6 +83,9 @@ export const RoomProvider = ({ children }) => {
       setCode(data.code || "");
       setLanguage(data.language || "javascript");
       sessionStorage.setItem("currentRoom", data.roomId);
+
+      // update webrtc identity
+      webrtcService.setRoom(data.roomId);
     };
 
     const handleReceiveMessage = (data) => {
@@ -90,17 +100,13 @@ export const RoomProvider = ({ children }) => {
       setCode(data.code);
     };
 
-    // ----------------------------------------------------
-    // LANGUAGE RECEIVE HANDLER
-    // ----------------------------------------------------
     const handleLanguageReceive = ({ username: changedBy, language: newLang }) => {
-      // If our current language already equals newLang, don't spam popup
       if (languageRef.current === newLang) return;
-
       alert(`⚠️ ${changedBy} changed language to ${newLang.toUpperCase()}`);
       setLanguage(newLang);
     };
 
+    // register listeners
     socketService.onRoomCreated(handleRoomCreated);
     socketService.onRoomJoined(handleRoomJoined);
     socketService.onReceiveMessage(handleReceiveMessage);
@@ -113,20 +119,27 @@ export const RoomProvider = ({ children }) => {
       socketService.disconnect();
       listenersSetup.current = false;
       setIsConnected(false);
+      webrtcService.cleanupAll();
     };
-  }, []); // 🔥 very important: [] so it runs only once
+  }, []);
 
-  // ----------------------------------------------------
   // ACTIONS
-  // ----------------------------------------------------
-
   const createRoom = (roomId, userName) => {
     setUsername(userName);
+
+    // tell webrtc about identity too
+    webrtcService.setUsername(userName);
+    webrtcService.setRoom(roomId);
+
     socketService.createRoom(roomId, userName);
   };
 
   const joinRoom = (roomId, userName) => {
     setUsername(userName);
+
+    webrtcService.setUsername(userName);
+    webrtcService.setRoom(roomId);
+
     socketService.joinRoom(roomId, userName);
   };
 
@@ -138,6 +151,8 @@ export const RoomProvider = ({ children }) => {
     setMessages([]);
     setCode("");
     setLanguage("javascript");
+
+    webrtcService.cleanupAll();
   };
 
   const sendMessage = (message) => {
@@ -154,9 +169,6 @@ export const RoomProvider = ({ children }) => {
     socketService.sendLanguage(currentRoom, lang, username);
   };
 
-  // ----------------------------------------------------
-  // CONTEXT EXPORT
-  // ----------------------------------------------------
   return (
     <RoomContext.Provider
       value={{
@@ -165,19 +177,15 @@ export const RoomProvider = ({ children }) => {
         messages,
         username,
         setUsername,
-
         code,
         setCode,
         sendCode,
-
         language,
         sendLanguage,
-
         createRoom,
         joinRoom,
         leaveRoom,
         sendMessage,
-
         isConnected,
       }}
     >

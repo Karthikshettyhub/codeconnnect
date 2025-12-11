@@ -1,71 +1,34 @@
-// src/components/chatbox.jsx - FIXED DUPLICATES
-import React, { useState, useEffect, useRef } from 'react';
-import { useRoom } from '../contexts/roomcontext';
+// frontend/src/components/chatbox.jsx
+import React, { useState, useEffect, useRef } from "react";
+import { useRoom } from "../contexts/roomcontext";
 import socketService from "../services/socket";
-import './chatbox.css';
+import webrtcService from "../services/webrtc";
+import "./chatbox.css";
 
-let mediaRecorder = null;
-let audioContext = null;
+/* 
+  NOTE: original MediaRecorder chunk-based approach commented out below.
+  We now use WebRTC local stream via webrtcService.startLocalStream()
+*/
 
 const ChatBox = ({ onLeave }) => {
   const { currentRoom, messages, sendMessage, username, isConnected } = useRoom();
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [micOn, setMicOn] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto-scroll to latest message
+  // Auto-scroll
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Initialize audio context
-  const initAudioContext = () => {
-    if (!audioContext) {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-  };
-
-  // Start recording
-  const startRecording = async () => {
+  // Start WebRTC local audio (replaces MediaRecorder chunk method)
+  const startLocalAudio = async () => {
     try {
-      initAudioContext();
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 44100
-        } 
-      });
-      
-      mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm") 
-          ? "audio/webm" 
-          : "audio/ogg"
-      });
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && currentRoom && username) {
-          event.data.arrayBuffer().then((buffer) => {
-            socketService.sendVoiceChunk(
-              currentRoom,
-              username,
-              Array.from(new Uint8Array(buffer))
-            );
-          });
-        }
-      };
-
-      mediaRecorder.onerror = (error) => {
-        console.error("MediaRecorder error:", error);
-        stopRecording();
-      };
-
-      mediaRecorder.start(200);
+      await webrtcService.startLocalStream();
       setIsRecording(true);
-      socketService.sendVoiceStart(currentRoom, username);
-      console.log("🎤 Recording started");
+      console.log("🎤 WebRTC local audio started");
     } catch (err) {
       console.error("Mic error:", err);
       alert("Could not access microphone");
@@ -74,75 +37,55 @@ const ChatBox = ({ onLeave }) => {
     }
   };
 
-  // Stop recording
-  const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-      if (mediaRecorder.stream) {
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
-      }
-      mediaRecorder = null;
-    }
+  const stopLocalAudio = () => {
+    webrtcService.stopLocalStream();
     setIsRecording(false);
-    if (currentRoom && username) {
-      socketService.sendVoiceStop(currentRoom, username);
-    }
-    console.log("🎤 Recording stopped");
+    console.log("🎤 WebRTC local audio stopped");
   };
 
   const handleMicClick = () => {
     const newState = !micOn;
     setMicOn(newState);
-    if (newState) {
-      startRecording();
-    } else {
-      stopRecording();
-    }
+    if (newState) startLocalAudio();
+    else stopLocalAudio();
   };
 
-  // ⭐ CRITICAL: Just send message, don't add locally
+  // keep cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (micOn || isRecording) {
+        stopLocalAudio();
+      }
+    };
+  }, []);
+
   const handleSend = (e) => {
     e.preventDefault();
-    
+
     if (!inputMessage.trim()) return;
     if (!currentRoom) {
       alert("You must be in a room to send messages");
       return;
     }
 
-    console.log('📤 Sending message:', inputMessage);
-    
-    // IMPORTANT: Only send to server
-    // Server will broadcast to everyone (including sender)
-    // Do NOT add to messages array here!
+    console.log("📤 Sending message:", inputMessage);
     sendMessage(inputMessage.trim());
-    
-    // Clear input
-    setInputMessage('');
+    setInputMessage("");
     inputRef.current?.focus();
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend(e);
     }
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (micOn || isRecording) {
-        stopRecording();
-      }
-    };
-  }, []);
-
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -152,8 +95,8 @@ const ChatBox = ({ onLeave }) => {
       <div className="chatbox-header">
         <div className="header-info">
           <h3>💬 Chat</h3>
-          <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-            {isConnected ? '🟢' : '🔴'}
+          <span className={`connection-status ${isConnected ? "connected" : "disconnected"}`}>
+            {isConnected ? "🟢" : "🔴"}
           </span>
         </div>
         <button className="leave-button" onClick={onLeave}>
@@ -169,9 +112,9 @@ const ChatBox = ({ onLeave }) => {
           </div>
         ) : (
           messages.map((msg, idx) => (
-            <div 
+            <div
               key={`${msg.username}-${msg.timestamp}-${idx}`}
-              className={`message ${msg.isSystem ? 'system-message' : ''} ${msg.username === username ? 'own-message' : ''}`}
+              className={`message ${msg.isSystem ? "system-message" : ""} ${msg.username === username ? "own-message" : ""}`}
             >
               {msg.isSystem ? (
                 <div className="system-content">{msg.message}</div>
@@ -202,20 +145,12 @@ const ChatBox = ({ onLeave }) => {
           disabled={!isConnected}
           maxLength={500}
         />
-        
-        <button 
-          type="button" 
-          className={`mic-button ${micOn ? 'recording' : ''}`}
-          onClick={handleMicClick}
-        >
+
+        <button type="button" className={`mic-button ${micOn ? "recording" : ""}`} onClick={handleMicClick}>
           {micOn ? "⏹️" : "🎤"}
         </button>
-        
-        <button 
-          type="submit" 
-          className="send-button"
-          disabled={!isConnected || !inputMessage.trim()}
-        >
+
+        <button type="submit" className="send-button" disabled={!isConnected || !inputMessage.trim()}>
           Send
         </button>
       </form>
@@ -227,6 +162,9 @@ const ChatBox = ({ onLeave }) => {
           Recording...
         </div>
       )}
+
+      {/* Optional: local preview audio element to confirm mic working (muted) */}
+      <audio id="local-audio-preview" style={{ display: "none" }} />
     </div>
   );
 };

@@ -12,8 +12,7 @@ class SocketService {
       return;
     }
 
-    const SOCKET_URL =
-      import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
 
     this.socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
@@ -38,45 +37,38 @@ class SocketService {
 
   disconnect() {
     if (!this.socket) return;
-    this.socket.disconnect();
-    console.log("🔌 Socket connection closed manually");
+    if (this.socket.connected || this.socket._connected) {
+      this.socket.disconnect();
+      console.log("🔌 Socket connection closed manually");
+    }
   }
 
   isConnected() {
     return this.socket?.connected || false;
   }
 
-  // =================== EMIT EVENTS ===================
-
+  // emits...
   createRoom(roomId, username) {
     this.socket?.emit("create-room", { roomId, username });
   }
-
   joinRoom(roomId, username) {
     this.socket?.emit("join-room", { roomId, username });
   }
-
   leaveRoom(roomId, username) {
     this.socket?.emit("leave-room", { roomId, username });
   }
-
   sendMessage(roomId, username, message) {
     this.socket?.emit("chat-message", { roomId, username, message });
   }
-
   sendCode(roomId, code) {
     this.socket?.emit("code-change", { roomId, code });
   }
-
   sendLanguage(roomId, language, username) {
     this.socket?.emit("language-change", { roomId, language, username });
   }
-
   sendRunCode(roomId, code, language, input) {
     this.socket?.emit("run-code", { roomId, code, language, input });
   }
-
-  // =================== LISTENERS ===================
 
   listen(event, callback) {
     this.socket?.off(event);
@@ -101,11 +93,9 @@ class SocketService {
   onCodeReceive(cb) {
     this.listen("code-receive", cb);
   }
-
   onLanguageReceive(cb) {
     this.listen("language-receive", cb);
   }
-
   onError(cb) {
     this.listen("error", cb);
   }

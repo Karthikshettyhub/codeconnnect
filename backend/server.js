@@ -99,14 +99,7 @@ ${userBody}
 // =============================
 // SOCKET HANDLER
 // =============================
-io.on("connection", (socket) => {
-  console.log("🟢 SOCKET CONNECTED:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("🔴 SOCKET DISCONNECTED:", socket.id);
-  });
-});
-
+require("./src/socketHandler")(io);
 // =============================
 // START SERVER
 // =============================
