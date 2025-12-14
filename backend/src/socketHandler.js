@@ -1,137 +1,73 @@
-// backend/src/socketHandler.js - FINAL VERSION WITH PERSISTENCE + FIXES
-const roomManager = require('./roomManager');
+// backend/src/socketHandler.js
+const roomManager = require("./roomManager");
 
 module.exports = (io) => {
-  io.on('connection', (socket) => {
-    console.log(`🔌 User connected: ${socket.id}`);
+  io.on("connection", (socket) => {
+    console.log("🔌 Connected:", socket.id);
 
-    // ========================================
-    // CREATE ROOM
-    // ========================================
-    socket.on('create-room', ({ roomId, username }) => {
+    socket.on("create-room", ({ roomId, username }) => {
       const result = roomManager.createRoom(roomId, socket.id, username);
-
-      if (result.success) {
-        socket.join(roomId);
-
-        socket.emit('room-created', {
-          roomId,
-          users: result.room.users,
-          messages: result.room.messages,
-          code: result.room.code
-        });
-
-        console.log(`🏠 Room created: ${roomId}`);
-      } else {
-        socket.emit('error', { message: result.message });
-      }
-    });
-
-    // ========================================
-    // JOIN ROOM
-    // ========================================
-    socket.on('join-room', ({ roomId, username }) => {
-      const result = roomManager.joinRoom(roomId, socket.id, username);
-
-      if (!result.success) {
-        socket.emit('error', { message: result.message });
-        return;
-      }
+      if (!result.success) return;
 
       socket.join(roomId);
 
-      // 🔥 Get stored room data
-      const roomData = roomManager.getRoomData(roomId);
-
-      // 🔥 Send full saved data ONLY to the joining user
-      socket.emit('room-joined', {
+      socket.emit("room-created", {
         roomId,
-        users: roomData.data.users,
-        messages: roomData.data.messages,
-        code: roomData.data.code
+        ...roomManager.getRoomData(roomId),
       });
+    });
 
-      // 🔥 Notify others + send updated user list
-      socket.to(roomId).emit('user-joined', {
-        username,
-        users: roomData.data.users
+    socket.on("join-room", ({ roomId, username }) => {
+      const result = roomManager.joinRoom(roomId, socket.id, username);
+      if (!result.success) return;
+
+      socket.join(roomId);
+
+      socket.emit("room-joined", {
+        roomId,
+        ...roomManager.getRoomData(roomId),
       });
-
-      console.log(`🚪 ${username} joined ${roomId}`);
     });
 
-    // ========================================
-    // LEAVE ROOM
-    // ========================================
-    socket.on('leave-room', ({ roomId, username }) => {
-      const result = roomManager.leaveRoom(roomId, socket.id);
-
-      socket.leave(roomId);
-
-      if (result.success) {
-        socket.to(roomId).emit('user-left', { username });
-
-        // 🔥 Send updated user list after leaving
-        const updated = roomManager.getRoomUsers(roomId);
-        socket.to(roomId).emit('users-updated', updated.users);
-
-        console.log(`👋 ${username} left ${roomId}`);
-      }
+    socket.on("chat-message", ({ roomId, username, message }) => {
+      const data = { username, message, timestamp: Date.now() };
+      roomManager.addMessage(roomId, data);
+      io.to(roomId).emit("receive-message", data);
     });
 
-    // ========================================
-    // CHAT MESSAGE
-    // ========================================
-    socket.on('chat-message', ({ roomId, username, message }) => {
-      const messageData = {
-        username,
-        message,
-        timestamp: Date.now(),
-        isSystem: false
-      };
-
-      // 🔥 Store message history
-      roomManager.addMessage(roomId, messageData);
-
-      io.to(roomId).emit('receive-message', messageData);
-
-      console.log(`💬 [${roomId}] ${username}: ${message}`);
-    });
-
-    // ========================================
-    // CODE SYNC WITH PERSISTENCE
-    // ========================================
-    socket.on('code-change', ({ roomId, code }) => {
-      // 🔥 Save latest code to memory
+    socket.on("code-change", ({ roomId, code }) => {
       roomManager.updateCode(roomId, code);
-
-      // 🔥 Send ONLY to other clients
-      socket.to(roomId).emit('code-receive', { code });
-
-      // no console spam → uncomment if needed
-      // console.log(`📝 Updated code in ${roomId}`);
+      socket.to(roomId).emit("code-receive", { code });
     });
 
-    // ========================================
-    // VOICE CHAT EVENTS
-    // ========================================
-    socket.on('voice-start', ({ roomId, username }) => {
-      socket.to(roomId).emit('voice-start', { username });
+    // ✅ LANGUAGE CHANGE (POPUP ONLY)
+    socket.on("language-change", ({ roomId, language, username }) => {
+      roomManager.updateLanguage(roomId, language);
+
+      socket.to(roomId).emit("language-change", {
+        language,
+        username,
+      });
     });
 
-    socket.on('voice-chunk', ({ roomId, username, chunk }) => {
-      socket.to(roomId).emit('voice-chunk', { username, chunk });
+    socket.on("disconnect", () => {
+      console.log("❌ Disconnected:", socket.id);
+    });
+    // inside io.on("connection")
+
+    socket.on("webrtc-offer", ({ roomId, offer }) => {
+      console.log("📨 Offer received for room", roomId);
+      socket.to(roomId).emit("webrtc-offer", { roomId, offer });
     });
 
-    socket.on('voice-stop', ({ roomId, username }) => {
-      socket.to(roomId).emit('voice-stop', { username });
+    socket.on("webrtc-answer", ({ roomId, answer }) => {
+      console.log("📤 Answer received for room", roomId);
+      socket.to(roomId).emit("webrtc-answer", { answer });
     });
 
-    // ========================================
-    // DISCONNECT
-    // ========================================
-    socket.on('disconnect', () => {
-      console.log(`❌ User disconnected: ${socket.id}`);
+    socket.on("webrtc-ice", ({ roomId, candidate }) => {
+      socket.to(roomId).emit("webrtc-ice", { candidate });
     });
+
   });
 };

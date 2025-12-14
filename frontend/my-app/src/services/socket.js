@@ -7,16 +7,14 @@ class SocketService {
   }
 
   connect() {
-    if (this.socket?.connected) {
-      console.log("⚠️ Socket already connected:", this.socket.id);
-      return;
-    }
+    if (this.socket?.connected) return;
 
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5001";
+    const SOCKET_URL =
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
 
     this.socket = io(SOCKET_URL, {
-      transports: ["websocket", "polling"], // 🔥 Fallback added
-      withCredentials: true, // 🔥 Required if backend uses CORS with credentials
+      transports: ["websocket", "polling"],
+      withCredentials: true,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
@@ -26,29 +24,16 @@ class SocketService {
       console.log("🟢 Socket connected:", this.socket.id);
     });
 
-    this.socket.on("disconnect", (reason) => {
-      console.log("🔴 Socket disconnected:", reason);
-    });
-
-    this.socket.on("connect_error", (error) => {
-      console.error("❌ Socket Connection Error:", error.message);
+    this.socket.on("disconnect", () => {
+      console.log("🔴 Socket disconnected");
     });
   }
 
   disconnect() {
-    if (!this.socket) return;
-    this.socket.disconnect();
-    console.log("🔌 Socket connection closed manually");
+    this.socket?.disconnect();
   }
 
-  isConnected() {
-    return this.socket?.connected || false;
-  }
-
-  // ============================
-  // EMIT EVENTS
-  // ============================
-
+  // ============ EMITS ============
   createRoom(roomId, username) {
     this.socket?.emit("create-room", { roomId, username });
   }
@@ -61,7 +46,6 @@ class SocketService {
     this.socket?.emit("leave-room", { roomId, username });
   }
 
-  // 🔥 Ensure backend uses "chat-message"
   sendMessage(roomId, username, message) {
     this.socket?.emit("chat-message", { roomId, username, message });
   }
@@ -70,72 +54,63 @@ class SocketService {
     this.socket?.emit("code-change", { roomId, code });
   }
 
-  sendVoiceChunk(roomId, username, chunk) {
-    this.socket?.emit("voice-chunk", { roomId, username, chunk });
+  // ✅ ADD ONLY THIS
+  sendLanguage(roomId, language, username) {
+    if (!roomId || !language || !username) return;
+    this.socket?.emit("language-change", { roomId, language, username });
   }
 
-  sendVoiceStart(roomId, username) {
-    this.socket?.emit("voice-start", { roomId, username });
-  }
-
-  sendVoiceStop(roomId, username) {
-    this.socket?.emit("voice-stop", { roomId, username });
-  }
-
-  // ============================
-  // LISTENERS
-  // ============================
-
-  // To prevent duplicate listeners, always remove before binding again
-  listen(event, callback) {
+  // ============ LISTENERS ============
+  listen(event, cb) {
     this.socket?.off(event);
-    this.socket?.on(event, callback);
+    this.socket?.on(event, cb);
   }
 
-  onRoomCreated(callback) {
-    this.listen("room-created", callback);
+  onRoomCreated(cb) {
+    this.listen("room-created", cb);
   }
 
-  onRoomJoined(callback) {
-    this.listen("room-joined", callback);
+  onRoomJoined(cb) {
+    this.listen("room-joined", cb);
   }
 
-  onUserJoined(callback) {
-    this.listen("user-joined", callback);
+  onReceiveMessage(cb) {
+    this.listen("receive-message", cb);
   }
 
-  onUserLeft(callback) {
-    this.listen("user-left", callback);
+  onCodeReceive(cb) {
+    this.listen("code-receive", cb);
   }
 
-  onReceiveMessage(callback) {
-    this.listen("receive-message", callback);
-  }
-
-  onCodeReceive(callback) {
-    this.listen("code-receive", callback);
-  }
-
-  onError(callback) {
-    this.listen("error", callback);
-  }
-
-  onVoiceChunk(callback) {
-    this.listen("voice-chunk", callback);
-  }
-
-  onVoiceStart(callback) {
-    this.listen("voice-start", callback);
-  }
-
-  onVoiceStop(callback) {
-    this.listen("voice-stop", callback);
+  // ✅ ADD ONLY THIS
+  onLanguageChange(cb) {
+    this.listen("language-change", cb);
   }
 
   removeAllListeners() {
     this.socket?.removeAllListeners();
   }
+  onError(callback) {
+    this.listen("error", callback);
+  }
+  // ADD AT BOTTOM
+  emit(event, data) {
+    this.socket?.emit(event, data);
+  }
+
+  onWebRTCOffer(cb) {
+    this.listen("webrtc-offer", cb);
+  }
+
+  onWebRTCAnswer(cb) {
+    this.listen("webrtc-answer", cb);
+  }
+
+  onWebRTCIce(cb) {
+    this.listen("webrtc-ice", cb);
+  }
+
+
 }
 
-const socketService = new SocketService();
-export default socketService;
+export default new SocketService();

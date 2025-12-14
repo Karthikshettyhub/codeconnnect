@@ -1,34 +1,51 @@
 // src/components/RoomPage.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRoom } from '../contexts/roomcontext';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ChatBox from '../components/chatbox';
-import CodeEditor from '../components/CodeEditor';
+import CodeEditor from '../components/codeeditor';
 import './roompage.css';
 
 const RoomPage = () => {
-  const { leaveRoom } = useRoom();
+  const { leaveRoom, currentRoom, joinRoom } = useRoom();
   const navigate = useNavigate();
+  const { roomId } = useParams();
+
+  useEffect(() => {
+    const savedUsername = sessionStorage.getItem("username");
+
+    // 🔴 Case 1: No roomId at all → go home
+    if (!roomId) {
+      navigate("/");
+      return;
+    }
+
+    // 🔴 Case 2: No username → go home
+    if (!savedUsername) {
+      navigate("/");
+      return;
+    }
+
+    // 🟢 Case 3: Refresh → restore room
+    if (!currentRoom) {
+      joinRoom(roomId, savedUsername);
+    }
+  }, [roomId, currentRoom, joinRoom, navigate]);
 
   const handleLeave = () => {
-    leaveRoom();
-    navigate("/");
+    leaveRoom();          // full cleanup
+    navigate("/");        // manual redirect
   };
 
   return (
     <div className="roompage">
       <div className="roompage-content">
-
-        {/* LEFT SIDE: EDITOR */}
         <div className="editor-side">
           <CodeEditor />
         </div>
-
-        {/* RIGHT SIDE: CHAT */}
         <div className="chat-side">
           <ChatBox onLeave={handleLeave} />
         </div>
-
       </div>
     </div>
   );

@@ -1,24 +1,37 @@
-// src/contexts/roomcontext.jsx - FINAL MERGED VERSION
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import socketService from '../services/socket';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
+import socketService from "../services/socket";
 
 const RoomContext = createContext();
 
 export const useRoom = () => {
-  const context = useContext(RoomContext);
-  if (!context) throw new Error('useRoom must be used within RoomProvider');
-  return context;
+  const ctx = useContext(RoomContext);
+  if (!ctx) throw new Error("useRoom must be used within RoomProvider");
+  return ctx;
 };
 
 export const RoomProvider = ({ children }) => {
   const [currentRoom, setCurrentRoom] = useState(null);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [isConnected, setIsConnected] = useState(false);
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState("");
+
+  // 🔥 Language states
+  const [language, setLanguage] = useState("javascript");
+  const [pendingLanguage, setPendingLanguage] = useState(null);
 
   const listenersSetup = useRef(false);
+  const usernameRef = useRef("");
+
+  // ✅ NEW: hydration guard (VERY IMPORTANT)
+  const isHydratingRef = useRef(true);
 
   useEffect(() => {
     if (listenersSetup.current) return;
@@ -27,142 +40,180 @@ export const RoomProvider = ({ children }) => {
     socketService.connect();
     setIsConnected(true);
 
-    const savedRoom = sessionStorage.getItem("currentRoom");
     const savedUser = sessionStorage.getItem("username");
-
-    if (savedRoom && savedUser) {
-      setCurrentRoom(savedRoom);
+    if (savedUser) {
       setUsername(savedUser);
-
-      setTimeout(() => {
-        socketService.joinRoom(savedRoom, savedUser);
-      }, 400);
+      usernameRef.current = savedUser;
     }
 
-    const handleRoomCreated = (data) => {
-      setCurrentRoom(data.roomId);
-      setUsers(data.users || []);
-      setMessages(data.messages || []);
-      setCode(data.code || '');
-
-      sessionStorage.setItem("currentRoom", data.roomId);
-      sessionStorage.setItem("username", data.username);
-    };
-
-    const handleRoomJoined = (data) => {
-      console.log('📥 Restored history:', {
-        messages: data.messages?.length || 0,
-        codeLength: data.code?.length || 0
-      });
+    // ======================
+    // ROOM CREATED
+    // ======================
+    socketService.onRoomCreated((data) => {
+      if (!data?.roomId) return;
 
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
-      setCode(data.code || '');
+      setCode(data.code || "");
 
-      sessionStorage.setItem("currentRoom", data.roomId);
-    };
+      // 🔥 FIX: restore language on create
+      if (data.language) {
+        console.log("♻️ restore language (create):", data.language);
+        setLanguage(data.language);
+      }
 
-    const handleUserJoined = (data) => {
-      setUsers(prev => {
-        if (prev.some(u => u.username === data.username)) return prev;
-        return [...prev, { username: data.username }];
-      });
+      isHydratingRef.current = false;
+    });
 
-      setMessages(prev => [
-        ...prev,
-        {
-          username: "System",
-          message: `${data.username} joined`,
-          timestamp: Date.now(),
-          isSystem: true
-        }
-      ]);
-    };
+    // ======================
+    // ROOM JOINED (REFRESH)
+    // ======================
+    socketService.onRoomJoined((data) => {
+      if (!data?.roomId) return;
 
-    const handleUserLeft = (data) => {
-      setUsers(prev => prev.filter(u => u.username !== data.username));
-      setMessages(prev => [
-        ...prev,
-        {
-          username: "System",
-          message: `${data.username} left`,
-          timestamp: Date.now(),
-          isSystem: true
-        }
-      ]);
-    };
+      setCurrentRoom(data.roomId);
+      setUsers(data.users || []);
+      setMessages(data.messages || []);
+      setCode(data.code || "");
 
-    const handleReceiveMessage = (data) => {
-      setMessages(prev => {
-        const id = `${data.username}-${data.timestamp}-${data.message}`;
-        if (prev.some(msg => `${msg.username}-${msg.timestamp}-${msg.message}` === id))
-          return prev;
-        return [...prev, data];
-      });
-    };
+      // 🔥 FIX: restore language on refresh
+      if (data.language) {
+        console.log("♻️ restore language (join):", data.language);
+        setLanguage(data.language);
+      }
 
-    const handleCodeReceive = (data) => setCode(data.code);
-    const handleError = (data) => alert(data.message);
+      isHydratingRef.current = false;
+    });
 
-    socketService.onRoomCreated(handleRoomCreated);
-    socketService.onRoomJoined(handleRoomJoined);
-    socketService.onUserJoined(handleUserJoined);
-    socketService.onUserLeft(handleUserLeft);
-    socketService.onReceiveMessage(handleReceiveMessage);
-    socketService.onCodeReceive(handleCodeReceive);
-    socketService.onError(handleError);
+    socketService.onReceiveMessage((data) => {
+      if (!data) return;
+      setMessages((prev) => [...prev, data]);
+    });
+
+    socketService.onCodeReceive((data) => {
+      if (data?.code !== undefined) {
+        setCode(data.code);
+      }
+    });
+
+    // ======================
+    // LANGUAGE CHANGE (POPUP)
+    // ======================
+    socketService.onLanguageChange((data) => {
+      console.log("🌐 Language event received:", data);
+
+      if (!data || !data.language || !data.username) return;
+
+      // ❌ ignore own change
+      if (data.username === usernameRef.current) return;
+
+      // ❌ ignore refresh / hydration
+      if (isHydratingRef.current) {
+        console.log("⏭️ skip popup (hydration)");
+        return;
+      }
+
+      console.log("🔔 Showing popup for language:", data.language);
+      setPendingLanguage(data.language);
+    });
+
+    socketService.onError((data) => alert(data.message));
 
     return () => {
+      socketService.removeAllListeners();
       socketService.disconnect();
       listenersSetup.current = false;
       setIsConnected(false);
     };
   }, []);
 
+  // ======================
+  // ACTIONS (UNCHANGED)
+  // ======================
   const createRoom = (roomId, userName) => {
+    if (!roomId || !userName) return;
     setUsername(userName);
+    usernameRef.current = userName;
+    sessionStorage.setItem("username", userName);
     socketService.createRoom(roomId, userName);
   };
 
   const joinRoom = (roomId, userName) => {
+    if (!roomId || !userName) return;
     setUsername(userName);
+    usernameRef.current = userName;
+    sessionStorage.setItem("username", userName);
     socketService.joinRoom(roomId, userName);
   };
 
   const leaveRoom = () => {
-    sessionStorage.removeItem("currentRoom");
-    sessionStorage.removeItem("username");
-    socketService.leaveRoom(currentRoom, username);
+    if (currentRoom && usernameRef.current) {
+      socketService.leaveRoom(currentRoom, usernameRef.current);
+    }
+
+    socketService.removeAllListeners();
+    socketService.disconnect();
+    sessionStorage.clear();
+
     setCurrentRoom(null);
-    setMessages([]);
     setUsers([]);
+    setMessages([]);
+    setCode("");
+    setUsername("");
+    setPendingLanguage(null);
+    setIsConnected(false);
   };
 
   const sendMessage = (message) => {
-    if (!currentRoom) return;
-    socketService.sendMessage(currentRoom, username, message);
+    if (!currentRoom || !usernameRef.current || !message) return;
+    socketService.sendMessage(currentRoom, usernameRef.current, message);
   };
 
   const updateCodeRemote = (updatedCode) => {
+    if (!currentRoom) return;
     setCode(updatedCode);
     socketService.sendCode(currentRoom, updatedCode);
   };
 
+  // 🔥 sender only
+  const updateLanguageRemote = (newLang) => {
+    if (!currentRoom || !newLang || !usernameRef.current) return;
+    setLanguage(newLang);
+    socketService.sendLanguage(currentRoom, newLang, usernameRef.current);
+  };
+
+  const acceptLanguageChange = () => {
+    if (!pendingLanguage) return;
+    setLanguage(pendingLanguage);
+    setPendingLanguage(null);
+  };
+
+  const rejectLanguageChange = () => {
+    setPendingLanguage(null);
+  };
+
   return (
-    <RoomContext.Provider value={{
-      currentRoom,
-      users,
-      messages,
-      username,
-      createRoom,
-      joinRoom,
-      leaveRoom,
-      sendMessage,
-      code,
-      updateCodeRemote,
-      isConnected
-    }}>
+    <RoomContext.Provider
+      value={{
+        currentRoom,
+        users,
+        messages,
+        username,
+        code,
+        language,
+        pendingLanguage,
+        createRoom,
+        joinRoom,
+        leaveRoom,
+        sendMessage,
+        updateCodeRemote,
+        updateLanguageRemote,
+        acceptLanguageChange,
+        rejectLanguageChange,
+        isConnected,
+      }}
+    >
       {children}
     </RoomContext.Provider>
   );
