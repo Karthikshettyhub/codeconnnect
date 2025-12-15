@@ -27,12 +27,22 @@ export const RoomProvider = ({ children }) => {
   const [language, setLanguage] = useState("javascript");
   const [pendingLanguage, setPendingLanguage] = useState(null);
 
+  const [code, setCode] = useState("");
+  const [language, setLanguage] = useState("javascript");
+
+  const [isConnected, setIsConnected] = useState(false);
   const listenersSetup = useRef(false);
   const usernameRef = useRef("");
 
   // ✅ NEW: hydration guard (VERY IMPORTANT)
   const isHydratingRef = useRef(true);
 
+  const languageRef = useRef(language);
+  useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
+
+  // INIT SOCKET
   useEffect(() => {
     if (listenersSetup.current) return;
     listenersSetup.current = true;
@@ -125,6 +135,7 @@ export const RoomProvider = ({ children }) => {
       socketService.disconnect();
       listenersSetup.current = false;
       setIsConnected(false);
+      webrtcService.cleanupAll();
     };
   }, []);
 

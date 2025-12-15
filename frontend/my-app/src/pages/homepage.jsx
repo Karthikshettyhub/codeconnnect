@@ -13,7 +13,6 @@ const Homepage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!roomId.trim() || !username.trim()) {
       alert("Enter both room ID and username");
       return;
