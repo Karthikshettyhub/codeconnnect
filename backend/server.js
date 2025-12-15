@@ -4,7 +4,11 @@ const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 const axios = require("axios");
+<<<<<<< HEAD
 require("dotenv").config(); // Load .env
+=======
+require("dotenv").config();
+>>>>>>> bugfix-working-version
 
 const app = express();
 const server = http.createServer(app);
@@ -20,7 +24,11 @@ const io = new Server(server, {
   },
 });
 
+<<<<<<< HEAD
 // IMPORTANT: backend runs on 5005 NOT 5001
+=======
+// IMPORTANT: backend runs on 5005
+>>>>>>> bugfix-working-version
 const PORT = process.env.PORT || 5005;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
@@ -49,12 +57,17 @@ app.get("/", (req, res) => {
 });
 
 // =============================
+<<<<<<< HEAD
 // 🧠 LLM BOILERPLATE ROUTE
+=======
+// 🧠 GEMINI BOILERPLATE ROUTE
+>>>>>>> bugfix-working-version
 // =============================
 app.post("/boiler", async (req, res) => {
   const { language, userBody } = req.body;
 
   console.log("\n===============================");
+<<<<<<< HEAD
   console.log("🔵 LLM REQUEST RECEIVED");
   console.log("Language:", language);
   console.log("User Body:", userBody);
@@ -66,12 +79,31 @@ DO NOT FIX user code.
 DO NOT explain.
 DO NOT add markdown.
 Wrap this USER BODY inside correct ${language} boilerplate:
+=======
+  console.log("🔵 GEMINI REQUEST");
+  console.log("Language:", language);
+  console.log("User Code:\n", userBody);
+  console.log("===============================\n");
+
+  if (!language || !userBody) {
+    return res.json({ ok: false, output: "" });
+  }
+
+  const prompt = `
+Generate ONLY ${language} boilerplate code.
+DO NOT fix user code.
+DO NOT explain.
+DO NOT add markdown.
+
+Wrap this USER BODY inside correct ${language} boilerplate.
+>>>>>>> bugfix-working-version
 
 USER BODY:
 ${userBody}
 `;
 
   try {
+<<<<<<< HEAD
     const rawResponse = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
       { contents: [{ parts: [{ text: prompt }] }] }
@@ -79,6 +111,17 @@ ${userBody}
 
     const llmText =
       rawResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+=======
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+      {
+        contents: [{ parts: [{ text: prompt }] }],
+      }
+    );
+
+    const llmText =
+      response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+>>>>>>> bugfix-working-version
 
     const cleaned = clean(llmText);
 
@@ -89,20 +132,40 @@ ${userBody}
       return res.json({ ok: false, output: "" });
     }
 
+<<<<<<< HEAD
     res.json({ ok: true, output: cleaned });
   } catch (err) {
     console.log("🟥 LLM ERROR:", err.response?.data || err);
+=======
+    return res.json({
+      ok: true,
+      output: cleaned,
+    });
+  } catch (err) {
+    console.log("🟥 GEMINI ERROR:", err.response?.data || err);
+>>>>>>> bugfix-working-version
     return res.json({ ok: false, output: "" });
   }
 });
 
 // =============================
+<<<<<<< HEAD
 // SOCKET HANDLER
 // =============================
 require("./src/socketHandler")(io);
+=======
+// SOCKET HANDLER (UNCHANGED)
+// =============================
+require("./src/socketHandler")(io);
+
+>>>>>>> bugfix-working-version
 // =============================
 // START SERVER
 // =============================
 server.listen(PORT, () => {
+<<<<<<< HEAD
   console.log(`🔥 Backend + LLM + Socket running on port ${PORT}`);
+=======
+  console.log(`🔥 Backend + Gemini + Socket running on port ${PORT}`);
+>>>>>>> bugfix-working-version
 });

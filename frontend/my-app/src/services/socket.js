@@ -7,12 +7,14 @@ class SocketService {
   }
 
   connect() {
-    if (this.socket?.connected) {
-      console.log("⚠️ Socket already connected:", this.socket.id);
-      return;
-    }
+    if (this.socket?.connected) return;
 
+<<<<<<< HEAD
     const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
+=======
+    const SOCKET_URL =
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
+>>>>>>> bugfix-working-version
 
     this.socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
@@ -26,16 +28,13 @@ class SocketService {
       console.log("🟢 Socket connected:", this.socket.id);
     });
 
-    this.socket.on("disconnect", (reason) => {
-      console.log("🔴 Socket disconnected:", reason);
-    });
-
-    this.socket.on("connect_error", (error) => {
-      console.error("❌ Socket Connection Error:", error.message);
+    this.socket.on("disconnect", () => {
+      console.log("🔴 Socket disconnected");
     });
   }
 
   disconnect() {
+<<<<<<< HEAD
     if (!this.socket) return;
     if (this.socket.connected || this.socket._connected) {
       this.socket.disconnect();
@@ -48,6 +47,12 @@ class SocketService {
   }
 
   // emits...
+=======
+    this.socket?.disconnect();
+  }
+
+  // ============ EMITS ============
+>>>>>>> bugfix-working-version
   createRoom(roomId, username) {
     this.socket?.emit("create-room", { roomId, username });
   }
@@ -57,12 +62,17 @@ class SocketService {
   leaveRoom(roomId, username) {
     this.socket?.emit("leave-room", { roomId, username });
   }
+<<<<<<< HEAD
+=======
+
+>>>>>>> bugfix-working-version
   sendMessage(roomId, username, message) {
     this.socket?.emit("chat-message", { roomId, username, message });
   }
   sendCode(roomId, code) {
     this.socket?.emit("code-change", { roomId, code });
   }
+<<<<<<< HEAD
   sendLanguage(roomId, language, username) {
     this.socket?.emit("language-change", { roomId, language, username });
   }
@@ -71,13 +81,25 @@ class SocketService {
   }
 
   listen(event, callback) {
+=======
+
+  // ✅ ADD ONLY THIS
+  sendLanguage(roomId, language, username) {
+    if (!roomId || !language || !username) return;
+    this.socket?.emit("language-change", { roomId, language, username });
+  }
+
+  // ============ LISTENERS ============
+  listen(event, cb) {
+>>>>>>> bugfix-working-version
     this.socket?.off(event);
-    this.socket?.on(event, callback);
+    this.socket?.on(event, cb);
   }
 
   onRoomCreated(cb) {
     this.listen("room-created", cb);
   }
+<<<<<<< HEAD
   onRoomJoined(cb) {
     this.listen("room-joined", cb);
   }
@@ -98,8 +120,50 @@ class SocketService {
   }
   onError(cb) {
     this.listen("error", cb);
+=======
+
+  onRoomJoined(cb) {
+    this.listen("room-joined", cb);
   }
+
+  onReceiveMessage(cb) {
+    this.listen("receive-message", cb);
+  }
+
+  onCodeReceive(cb) {
+    this.listen("code-receive", cb);
+  }
+
+  // ✅ ADD ONLY THIS
+  onLanguageChange(cb) {
+    this.listen("language-change", cb);
+  }
+
+  removeAllListeners() {
+    this.socket?.removeAllListeners();
+>>>>>>> bugfix-working-version
+  }
+  onError(callback) {
+    this.listen("error", callback);
+  }
+  // ADD AT BOTTOM
+  emit(event, data) {
+    this.socket?.emit(event, data);
+  }
+
+  onWebRTCOffer(cb) {
+    this.listen("webrtc-offer", cb);
+  }
+
+  onWebRTCAnswer(cb) {
+    this.listen("webrtc-answer", cb);
+  }
+
+  onWebRTCIce(cb) {
+    this.listen("webrtc-ice", cb);
+  }
+
+
 }
 
-const socketService = new SocketService();
-export default socketService;
+export default new SocketService();
