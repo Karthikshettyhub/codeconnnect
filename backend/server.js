@@ -1,10 +1,9 @@
-// server.js
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 const axios = require("axios");
-require("dotenv").config(); // Load .env
+require("dotenv").config();
 
 const app = express();
 const server = http.createServer(app);
@@ -20,7 +19,7 @@ const io = new Server(server, {
   },
 });
 
-// IMPORTANT: backend runs on 5005 NOT 5001
+// IMPORTANT: backend runs on 5005
 const PORT = process.env.PORT || 5005;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
@@ -49,36 +48,43 @@ app.get("/", (req, res) => {
 });
 
 // =============================
-// 🧠 LLM BOILERPLATE ROUTE
+// 🧠 GEMINI BOILERPLATE ROUTE
 // =============================
 app.post("/boiler", async (req, res) => {
   const { language, userBody } = req.body;
 
   console.log("\n===============================");
-  console.log("🔵 LLM REQUEST RECEIVED");
+  console.log("🔵 GEMINI REQUEST");
   console.log("Language:", language);
-  console.log("User Body:", userBody);
+  console.log("User Code:\n", userBody);
   console.log("===============================\n");
+
+  if (!language || !userBody) {
+    return res.json({ ok: false, output: "" });
+  }
 
   const prompt = `
 Generate ONLY ${language} boilerplate code.
-DO NOT FIX user code.
+DO NOT fix user code.
 DO NOT explain.
 DO NOT add markdown.
-Wrap this USER BODY inside correct ${language} boilerplate:
+
+Wrap this USER BODY inside correct ${language} boilerplate.
 
 USER BODY:
 ${userBody}
 `;
 
   try {
-    const rawResponse = await axios.post(
+    const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
-      { contents: [{ parts: [{ text: prompt }] }] }
+      {
+        contents: [{ parts: [{ text: prompt }] }],
+      }
     );
 
     const llmText =
-      rawResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     const cleaned = clean(llmText);
 
@@ -89,20 +95,24 @@ ${userBody}
       return res.json({ ok: false, output: "" });
     }
 
-    res.json({ ok: true, output: cleaned });
+    return res.json({
+      ok: true,
+      output: cleaned,
+    });
   } catch (err) {
-    console.log("🟥 LLM ERROR:", err.response?.data || err);
+    console.log("🟥 GEMINI ERROR:", err.response?.data || err);
     return res.json({ ok: false, output: "" });
   }
 });
 
 // =============================
-// SOCKET HANDLER
+// SOCKET HANDLER (UNCHANGED)
 // =============================
 require("./src/socketHandler")(io);
+
 // =============================
 // START SERVER
 // =============================
 server.listen(PORT, () => {
-  console.log(`🔥 Backend + LLM + Socket running on port ${PORT}`);
+  console.log(`🔥 Backend + Gemini + Socket running on port ${PORT}`);
 });

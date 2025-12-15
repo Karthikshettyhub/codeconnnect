@@ -1,9 +1,7 @@
-// src/components/codeeditor.jsx
 import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import CompilerPanel from "./CompilerPanel";
 import "./codeeditor.css";
-import axios from "axios";
 import { useRoom } from "../contexts/roomcontext";
 import { getStarterCode } from "../services/pistonService";
 
@@ -21,118 +19,168 @@ const extensions = {
   php: "php",
 };
 
-const CodeEditor = ({ language: initialLang = "javascript" }) => {
-  const { code, setCode, sendCode, language, sendLanguage } = useRoom();
-  const [localCode, setLocalCode] = useState(code || "");
+const CodeEditor = () => {
+  const {
+    code,
+    language,
+    pendingLanguage,
+    updateCodeRemote,
+    updateLanguageRemote,
+    acceptLanguageChange,
+    rejectLanguageChange,
+  } = useRoom();
 
+  const [localCode, setLocalCode] = useState(code);
+  const [showLangPopup, setShowLangPopup] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // =====================
+  // SYNC CODE
+  // =====================
   useEffect(() => {
-    if (code !== localCode) setLocalCode(code);
+    if (code !== localCode) {
+      setLocalCode(code);
+      localStorage.setItem("currentCode", code);
+    }
   }, [code]);
 
   useEffect(() => {
-    if (!localCode.trim()) {
-      const starter = getStarterCode(language || initialLang);
-      setLocalCode(starter);
-      setCode(starter);
-      sendCode(starter);
-      localStorage.setItem("currentCode", starter);
+    if (language) {
+      localStorage.setItem("currentLanguage", language);
     }
-  }, []);
+  }, [language]);
+
+  useEffect(() => {
+    if (!pendingLanguage || pendingLanguage === language) return;
+    setShowLangPopup(true);
+  }, [pendingLanguage, language]);
 
   const handleEditorChange = (value) => {
-    if (!value) return;
+    if (value == null) return;
     setLocalCode(value);
-    setCode(value);
-    sendCode(value);
     localStorage.setItem("currentCode", value);
+    updateCodeRemote(value);
   };
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
-    if (!window.confirm(`Switch to ${newLang}? Code will reset.`)) return;
+    if (newLang === language) return;
 
-    sendLanguage(newLang);
+    const ok = window.confirm(
+      `Changing language will replace code with ${newLang.toUpperCase()} template. Continue?`
+    );
+    if (!ok) return;
+
+    updateLanguageRemote(newLang);
+
     const template = getStarterCode(newLang);
     setLocalCode(template);
-    setCode(template);
-    sendCode(template);
     localStorage.setItem("currentCode", template);
+    localStorage.setItem("currentLanguage", newLang);
+
+    updateCodeRemote(template);
   };
 
-  // ⭐ FIXED FUNCTION — NOW IT EXISTS ⭐
+  const acceptPopup = () => {
+    acceptLanguageChange();
+    setShowLangPopup(false);
+    localStorage.setItem("currentLanguage", pendingLanguage);
+  };
+
+  const rejectPopup = () => {
+    rejectLanguageChange();
+    setShowLangPopup(false);
+  };
+
+  // =====================
+  // 🔥 BOILERPLATE (ONLY PLACE WITH await)
+  // =====================
   const handleGenerateBoilerplate = async () => {
-    console.log("🔥 Generating boilerplate...");
+    if (!localCode || isGenerating) return;
+
+    console.log("🧠 Generate Boilerplate clicked");
+    setIsGenerating(true);
 
     try {
-      const res = await axios.post("http://localhost:5005/boiler", {
-        language,
-        userBody: localCode,
+      const res = await fetch("http://localhost:5005/boiler", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language,
+          userBody: localCode,
+        }),
       });
 
-      console.log("🟩 BACKEND RESPONSE:", res.data);
+      if (!res.ok) throw new Error("Boilerplate API failed");
 
-      if (!res.data.ok || !res.data.output.trim()) {
-        alert("LLM failed to generate boilerplate.");
-        return;
+      const data = await res.json();
+      console.log("📦 Boilerplate response:", data);
+
+      if (!data.ok || !data.output) {
+        throw new Error("Invalid boilerplate response");
       }
 
-      const updated = res.data.output.trim();
-      setLocalCode(updated);
-      setCode(updated);
-      sendCode(updated);
-      localStorage.setItem("currentCode", updated);
+      console.log("✅ Boilerplate received");
+
+      setLocalCode(data.output);
+      localStorage.setItem("currentCode", data.output);
+
+      // 🔥 sync to all peers
+      updateCodeRemote(data.output);
 
     } catch (err) {
-      console.error("🔥 Boilerplate ERROR:", err);
-      alert("Boilerplate generation failed.");
+      console.error("❌ Boilerplate error:", err);
+      alert("Failed to generate boilerplate");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
   return (
     <div className="editor-container">
+      {showLangPopup && (
+        <div className="lang-popup-overlay">
+          <div className="lang-popup">
+            <h3>Language Changed</h3>
+            <p>
+              Another user changed language to{" "}
+              <b>{pendingLanguage.toUpperCase()}</b>
+            </p>
+            <div className="popup-actions">
+              <button onClick={acceptPopup}>Switch Language</button>
+              <button onClick={rejectPopup}>Keep Current</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="editor-header">
-        <select className="language-dropdown" value={language} onChange={handleLanguageChange}>
+        <select value={language} onChange={handleLanguageChange}>
           {Object.keys(extensions).map((lang) => (
             <option key={lang} value={lang}>
-              {lang.charAt(0).toUpperCase() + lang.slice(1)}
+              {lang.toUpperCase()}
             </option>
           ))}
         </select>
 
-        <span className="file-label">body.{extensions[language]}</span>
+        <span>📄 main.{extensions[language]}</span>
 
-        {/* ⭐ FIXED BUTTON ⭐ */}
         <button
-          className="boiler-btn"
+          className="boilerplate-btn"
           onClick={handleGenerateBoilerplate}
-          style={{
-            marginLeft: "10px",
-            padding: "5px 10px",
-            background: "#3b82f6",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
+          disabled={isGenerating}
         >
-          Generate Boilerplate
+          {isGenerating ? "Generating..." : "Generate Boilerplate"}
         </button>
       </div>
 
-      <div className="editor-wrapper">
-        <Editor
-          language={language}
-          value={localCode}
-          onChange={handleEditorChange}
-          theme="vs-dark"
-          options={{
-            minimap: { enabled: false },
-            fontSize: 15,
-            wordWrap: "on",
-            automaticLayout: true,
-          }}
-        />
-      </div>
+      <Editor
+        language={language}
+        value={localCode}
+        theme="vs-dark"
+        onChange={handleEditorChange}
+        options={{ automaticLayout: true }}
+      />
 
       <CompilerPanel language={language} />
     </div>

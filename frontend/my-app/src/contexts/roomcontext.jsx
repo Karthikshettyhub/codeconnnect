@@ -1,4 +1,3 @@
-// frontend/src/contexts/roomcontext.jsx
 import React, {
   createContext,
   useContext,
@@ -7,13 +6,12 @@ import React, {
   useRef,
 } from "react";
 import socketService from "../services/socket";
-import webrtcService from "../services/webrtc";
 
-const RoomContext = createContext(null);
+const RoomContext = createContext();
 
 export const useRoom = () => {
   const ctx = useContext(RoomContext);
-  if (!ctx) throw new Error("useRoom must be used inside RoomProvider");
+  if (!ctx) throw new Error("useRoom must be used within RoomProvider");
   return ctx;
 };
 
@@ -22,12 +20,22 @@ export const RoomProvider = ({ children }) => {
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
+  const [isConnected, setIsConnected] = useState(false);
+  const [code, setCode] = useState("");
+
+  // 🔥 Language states
+  const [language, setLanguage] = useState("javascript");
+  const [pendingLanguage, setPendingLanguage] = useState(null);
 
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("javascript");
 
   const [isConnected, setIsConnected] = useState(false);
   const listenersSetup = useRef(false);
+  const usernameRef = useRef("");
+
+  // ✅ NEW: hydration guard (VERY IMPORTANT)
+  const isHydratingRef = useRef(true);
 
   const languageRef = useRef(language);
   useEffect(() => {
@@ -42,80 +50,88 @@ export const RoomProvider = ({ children }) => {
     socketService.connect();
     setIsConnected(true);
 
-    // Initialize webrtc service (it will attach socket listeners)
-    webrtcService.init();
-
-    const savedRoom = sessionStorage.getItem("currentRoom");
     const savedUser = sessionStorage.getItem("username");
-
-    if (savedRoom && savedUser) {
-      setCurrentRoom(savedRoom);
+    if (savedUser) {
       setUsername(savedUser);
-
-      // ensure webrtc has the identity
-      webrtcService.setRoom(savedRoom);
-      webrtcService.setUsername(savedUser);
-
-      setTimeout(() => {
-        socketService.joinRoom(savedRoom, savedUser);
-      }, 400);
+      usernameRef.current = savedUser;
     }
 
-    // handlers
-    const handleRoomCreated = (data) => {
+    // ======================
+    // ROOM CREATED
+    // ======================
+    socketService.onRoomCreated((data) => {
+      if (!data?.roomId) return;
+
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
       setCode(data.code || "");
-      setLanguage(data.language || "javascript");
-      sessionStorage.setItem("currentRoom", data.roomId);
-      sessionStorage.setItem("username", data.username);
 
-      // update webrtc identity
-      webrtcService.setRoom(data.roomId);
-      webrtcService.setUsername(data.username);
-    };
+      // 🔥 FIX: restore language on create
+      if (data.language) {
+        console.log("♻️ restore language (create):", data.language);
+        setLanguage(data.language);
+      }
 
-    const handleRoomJoined = (data) => {
+      isHydratingRef.current = false;
+    });
+
+    // ======================
+    // ROOM JOINED (REFRESH)
+    // ======================
+    socketService.onRoomJoined((data) => {
+      if (!data?.roomId) return;
+
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
       setCode(data.code || "");
-      setLanguage(data.language || "javascript");
-      sessionStorage.setItem("currentRoom", data.roomId);
 
-      // update webrtc identity
-      webrtcService.setRoom(data.roomId);
-    };
+      // 🔥 FIX: restore language on refresh
+      if (data.language) {
+        console.log("♻️ restore language (join):", data.language);
+        setLanguage(data.language);
+      }
 
-    const handleReceiveMessage = (data) => {
+      isHydratingRef.current = false;
+    });
+
+    socketService.onReceiveMessage((data) => {
+      if (!data) return;
       setMessages((prev) => [...prev, data]);
-    };
+    });
 
-    const handleUserJoined = (data) => {
-      setUsers(data.users);
-    };
+    socketService.onCodeReceive((data) => {
+      if (data?.code !== undefined) {
+        setCode(data.code);
+      }
+    });
 
-    const handleCodeReceive = (data) => {
-      setCode(data.code);
-    };
+    // ======================
+    // LANGUAGE CHANGE (POPUP)
+    // ======================
+    socketService.onLanguageChange((data) => {
+      console.log("🌐 Language event received:", data);
 
-    const handleLanguageReceive = ({ username: changedBy, language: newLang }) => {
-      if (languageRef.current === newLang) return;
-      alert(`⚠️ ${changedBy} changed language to ${newLang.toUpperCase()}`);
-      setLanguage(newLang);
-    };
+      if (!data || !data.language || !data.username) return;
 
-    // register listeners
-    socketService.onRoomCreated(handleRoomCreated);
-    socketService.onRoomJoined(handleRoomJoined);
-    socketService.onReceiveMessage(handleReceiveMessage);
-    socketService.onUserJoined(handleUserJoined);
-    socketService.onCodeReceive(handleCodeReceive);
-    socketService.onLanguageReceive(handleLanguageReceive);
-    socketService.onError((err) => alert(err.message));
+      // ❌ ignore own change
+      if (data.username === usernameRef.current) return;
+
+      // ❌ ignore refresh / hydration
+      if (isHydratingRef.current) {
+        console.log("⏭️ skip popup (hydration)");
+        return;
+      }
+
+      console.log("🔔 Showing popup for language:", data.language);
+      setPendingLanguage(data.language);
+    });
+
+    socketService.onError((data) => alert(data.message));
 
     return () => {
+      socketService.removeAllListeners();
       socketService.disconnect();
       listenersSetup.current = false;
       setIsConnected(false);
@@ -123,50 +139,69 @@ export const RoomProvider = ({ children }) => {
     };
   }, []);
 
-  // ACTIONS
+  // ======================
+  // ACTIONS (UNCHANGED)
+  // ======================
   const createRoom = (roomId, userName) => {
+    if (!roomId || !userName) return;
     setUsername(userName);
-
-    // tell webrtc about identity too
-    webrtcService.setUsername(userName);
-    webrtcService.setRoom(roomId);
-
+    usernameRef.current = userName;
+    sessionStorage.setItem("username", userName);
     socketService.createRoom(roomId, userName);
   };
 
   const joinRoom = (roomId, userName) => {
+    if (!roomId || !userName) return;
     setUsername(userName);
-
-    webrtcService.setUsername(userName);
-    webrtcService.setRoom(roomId);
-
+    usernameRef.current = userName;
+    sessionStorage.setItem("username", userName);
     socketService.joinRoom(roomId, userName);
   };
 
   const leaveRoom = () => {
-    socketService.leaveRoom(currentRoom, username);
+    if (currentRoom && usernameRef.current) {
+      socketService.leaveRoom(currentRoom, usernameRef.current);
+    }
+
+    socketService.removeAllListeners();
+    socketService.disconnect();
     sessionStorage.clear();
+
     setCurrentRoom(null);
     setUsers([]);
     setMessages([]);
     setCode("");
-    setLanguage("javascript");
-
-    webrtcService.cleanupAll();
+    setUsername("");
+    setPendingLanguage(null);
+    setIsConnected(false);
   };
 
   const sendMessage = (message) => {
-    socketService.sendMessage(currentRoom, username, message);
+    if (!currentRoom || !usernameRef.current || !message) return;
+    socketService.sendMessage(currentRoom, usernameRef.current, message);
   };
 
-  const sendCode = (updatedCode) => {
+  const updateCodeRemote = (updatedCode) => {
+    if (!currentRoom) return;
     setCode(updatedCode);
     socketService.sendCode(currentRoom, updatedCode);
   };
 
-  const sendLanguage = (lang) => {
-    setLanguage(lang);
-    socketService.sendLanguage(currentRoom, lang, username);
+  // 🔥 sender only
+  const updateLanguageRemote = (newLang) => {
+    if (!currentRoom || !newLang || !usernameRef.current) return;
+    setLanguage(newLang);
+    socketService.sendLanguage(currentRoom, newLang, usernameRef.current);
+  };
+
+  const acceptLanguageChange = () => {
+    if (!pendingLanguage) return;
+    setLanguage(pendingLanguage);
+    setPendingLanguage(null);
+  };
+
+  const rejectLanguageChange = () => {
+    setPendingLanguage(null);
   };
 
   return (
@@ -176,16 +211,17 @@ export const RoomProvider = ({ children }) => {
         users,
         messages,
         username,
-        setUsername,
         code,
-        setCode,
-        sendCode,
         language,
-        sendLanguage,
+        pendingLanguage,
         createRoom,
         joinRoom,
         leaveRoom,
         sendMessage,
+        updateCodeRemote,
+        updateLanguageRemote,
+        acceptLanguageChange,
+        rejectLanguageChange,
         isConnected,
       }}
     >

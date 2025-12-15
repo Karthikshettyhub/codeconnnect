@@ -1,64 +1,136 @@
-// frontend/src/components/chatbox.jsx
-import React, { useState, useEffect, useRef } from "react";
-import { useRoom } from "../contexts/roomcontext";
+// src/components/chatbox.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import { useRoom } from '../contexts/roomcontext';
 import socketService from "../services/socket";
 import webrtcService from "../services/webrtc";
 import "./chatbox.css";
 
-/* 
-  NOTE: original MediaRecorder chunk-based approach commented out below.
-  We now use WebRTC local stream via webrtcService.startLocalStream()
-*/
+// =====================
+// 🔊 WebRTC refs
+// =====================
+let pc = null;
+let localStream = null;
 
 const ChatBox = ({ onLeave }) => {
   const { currentRoom, messages, sendMessage, username, isConnected } = useRoom();
-  const [inputMessage, setInputMessage] = useState("");
-  const [micOn, setMicOn] = useState(false);
+  const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto-scroll
+  // =====================
+  // AUTO SCROLL
+  // =====================
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Start WebRTC local audio (replaces MediaRecorder chunk method)
-  const startLocalAudio = async () => {
-    try {
-      await webrtcService.startLocalStream();
+  // =====================
+  // WEBRTC SOCKET LISTENERS
+  // =====================
+  useEffect(() => {
+    socketService.listen("webrtc-offer", async ({ roomId, offer }) => {
+      console.log("📩 WebRTC OFFER received");
+
+      pc = createPeer(roomId);
+
+      await pc.setRemoteDescription(offer);
+
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      console.log("📤 Sending WebRTC ANSWER");
+      socketService.emit("webrtc-answer", { roomId, answer });
+    });
+
+    socketService.listen("webrtc-answer", async ({ answer }) => {
+      console.log("✅ WebRTC ANSWER received");
+      await pc.setRemoteDescription(answer);
+    });
+
+    socketService.listen("webrtc-ice", async ({ candidate }) => {
+      if (candidate) {
+        console.log("🧊 ICE candidate received");
+        await pc.addIceCandidate(candidate);
+      }
+    });
+  }, []);
+
+  // =====================
+  // CREATE PEER
+  // =====================
+  const createPeer = (roomId) => {
+    const peer = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+
+    peer.onicecandidate = (event) => {
+      if (event.candidate) {
+        console.log("🧊 Sending ICE candidate");
+        socketService.emit("webrtc-ice", {
+          roomId,
+          candidate: event.candidate,
+        });
+      }
+    };
+
+    peer.ontrack = (event) => {
+      console.log("🔊 Remote audio stream received");
+      const audio = document.createElement("audio");
+      audio.srcObject = event.streams[0];
+      audio.autoplay = true;
+    };
+
+    return peer;
+  };
+
+  // =====================
+  // 🎤 MIC TOGGLE
+  // =====================
+  const toggleMic = async () => {
+    if (!currentRoom) {
+      alert("Join a room first");
+      return;
+    }
+
+    if (!isRecording) {
+      console.log("🎤 MIC STARTED");
+
+      pc = createPeer(currentRoom);
+
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      console.log("📨 Sending WebRTC OFFER");
+      socketService.emit("webrtc-offer", {
+        roomId: currentRoom,
+        offer,
+      });
+
       setIsRecording(true);
-      console.log("🎤 WebRTC local audio started");
-    } catch (err) {
-      console.error("Mic error:", err);
-      alert("Could not access microphone");
-      setMicOn(false);
+    } else {
+      console.log("🔇 MIC STOPPED");
+
+      localStream?.getTracks().forEach(t => t.stop());
+      pc?.close();
+
+      pc = null;
+      localStream = null;
+
       setIsRecording(false);
     }
   };
 
-  const stopLocalAudio = () => {
-    webrtcService.stopLocalStream();
-    setIsRecording(false);
-    console.log("🎤 WebRTC local audio stopped");
-  };
-
-  const handleMicClick = () => {
-    const newState = !micOn;
-    setMicOn(newState);
-    if (newState) startLocalAudio();
-    else stopLocalAudio();
-  };
-
-  // keep cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (micOn || isRecording) {
-        stopLocalAudio();
-      }
-    };
-  }, []);
-
+  // =====================
+  // SEND MESSAGE
+  // =====================
   const handleSend = (e) => {
     e.preventDefault();
 
@@ -68,103 +140,61 @@ const ChatBox = ({ onLeave }) => {
       return;
     }
 
-    console.log("📤 Sending message:", inputMessage);
     sendMessage(inputMessage.trim());
-    setInputMessage("");
+    setInputMessage('');
     inputRef.current?.focus();
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend(e);
-    }
   };
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
     <div className="chatbox">
-      {/* Header */}
       <div className="chatbox-header">
-        <div className="header-info">
-          <h3>💬 Chat</h3>
-          <span className={`connection-status ${isConnected ? "connected" : "disconnected"}`}>
-            {isConnected ? "🟢" : "🔴"}
-          </span>
-        </div>
-        <button className="leave-button" onClick={onLeave}>
-          Leave
-        </button>
+        <h3>💬 Chat</h3>
+        <button onClick={onLeave}>Leave</button>
       </div>
 
-      {/* Messages */}
       <div className="chatbox-messages">
-        {messages.length === 0 ? (
-          <div className="no-messages">
-            <p>No messages yet 👋</p>
-          </div>
-        ) : (
-          messages.map((msg, idx) => (
-            <div
-              key={`${msg.username}-${msg.timestamp}-${idx}`}
-              className={`message ${msg.isSystem ? "system-message" : ""} ${msg.username === username ? "own-message" : ""}`}
-            >
-              {msg.isSystem ? (
-                <div className="system-content">{msg.message}</div>
-              ) : (
-                <>
-                  <div className="message-header">
-                    <span className="message-username">{msg.username}</span>
-                    <span className="message-time">{formatTime(msg.timestamp)}</span>
-                  </div>
-                  <div className="message-content">{msg.message}</div>
-                </>
-              )}
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`message ${msg.username === username ? 'own-message' : ''}`}
+          >
+            <div className="message-header">
+              <span className="message-username">
+                {msg.username || "Anonymous"}
+              </span>
+              <span className="message-time">
+                {formatTime(msg.timestamp)}
+              </span>
             </div>
-          ))
-        )}
+            <div className="message-content">{msg.message}</div>
+          </div>
+        ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
+      {/* ===================== */}
+      {/* INPUT + MIC */}
+      {/* ===================== */}
       <form className="chatbox-input" onSubmit={handleSend}>
         <input
           ref={inputRef}
-          type="text"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder={isConnected ? "Type a message..." : "Connecting..."}
-          disabled={!isConnected}
-          maxLength={500}
+          placeholder="Type a message..."
         />
 
-        <button type="button" className={`mic-button ${micOn ? "recording" : ""}`} onClick={handleMicClick}>
-          {micOn ? "⏹️" : "🎤"}
-        </button>
+        <button type="submit">Send</button>
 
-        <button type="submit" className="send-button" disabled={!isConnected || !inputMessage.trim()}>
-          Send
+        {/* 🎤 MIC BUTTON */}
+        <button type="button" onClick={toggleMic}>
+          {isRecording ? "🔴 Mic On" : "🎤 Mic"}
         </button>
       </form>
-
-      {/* Recording indicator */}
-      {isRecording && (
-        <div className="recording-indicator">
-          <span className="recording-dot"></span>
-          Recording...
-        </div>
-      )}
-
-      {/* Optional: local preview audio element to confirm mic working (muted) */}
-      <audio id="local-audio-preview" style={{ display: "none" }} />
     </div>
   );
 };
