@@ -6,6 +6,7 @@ import React, {
   useRef,
 } from "react";
 import socketService from "../services/socket";
+import * as webrtcService from "../services/webrtc";
 
 const RoomContext = createContext();
 
@@ -22,7 +23,7 @@ export const RoomProvider = ({ children }) => {
   const [username, setUsername] = useState("");
   const [isConnected, setIsConnected] = useState(false);
 
-  // 🔥 Language states (removed duplicates)
+  // 🔥 Language states
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("javascript");
   const [pendingLanguage, setPendingLanguage] = useState(null);
@@ -131,11 +132,12 @@ export const RoomProvider = ({ children }) => {
       socketService.disconnect();
       listenersSetup.current = false;
       setIsConnected(false);
+      webrtcService.stopAudio();
     };
   }, []);
 
   // ======================
-  // ACTIONS (UNCHANGED)
+  // ACTIONS
   // ======================
   const createRoom = (roomId, userName) => {
     if (!roomId || !userName) return;

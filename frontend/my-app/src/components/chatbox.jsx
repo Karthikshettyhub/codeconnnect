@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRoom } from '../contexts/roomcontext';
 import socketService from "../services/socket";
-import webrtcService from "../services/webrtc";
+import * as webrtcService from "../services/webrtc";
 import "./chatbox.css";
 
 // =====================
