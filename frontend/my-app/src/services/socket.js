@@ -10,7 +10,7 @@ class SocketService {
     if (this.socket?.connected) return;
 
     const SOCKET_URL =
-      import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
+      import.meta.env.VITE_SOCKET_URL || "https://codeconnnect.onrender.com";
 
     this.socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
