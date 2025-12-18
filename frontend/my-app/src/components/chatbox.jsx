@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRoom } from '../contexts/roomcontext';
 import socketService from "../services/socket";
-import './chatbox.css';
+import webrtcService from "../services/webrtc";
+import "./chatbox.css";
 
 // =====================
 // 🔊 WebRTC refs
@@ -22,7 +23,7 @@ const ChatBox = ({ onLeave }) => {
   // AUTO SCROLL
   // =====================
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // =====================

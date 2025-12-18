@@ -53,7 +53,6 @@ module.exports = (io) => {
     socket.on("disconnect", () => {
       console.log("❌ Disconnected:", socket.id);
     });
-    // inside io.on("connection")
 
     socket.on("webrtc-offer", ({ roomId, offer }) => {
       console.log("📨 Offer received for room", roomId);
@@ -68,6 +67,5 @@ module.exports = (io) => {
     socket.on("webrtc-ice", ({ roomId, candidate }) => {
       socket.to(roomId).emit("webrtc-ice", { candidate });
     });
-
   });
 };

@@ -37,11 +37,9 @@ class SocketService {
   createRoom(roomId, username) {
     this.socket?.emit("create-room", { roomId, username });
   }
-
   joinRoom(roomId, username) {
     this.socket?.emit("join-room", { roomId, username });
   }
-
   leaveRoom(roomId, username) {
     this.socket?.emit("leave-room", { roomId, username });
   }
@@ -49,7 +47,6 @@ class SocketService {
   sendMessage(roomId, username, message) {
     this.socket?.emit("chat-message", { roomId, username, message });
   }
-
   sendCode(roomId, code) {
     this.socket?.emit("code-change", { roomId, code });
   }

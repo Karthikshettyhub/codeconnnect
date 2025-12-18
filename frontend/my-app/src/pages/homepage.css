@@ -1,102 +1,14 @@
-/* ---------- GLOBAL ---------- */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
-}
-
-body {
-  background: #0f0f0f;
-  color: #fff;
-}
-
-/* ---------- NAVBAR ---------- */
-.navbar {
-  width: 100%;
-  padding: 18px 32px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: absolute;
-  top: 0;
-}
-
-.nav-logo {
-  font-size: 22px;
-  font-weight: bold;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.nav-login-btn,
-.logout-btn {
-  background: #1e1e1e;
-  border: 1px solid #3a3a3a;
-  border-radius: 8px;
-  color: white;
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.nav-login-btn:hover,
-.logout-btn:hover {
-  background: #007bff;
-  border-color: #007bff;
-}
-
-/* ---------- LOGIN DROPDOWN ---------- */
-.dropdown-login {
-  position: absolute;
-  right: 32px;
-  top: 70px;
-  width: 230px;
-  background: #1b1b1b;
-  padding: 16px;
-  border-radius: 10px;
-  border: 1px solid #2b2b2b;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  animation: fadeIn 0.2s ease-in;
-}
-
-.dropdown-login input {
-  padding: 10px;
-  background: #2b2b2b;
-  border: none;
-  border-radius: 6px;
-  color: white;
-}
-
-.dropdown-login button {
-  background: #007bff;
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
-  color: white;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.dropdown-login button:hover {
-  background: #005fcc;
-}
-
-/* ---------- MAIN UI ---------- */
-.homepage-container {
+/* ---------- GLOBAL WRAPPER ---------- */
+.home-wrapper {
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: 50px;
+  background: #0f0f0f;
+  padding: 20px;
 }
 
+/* ---------- HOME CARD ---------- */
 .home-card {
   width: 430px;
   background: #161616;
@@ -104,17 +16,44 @@ body {
   border-radius: 18px;
   border: 1px solid #2b2b2b;
   text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
+/* ---------- TITLE & SUBTITLE ---------- */
 .home-title {
   font-size: 28px;
+  font-weight: 700;
   margin-bottom: 8px;
+  color: #fff;
 }
 
 .home-subtitle {
   font-size: 14px;
   opacity: 0.7;
   margin-bottom: 25px;
+}
+
+/* ---------- MODE TOGGLE BUTTONS ---------- */
+.mode-toggle {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #2b2b2b;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.mode-btn.active {
+  background: #007bff;
 }
 
 /* ---------- FORM ---------- */
@@ -135,35 +74,34 @@ body {
   background: #202020;
   border: none;
   border-radius: 10px;
-  color: white;
+  color: #fff;
 }
 
-/* ---------- SWITCH ---------- */
-.mode-toggle {
+/* ---------- ROOM INPUT + GENERATE BUTTON ---------- */
+.room-input-wrap {
   display: flex;
   gap: 10px;
-  margin: 5px 0;
 }
 
-.mode-btn {
-  flex: 1;
-  padding: 10px;
-  background: #2b2b2b;
-  border-radius: 8px;
+.gen-btn {
+  background: #5050ff;
   border: none;
-  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  color: #fff;
   cursor: pointer;
   transition: 0.2s;
 }
 
-.mode-btn.active {
-  background: #007bff;
+.gen-btn:hover {
+  background: #3b3be8;
 }
 
+/* ---------- SUBMIT BUTTON ---------- */
 .submit-btn {
   padding: 12px;
   background: #00b853;
-  color: black;
+  color: #000;
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -176,44 +114,10 @@ body {
   background: #009b45;
 }
 
-/* ---------- ROOM ID GENERATOR ---------- */
-.room-input-wrap {
-  display: flex;
-  gap: 10px;
-}
-
-.gen-btn {
-  background: #5050ff;
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.gen-btn:hover {
-  background: #3b3be8;
-}
-
 /* ---------- RESPONSIVE ---------- */
-@media(max-width: 600px) {
+@media (max-width: 600px) {
   .home-card {
     width: 90%;
     padding: 25px;
   }
-
-  .navbar {
-    padding: 14px 18px;
-  }
-
-  .dropdown-login {
-    right: 18px;
-  }
-}
-
-/* Animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
 }

@@ -4,7 +4,7 @@ class RoomManager {
     this.rooms = {};
   }
 
-  createRoom(roomId, userId, username) {
+  createRoom(roomId, userId, username, socketId) {
     if (!roomId || !userId) {
       return { success: false, message: "roomId and userId are required" };
     }
@@ -27,7 +27,7 @@ class RoomManager {
     return { success: true, room };
   }
 
-  joinRoom(roomId, userId, username) {
+  joinRoom(roomId, userId, username, socketId) {
     const room = this.rooms[roomId];
     if (!room) return { success: false, message: "Room not found" };
 
@@ -76,6 +76,33 @@ class RoomManager {
       code: room.code,
       language: room.language, // ✅ SEND LANGUAGE
     };
+  }
+
+  // 🔥🔥🔥 MISSING FUNCTION ADDED — FIXES BACKEND CRASH
+  removeUserBySocketId(socketId) {
+    let roomsLeft = [];
+
+    for (const roomId in this.rooms) {
+      const room = this.rooms[roomId];
+
+      const user = room.users.find((u) => u.socketId === socketId);
+      if (user) {
+        room.users = room.users.filter((u) => u.socketId !== socketId);
+
+        roomsLeft.push({
+          roomId,
+          userId: user.userId,
+          username: user.username,
+        });
+
+        if (room.users.length === 0) {
+          delete this.rooms[roomId];
+          console.log(`🗑️ Room deleted (empty): ${roomId}`);
+        }
+      }
+    }
+
+    return roomsLeft;
   }
 }
 

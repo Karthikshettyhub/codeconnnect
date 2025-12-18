@@ -62,3 +62,9 @@
   padding: 10px;
   resize: vertical;
 }
+.output-area {
+  white-space: pre-wrap;
+  overflow-y: auto;
+  max-height: 300px;
+}
+
