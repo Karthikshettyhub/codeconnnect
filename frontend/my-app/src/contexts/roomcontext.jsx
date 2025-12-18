@@ -21,16 +21,12 @@ export const RoomProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
   const [isConnected, setIsConnected] = useState(false);
-  const [code, setCode] = useState("");
 
-  // 🔥 Language states
+  // 🔥 Language states (removed duplicates)
+  const [code, setCode] = useState("");
   const [language, setLanguage] = useState("javascript");
   const [pendingLanguage, setPendingLanguage] = useState(null);
 
-  const [code, setCode] = useState("");
-  const [language, setLanguage] = useState("javascript");
-
-  const [isConnected, setIsConnected] = useState(false);
   const listenersSetup = useRef(false);
   const usernameRef = useRef("");
 
@@ -135,7 +131,6 @@ export const RoomProvider = ({ children }) => {
       socketService.disconnect();
       listenersSetup.current = false;
       setIsConnected(false);
-      webrtcService.cleanupAll();
     };
   }, []);
 
