@@ -53,3 +53,5 @@ coverage/
 !.yarn/plugins
 !.yarn/versions
 .pnp.*
+.vercel
+.env*.local
