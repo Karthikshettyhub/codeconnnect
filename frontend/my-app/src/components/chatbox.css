@@ -1,24 +1,24 @@
-/* chatbox.css - Your existing style + improvements */
-
+/* ================= CHATBOX BASE ================= */
 .chatbox {
   display: flex;
   flex-direction: column;
   height: 100%;
   background: #1e1e1e;
-  border-radius: 10px;
-  border: 1px solid #333;
+  border-radius: 12px;
+  border: 1px solid #2a2a2a;
   overflow: hidden;
   color: #fff;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Header */
+/* ================= HEADER ================= */
 .chatbox-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 15px;
   background: #252526;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #2a2a2a;
   flex-shrink: 0;
   gap: 12px;
 }
@@ -33,44 +33,111 @@
 .chatbox-header h3 {
   font-size: 16px;
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-/* Connection Status - NEW */
+/* Connection Status */
 .connection-status {
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 4px;
   font-weight: 500;
+  transition: background 0.2s, color 0.2s;
 }
 
 .connection-status.connected {
-  background: rgba(67, 181, 129, 0.15);
+  background: rgba(67, 181, 129, 0.2);
   color: #43b581;
 }
 
 .connection-status.disconnected {
-  background: rgba(255, 76, 76, 0.15);
+  background: rgba(255, 76, 76, 0.2);
   color: #ff4c4c;
 }
 
-/* Leave button styling */
+/* ================= BUTTONS ================= */
+
+/* MIC BUTTON */
+.mic-button {
+  background: #3b3b3b;
+  border: none;
+  color: #ffffff;
+  padding: 0 12px;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mic-button:hover {
+  background: #505050;
+  transform: translateY(-1px);
+}
+
+.mic-button.recording {
+  background: #ff4c4c;
+  animation: pulse 1.5s infinite;
+}
+
+/* SEND BUTTON */
+.send-button {
+  padding: 0 20px;
+  border: none;
+  background: #0078ff;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 600;
+  border-top-right-radius: 10px;
+  transition: all 0.2s ease, transform 0.1s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.send-button:hover:not(:disabled) {
+  background: #005fcc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #555;
+  box-shadow: none;
+}
+
+/* LEAVE BUTTON */
 .leave-button {
   background: #ff4c4c;
   border: none;
-  color: #fff;
+  color: #ffffff;
   font-size: 13px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  font-weight: 600;
+  transition: all 0.2s ease, transform 0.1s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .leave-button:hover {
   background: #e04343;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
 }
 
-/* Chat messages section */
+.leave-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* PULSE ANIMATION */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ================= MESSAGES ================= */
 .chatbox-messages {
   flex: 1;
   padding: 12px;
@@ -79,9 +146,12 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: #1b1b1b;
+  scrollbar-width: thin;
+  scrollbar-color: #444 transparent;
 }
 
-/* No messages placeholder - NEW */
+/* No messages placeholder */
 .no-messages {
   display: flex;
   align-items: center;
@@ -96,34 +166,22 @@
   margin: 0;
 }
 
-/* message container */
+/* Message */
 .message {
   padding: 8px;
   background: #2a2d2e;
-  border-radius: 6px;
-  width: 90%;
+  border-radius: 8px;
+  max-width: 85%;
   animation: slideIn 0.2s ease-out;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-/* Slide in animation - NEW */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* your messages aligned right */
 .own-message {
   margin-left: auto;
   background: #0078ff;
+  color: #fff;
 }
 
-/* system message */
 .system-message {
   text-align: center;
   font-size: 12px;
@@ -137,7 +195,7 @@
   font-style: italic;
 }
 
-/* user & time */
+/* User & time */
 .message-header {
   display: flex;
   justify-content: space-between;
@@ -160,10 +218,22 @@
   white-space: pre-wrap;
 }
 
-/* Input box */
+/* Slide-in animation */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= INPUT ================= */
 .chatbox-input {
   display: flex;
-  border-top: 1px solid #333;
+  border-top: 1px solid #2a2a2a;
   background: #1e1e1e;
   flex-shrink: 0;
   position: relative;
@@ -174,7 +244,7 @@
   padding: 10px;
   border: none;
   background: #2a2d2e;
-  color: white;
+  color: #fff;
   outline: none;
   font-size: 14px;
   border-top-left-radius: 10px;
@@ -190,55 +260,7 @@
   cursor: not-allowed;
 }
 
-/* Microphone button */
-.mic-button {
-  background: #444;
-  border: none;
-  color: white;
-  padding: 0 12px;
-  font-size: 18px;
-  cursor: pointer;
-  border-radius: 0;
-  transition: 0.2s ease;
-}
-
-.mic-button:hover {
-  background: #555;
-}
-
-.mic-button.recording {
-  background: #ff4c4c;
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-/* Send button */
-.send-button {
-  padding: 0 20px;
-  border: none;
-  background: #0078ff;
-  color: #fff;
-  cursor: pointer;
-  font-weight: bold;
-  border-top-right-radius: 10px;
-  transition: 0.2s ease;
-}
-
-.send-button:hover:not(:disabled) {
-  background: #005fcc;
-}
-
-.send-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: #555;
-}
-
-/* Recording Indicator - NEW */
+/* ================= RECORDING INDICATOR ================= */
 .recording-indicator {
   position: absolute;
   bottom: 100%;
@@ -280,7 +302,7 @@
   50% { opacity: 0.3; }
 }
 
-/* Scrollbar */
+/* ================= SCROLLBAR ================= */
 .chatbox-messages::-webkit-scrollbar {
   width: 8px;
 }
@@ -298,7 +320,7 @@
   background: #555;
 }
 
-/* Responsive */
+/* ================= RESPONSIVE ================= */
 @media (max-width: 768px) {
   .chatbox-header {
     padding: 8px 12px;

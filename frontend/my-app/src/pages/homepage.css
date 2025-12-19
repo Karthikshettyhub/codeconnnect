@@ -1,123 +1,203 @@
-/* ---------- GLOBAL WRAPPER ---------- */
-.home-wrapper {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #0f0f0f;
-  padding: 20px;
+/* ================= ROOT THEME ================= */
+:root {
+  --bg-main: #0b0d12;
+  --bg-card: #15181e;
+  --bg-input: #1c1f26;
+  --border-subtle: #2a2e36;
+
+  --text-main: #ffffff;
+  --text-muted: #b5bac1;
+
+  --accent-primary: #5865f2;   /* Discord blurple */
+  --accent-success: #23a559;
+  --accent-hover: #4752c4;
+
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
 }
 
-/* ---------- HOME CARD ---------- */
+/* ================= PAGE WRAPPER ================= */
+.homepage-container {
+  min-height: 100vh;
+  background: radial-gradient(
+      1200px 600px at top,
+      #11152b 0%,
+      var(--bg-main) 60%
+  );
+  display: flex;
+  flex-direction: column;
+  color: var(--text-main);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ================= NAVBAR ================= */
+.navbar {
+  height: 64px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(11, 13, 18, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.nav-logo {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--accent-primary);
+}
+
+/* ================= CARD ================= */
 .home-card {
   width: 430px;
-  background: #161616;
-  padding: 40px;
-  border-radius: 18px;
-  border: 1px solid #2b2b2b;
+  margin: auto;
+  background: var(--bg-card);
+  padding: 42px 38px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
-/* ---------- TITLE & SUBTITLE ---------- */
+/* ================= TITLE ================= */
 .home-title {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
-  margin-bottom: 8px;
-  color: #fff;
+  margin-bottom: 6px;
 }
 
 .home-subtitle {
   font-size: 14px;
-  opacity: 0.7;
-  margin-bottom: 25px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
 }
 
-/* ---------- MODE TOGGLE BUTTONS ---------- */
-.mode-toggle {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.mode-btn {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-  background: #2b2b2b;
-  color: #fff;
-  cursor: pointer;
-  font-weight: 500;
-  transition: 0.2s;
-}
-
-.mode-btn.active {
-  background: #007bff;
-}
-
-/* ---------- FORM ---------- */
+/* ================= FORM ================= */
 .home-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .home-form label {
   text-align: left;
-  font-size: 14px;
-  opacity: 0.8;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
+/* ================= INPUTS ================= */
 .home-form input {
-  padding: 12px;
-  background: #202020;
-  border: none;
-  border-radius: 10px;
-  color: #fff;
+  padding: 12px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
 }
 
-/* ---------- ROOM INPUT + GENERATE BUTTON ---------- */
+.home-form input::placeholder {
+  color: #7d828c;
+}
+
+.home-form input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.25);
+}
+
+/* ================= ROOM INPUT + BUTTON ================= */
 .room-input-wrap {
   display: flex;
   gap: 10px;
 }
 
 .gen-btn {
-  background: #5050ff;
+  background: var(--accent-primary);
   border: none;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
   color: #fff;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
 
 .gen-btn:hover {
-  background: #3b3be8;
+  background: var(--accent-hover);
 }
 
-/* ---------- SUBMIT BUTTON ---------- */
+.gen-btn:active {
+  transform: scale(0.96);
+}
+
+/* ================= MODE TOGGLE ================= */
+.mode-toggle {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: #1a1d24;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+
+.mode-btn:hover {
+  background: #20232b;
+}
+
+.mode-btn.active {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: var(--accent-primary);
+}
+
+/* ================= SUBMIT BUTTON ================= */
 .submit-btn {
-  padding: 12px;
-  background: #00b853;
+  margin-top: 14px;
+  padding: 13px;
+  background: var(--accent-success);
   color: #000;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  font-weight: bold;
-  margin-top: 10px;
-  transition: 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
 
 .submit-btn:hover {
-  background: #009b45;
+  background: #1f8f4f;
 }
 
-/* ---------- RESPONSIVE ---------- */
+.submit-btn:active {
+  transform: scale(0.97);
+}
+
+/* ================= RESPONSIVE ================= */
 @media (max-width: 600px) {
   .home-card {
-    width: 90%;
-    padding: 25px;
+    width: 92%;
+    padding: 32px 24px;
+  }
+
+  .home-title {
+    font-size: 22px;
   }
 }

@@ -2,31 +2,55 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background: #1e1e1e;
+  background: linear-gradient(180deg, #1a1a1a 0%, #1e1e1e 100%);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #ffffff;
 }
 
+/* ================= CONTENT ================= */
 .roompage-content {
   display: flex;
   width: 100%;
   height: 100%;
 }
 
-/* LEFT SIDE (Editor + Output) */
+/* ================= LEFT SIDE (Editor + Output) ================= */
 .editor-side {
   flex: 1.2;
   display: flex;
   flex-direction: column;
   background: #1e1e1e;
-  border-right: 1px solid #333;
+  border-right: 1px solid #2c2c2c;
   overflow: hidden;
+  box-shadow: inset -2px 0 5px rgba(0, 0, 0, 0.2);
 }
 
-/* RIGHT SIDE (Chat) */
+/* ================= RIGHT SIDE (Chat) ================= */
 .chat-side {
   flex: 0.8;
-  background: #111;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #333;
+  background: #141414;
+  border-left: 1px solid #2c2c2c;
   overflow: hidden;
+  box-shadow: inset 2px 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* ================= OPTIONAL ADDITIONAL TOUCHES ================= */
+
+/* Smooth scrollbar for professional feel */
+.editor-side::-webkit-scrollbar,
+.chat-side::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editor-side::-webkit-scrollbar-thumb,
+.chat-side::-webkit-scrollbar-thumb {
+  background-color: #3a3a3a;
+  border-radius: 4px;
+}
+
+.editor-side::-webkit-scrollbar-track,
+.chat-side::-webkit-scrollbar-track {
+  background: #1e1e1e;
 }

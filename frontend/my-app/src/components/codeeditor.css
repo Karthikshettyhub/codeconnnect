@@ -1,41 +1,54 @@
+/* ================= EDITOR CONTAINER ================= */
 .editor-container {
   display: flex;
   flex-direction: column;
   height: 100%;
   background: #1e1e1e;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Header */
+/* ================= HEADER ================= */
 .editor-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 16px;
+  padding: 12px 16px;
   background: #252526;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #2a2a2a;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  flex-shrink: 0;
 }
 
 .language-dropdown {
-  padding: 6px 12px;
-  background: #333;
-  color: white;
+  padding: 6px 14px;
+  background: #2a2d2e;
+  color: #fff;
   border-radius: 6px;
   cursor: pointer;
   border: 1px solid #444;
+  transition: all 0.2s ease;
+}
+
+.language-dropdown:hover {
+  background: #3b3b3b;
 }
 
 .file-label {
   color: #bbb;
   font-size: 12px;
+  opacity: 0.9;
 }
 
-/* Monaco Editor */
+/* ================= MONACO EDITOR WRAPPER ================= */
 .editor-wrapper {
   flex: 1;
   min-height: 300px;
   background: #1e1e1e;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #2a2a2a;
+  overflow: hidden;
 }
+
+/* ================= LANGUAGE POPUP ================= */
 .lang-popup-overlay {
   position: fixed;
   inset: 0;
@@ -48,95 +61,67 @@
 
 .lang-popup {
   background: #1e1e1e;
-  padding: 20px;
-  border-radius: 10px;
-  width: 320px;
-  text-align: center;
-  border: 1px solid #333;
-}
-
-.popup-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
-}
-
-.popup-actions button {
-  padding: 8px 14px;
-  border: none;
-  cursor: pointer;
-  border-radius: 6px;
-}
-
-/* Compiler Panel sits below */
-/* ===============================
-   LANGUAGE CHANGE POPUP
-   =============================== */
-
-.lang-popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lang-popup {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 12px;
   padding: 24px;
+  border-radius: 12px;
   width: 320px;
   text-align: center;
+  border: 1px solid #333;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   color: #fff;
-  animation: popupFade 0.2s ease-in;
+  animation: popupFade 0.2s ease-in-out;
 }
 
 .lang-popup h3 {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .lang-popup p {
   font-size: 14px;
   opacity: 0.85;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
+/* ================= POPUP BUTTONS ================= */
 .popup-actions {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   margin-top: 15px;
 }
 
 .popup-actions button {
   flex: 1;
-  padding: 10px;
+  padding: 10px 14px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
   font-weight: 600;
+  transition: all 0.2s ease, transform 0.1s;
 }
 
 .popup-actions button:first-child {
-  background: #007bff;
-  color: white;
+  background: #0078ff;
+  color: #fff;
+}
+
+.popup-actions button:first-child:hover {
+  background: #005fcc;
+  transform: translateY(-1px);
 }
 
 .popup-actions button:last-child {
-  background: #444;
-  color: white;
+  background: #3b3b3b;
+  color: #fff;
 }
 
-.popup-actions button:hover {
-  opacity: 0.9;
+.popup-actions button:last-child:hover {
+  background: #505050;
+  transform: translateY(-1px);
 }
 
+/* ================= ANIMATION ================= */
 @keyframes popupFade {
   from {
     opacity: 0;
@@ -145,5 +130,28 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .editor-header {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .language-dropdown {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+
+  .lang-popup {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .popup-actions button {
+    padding: 8px 10px;
+    font-size: 14px;
   }
 }
