@@ -362,3 +362,183 @@
     font-size: 13px;
   }
 }
+/* ================= CHATBOX UI POLISH ================= */
+
+/* Slight depth to whole chatbox */
+.chatbox {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* Header polish */
+.chatbox-header {
+  background: linear-gradient(180deg, #252526, #202020);
+}
+
+/* Leave button more prominent */
+.chatbox-header button {
+  background: linear-gradient(135deg, #ff4c4c, #ff6b6b);
+  border-radius: 8px;
+}
+
+.chatbox-header button:hover {
+  background: linear-gradient(135deg, #e04343, #ff4c4c);
+}
+
+/* ================= MESSAGE FLOW ================= */
+
+/* Messages feel lighter */
+.message {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.message:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* Own message glow */
+.own-message {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05),
+              0 4px 10px rgba(0, 120, 255, 0.35);
+}
+
+/* Username contrast */
+.message-username {
+  letter-spacing: 0.3px;
+}
+
+/* Time subtle */
+.message-time {
+  opacity: 0.7;
+}
+
+/* ================= INPUT BAR ================= */
+
+/* Input bar elevation */
+.chatbox-input {
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.4);
+}
+
+/* Input smoother */
+.chatbox-input input {
+  border-top-left-radius: 12px;
+}
+
+/* Send button polish */
+.chatbox-input button[type="submit"] {
+  background: linear-gradient(135deg, #0078ff, #00c6ff);
+  border-radius: 0 12px 12px 0;
+}
+
+.chatbox-input button[type="submit"]:hover {
+  background: linear-gradient(135deg, #0066e6, #00b4e6);
+}
+
+/* ================= MIC BUTTON ================= */
+
+.chatbox-input button[type="button"] {
+  background: #2a2d2e;
+  border-radius: 8px;
+  font-size: 18px;
+  padding: 0 14px;
+  transition: all 0.2s ease;
+}
+
+.chatbox-input button[type="button"]:hover {
+  background: #3b3b3b;
+  transform: translateY(-1px);
+}
+
+/* Mic recording glow */
+.chatbox-input button[type="button"]:has(:not()) {
+  background: #ff4c4c;
+}
+
+/* ================= SCROLL SMOOTHNESS ================= */
+
+.chatbox-messages {
+  scroll-behavior: smooth;
+}
+
+/* Fade-in for new messages */
+.message {
+  animation: fadeSlide 0.18s ease-out;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= MESSAGE HEADER SPACING FIX ================= */
+
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;                /* 🔥 adds breathing space */
+  margin-bottom: 6px;       /* 🔥 separates header from message text */
+}
+
+/* Username clearer */
+.message-username {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+/* Timestamp lighter & spaced */
+.message-time {
+  font-size: 11px;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+/* Extra spacing for own messages (optional polish) */
+.own-message .message-header {
+  gap: 14px;
+}
+/* ================= LEAVE BUTTON IMPROVEMENT ================= */
+
+.chatbox-header button {
+  background: linear-gradient(135deg, #ff4c4c, #ff6b6b);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 10px rgba(255, 76, 76, 0.35);
+  transition: 
+    background 0.2s ease,
+    transform 0.12s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Hover – warn but smooth */
+.chatbox-header button:hover {
+  background: linear-gradient(135deg, #e04343, #ff4c4c);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 76, 76, 0.45);
+}
+
+/* Active (click) */
+.chatbox-header button:active {
+  transform: scale(0.96);
+}
+
+/* Optional focus ring (accessibility) */
+.chatbox-header button:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 2px rgba(255, 255, 255, 0.15),
+    0 0 0 4px rgba(255, 76, 76, 0.6);
+}

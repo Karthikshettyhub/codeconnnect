@@ -94,26 +94,72 @@ export const executeCode = async (code, language, input = "") => {
     };
   }
 };
-
 export const getStarterCode = (language) => {
   const templates = {
     javascript: `console.log("Hello World");`,
+
     python: `print("Hello World")`,
+
+    java: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello World");
+    }
+}`,
+
     c: `#include <stdio.h>
 int main() {
-  printf("Hello World");
-  return 0;
+    printf("Hello World");
+    return 0;
 }`,
+
     cpp: `#include <iostream>
 using namespace std;
+
 int main() {
-  cout << "Hello World";
-  return 0;
-}`
+    cout << "Hello World";
+    return 0;
+}`,
+
+    csharp: `using System;
+
+class Program {
+    static void Main() {
+        Console.WriteLine("Hello World");
+    }
+}`,
+
+    go: `package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello World")
+}`,
+
+    rust: `fn main() {
+    println!("Hello World");
+}`,
+
+    typescript: `console.log("Hello World");`,
+
+    ruby: `puts "Hello World"`,
+
+    php: `<?php
+echo "Hello World";
+?>`,
+
+    kotlin: `fun main() {
+    println("Hello World")
+}`,
+
+    swift: `import Foundation
+
+print("Hello World")`
   };
 
   return templates[language.toLowerCase()] || "";
 };
+
 
 export const getFileExtension = (language) =>
   LANGUAGE_CONFIGS[language.toLowerCase()]?.alias || "txt";

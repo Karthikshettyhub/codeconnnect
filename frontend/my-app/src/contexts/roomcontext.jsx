@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import socketService from "../services/socket";
 import * as webrtcService from "../services/webrtc";
+import { getStarterCode } from "../services/pistonService";
 
 const RoomContext = createContext();
 
@@ -23,15 +24,13 @@ export const RoomProvider = ({ children }) => {
   const [username, setUsername] = useState("");
   const [isConnected, setIsConnected] = useState(false);
 
-  // 🔥 Language states
+  // 🔥 Language + code
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("javascript");
   const [pendingLanguage, setPendingLanguage] = useState(null);
 
   const listenersSetup = useRef(false);
   const usernameRef = useRef("");
-
-  // ✅ NEW: hydration guard (VERY IMPORTANT)
   const isHydratingRef = useRef(true);
 
   const languageRef = useRef(language);
@@ -39,7 +38,9 @@ export const RoomProvider = ({ children }) => {
     languageRef.current = language;
   }, [language]);
 
+  // ======================
   // INIT SOCKET
+  // ======================
   useEffect(() => {
     if (listenersSetup.current) return;
     listenersSetup.current = true;
@@ -53,9 +54,7 @@ export const RoomProvider = ({ children }) => {
       usernameRef.current = savedUser;
     }
 
-    // ======================
     // ROOM CREATED
-    // ======================
     socketService.onRoomCreated((data) => {
       if (!data?.roomId) return;
 
@@ -64,7 +63,6 @@ export const RoomProvider = ({ children }) => {
       setMessages(data.messages || []);
       setCode(data.code || "");
 
-      // 🔥 FIX: restore language on create
       if (data.language) {
         console.log("♻️ restore language (create):", data.language);
         setLanguage(data.language);
@@ -73,9 +71,7 @@ export const RoomProvider = ({ children }) => {
       isHydratingRef.current = false;
     });
 
-    // ======================
-    // ROOM JOINED (REFRESH)
-    // ======================
+    // ROOM JOINED
     socketService.onRoomJoined((data) => {
       if (!data?.roomId) return;
 
@@ -84,7 +80,6 @@ export const RoomProvider = ({ children }) => {
       setMessages(data.messages || []);
       setCode(data.code || "");
 
-      // 🔥 FIX: restore language on refresh
       if (data.language) {
         console.log("♻️ restore language (join):", data.language);
         setLanguage(data.language);
@@ -104,24 +99,13 @@ export const RoomProvider = ({ children }) => {
       }
     });
 
-    // ======================
     // LANGUAGE CHANGE (POPUP)
-    // ======================
     socketService.onLanguageChange((data) => {
-      console.log("🌐 Language event received:", data);
-
       if (!data || !data.language || !data.username) return;
 
-      // ❌ ignore own change
       if (data.username === usernameRef.current) return;
+      if (isHydratingRef.current) return;
 
-      // ❌ ignore refresh / hydration
-      if (isHydratingRef.current) {
-        console.log("⏭️ skip popup (hydration)");
-        return;
-      }
-
-      console.log("🔔 Showing popup for language:", data.language);
       setPendingLanguage(data.language);
     });
 
@@ -135,6 +119,24 @@ export const RoomProvider = ({ children }) => {
       webrtcService.stopAudio();
     };
   }, []);
+
+  // ======================
+  // 🔥 STARTER CODE INJECTION (THE FEATURE)
+  // ======================
+  useEffect(() => {
+    if (!currentRoom) return;
+
+    // inject starter code ONLY if room has no code
+    if (language && code === "") {
+      const starter = getStarterCode(language);
+
+      if (starter) {
+        console.log("🧩 Injecting starter code:", language);
+        setCode(starter);
+        socketService.sendCode(currentRoom, starter);
+      }
+    }
+  }, [currentRoom, language]);
 
   // ======================
   // ACTIONS
@@ -184,7 +186,6 @@ export const RoomProvider = ({ children }) => {
     socketService.sendCode(currentRoom, updatedCode);
   };
 
-  // 🔥 sender only
   const updateLanguageRemote = (newLang) => {
     if (!currentRoom || !newLang || !usernameRef.current) return;
     setLanguage(newLang);

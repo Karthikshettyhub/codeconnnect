@@ -68,3 +68,115 @@
   max-height: 300px;
 }
 
+/* ================= VS CODE–LIKE TERMINAL BEHAVIOR ================= */
+
+/* Keep compiler panel fixed, content scrolls */
+.compiler-panel {
+  height: 260px;
+  overflow: hidden;
+}
+
+/* Header + tabs stay fixed */
+.compiler-header,
+.compiler-tabs {
+  flex-shrink: 0;
+}
+
+/* Main content becomes scroll container */
+.compiler-content {
+  flex: 1;
+  overflow-y: auto;
+  background: #1e1e1e;
+  padding: 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Output behaves like terminal */
+.output-area {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  max-height: none;
+  min-height: 100%;
+  color: #d4d4d4;
+}
+
+/* Input textarea like stdin */
+.input-textarea {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  outline: none;
+}
+
+/* Scrollbar styling (VS Code–like) */
+.compiler-content::-webkit-scrollbar,
+.output-area::-webkit-scrollbar,
+.input-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.compiler-content::-webkit-scrollbar-thumb,
+.output-area::-webkit-scrollbar-thumb,
+.input-textarea::-webkit-scrollbar-thumb {
+  background: #3c3c3c;
+  border-radius: 4px;
+}
+
+.compiler-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Error box stays visible but clean */
+.error-box {
+  margin: 8px;
+  border-radius: 6px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+/* Run button animation polish */
+.btn-compiler {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-compiler.run {
+  background: #0e639c;
+}
+
+.btn-compiler.run:hover {
+  background: #1177bb;
+}
+
+.btn-compiler.running {
+  background: #444;
+  cursor: not-allowed;
+}
+
+/* Spinner animation */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
