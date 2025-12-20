@@ -1,3 +1,4 @@
+// src/contexts/roomcontext.jsx
 import React, {
   createContext,
   useContext,
@@ -54,7 +55,9 @@ export const RoomProvider = ({ children }) => {
       usernameRef.current = savedUser;
     }
 
+    // ======================
     // ROOM CREATED
+    // ======================
     socketService.onRoomCreated((data) => {
       if (!data?.roomId) return;
 
@@ -68,10 +71,17 @@ export const RoomProvider = ({ children }) => {
         setLanguage(data.language);
       }
 
+      // 🔥🔥🔥 FIX (DO NOT REMOVE)
+      // Overwrite stale browser data with room truth
+      localStorage.setItem("currentLanguage", data.language || "javascript");
+      localStorage.setItem("currentCode", data.code || "");
+
       isHydratingRef.current = false;
     });
 
+    // ======================
     // ROOM JOINED
+    // ======================
     socketService.onRoomJoined((data) => {
       if (!data?.roomId) return;
 
@@ -85,6 +95,11 @@ export const RoomProvider = ({ children }) => {
         setLanguage(data.language);
       }
 
+      // 🔥🔥🔥 FIX (DO NOT REMOVE)
+      // Overwrite stale browser data with room truth
+      localStorage.setItem("currentLanguage", data.language || "javascript");
+      localStorage.setItem("currentCode", data.code || "");
+
       isHydratingRef.current = false;
     });
 
@@ -96,13 +111,13 @@ export const RoomProvider = ({ children }) => {
     socketService.onCodeReceive((data) => {
       if (data?.code !== undefined) {
         setCode(data.code);
+        localStorage.setItem("currentCode", data.code);
       }
     });
 
     // LANGUAGE CHANGE (POPUP)
     socketService.onLanguageChange((data) => {
       if (!data || !data.language || !data.username) return;
-
       if (data.username === usernameRef.current) return;
       if (isHydratingRef.current) return;
 
@@ -121,7 +136,7 @@ export const RoomProvider = ({ children }) => {
   }, []);
 
   // ======================
-  // 🔥 STARTER CODE INJECTION (THE FEATURE)
+  // 🔥 STARTER CODE INJECTION
   // ======================
   useEffect(() => {
     if (!currentRoom) return;
@@ -133,6 +148,7 @@ export const RoomProvider = ({ children }) => {
       if (starter) {
         console.log("🧩 Injecting starter code:", language);
         setCode(starter);
+        localStorage.setItem("currentCode", starter);
         socketService.sendCode(currentRoom, starter);
       }
     }
@@ -165,6 +181,8 @@ export const RoomProvider = ({ children }) => {
     socketService.removeAllListeners();
     socketService.disconnect();
     sessionStorage.clear();
+    localStorage.removeItem("currentCode");
+    localStorage.removeItem("currentLanguage");
 
     setCurrentRoom(null);
     setUsers([]);
@@ -183,18 +201,21 @@ export const RoomProvider = ({ children }) => {
   const updateCodeRemote = (updatedCode) => {
     if (!currentRoom) return;
     setCode(updatedCode);
+    localStorage.setItem("currentCode", updatedCode);
     socketService.sendCode(currentRoom, updatedCode);
   };
 
   const updateLanguageRemote = (newLang) => {
     if (!currentRoom || !newLang || !usernameRef.current) return;
     setLanguage(newLang);
+    localStorage.setItem("currentLanguage", newLang);
     socketService.sendLanguage(currentRoom, newLang, usernameRef.current);
   };
 
   const acceptLanguageChange = () => {
     if (!pendingLanguage) return;
     setLanguage(pendingLanguage);
+    localStorage.setItem("currentLanguage", pendingLanguage);
     setPendingLanguage(null);
   };
 

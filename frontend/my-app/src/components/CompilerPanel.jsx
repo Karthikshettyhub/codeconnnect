@@ -1,5 +1,5 @@
 // src/components/CompilerPanel.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Play, Loader2, Terminal } from "lucide-react";
 import { executeCode } from "../services/pistonService";
 import "./CompilerPanel.css";
@@ -11,8 +11,27 @@ const CompilerPanel = ({ language }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState("output");
 
-  // Read latest code stored by Monaco Editor
-  const getUserCode = () => localStorage.getItem("currentCode") || "";
+  /**
+   * ✅ VERY IMPORTANT FIX
+   * If user refreshes / switches room / switches language,
+   * old code from localStorage must NOT be executed.
+   */
+  useEffect(() => {
+    const storedLang = localStorage.getItem("currentLanguage");
+
+    if (storedLang && storedLang !== language) {
+      // clear ONLY code, not touching anything else
+      localStorage.removeItem("currentCode");
+    }
+
+    // always keep language in sync
+    localStorage.setItem("currentLanguage", language);
+  }, [language]);
+
+  // Read code exactly how your app already does
+  const getUserCode = () => {
+    return localStorage.getItem("currentCode") || "";
+  };
 
   const clean = (code) =>
     (code || "")
@@ -22,36 +41,34 @@ const CompilerPanel = ({ language }) => {
       .replace(/[^\x00-\x7F]/g, "")
       .trim();
 
-  // ⛔ NO LLM HERE — Runs RAW user code
   const handleRunCode = async () => {
     setIsRunning(true);
     setOutput("⏳ Running user code...");
     setError("");
 
     const rawBody = getUserCode();
+
+    // ⛔ HARD GUARD — stops wrong-language execution
+    if (!rawBody.trim()) {
+      setOutput("");
+      setError("⏳ Code is syncing. Please run again.");
+      setIsRunning(false);
+      return;
+    }
+
     const finalCode = clean(rawBody);
 
     try {
       const result = await executeCode(finalCode, language, input);
 
-      console.log("🔍 PISTON RESULT:", result);
-
       if (!result.success) {
         setOutput("");
-        setError(
-          result.error ||
-            result.run?.stderr ||
-            result.compile?.stderr ||
-            "Unknown error."
-        );
+        setError(result.error || "Execution failed");
       } else if (result.run?.stderr?.trim()) {
         setOutput("");
         setError(result.run.stderr);
-      } else if (result.output?.trim()) {
-        setOutput(result.output);
-        setError("");
       } else {
-        setOutput("✔ Ran successfully — but no output.");
+        setOutput(result.output || "✔ Ran successfully — no output");
         setError("");
       }
     } catch (err) {
