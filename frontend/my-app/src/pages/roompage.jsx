@@ -1,10 +1,10 @@
 // src/components/RoomPage.jsx
-import React, { useEffect } from 'react';
-import { useRoom } from '../contexts/roomcontext';
+import React, { useEffect } from "react";
+import { useRoom } from "../contexts/roomcontext";
 import { useNavigate, useParams } from "react-router-dom";
-import ChatBox from '../components/chatbox';
-import CodeEditor from '../components/codeeditor';
-import './roompage.css';
+import ChatBox from "../components/chatbox";
+import CodeEditor from "../components/codeeditor";
+import "./roompage.css";
 
 const RoomPage = () => {
   const { leaveRoom, currentRoom, joinRoom } = useRoom();
@@ -13,28 +13,28 @@ const RoomPage = () => {
 
   useEffect(() => {
     const savedUsername = sessionStorage.getItem("username");
+    const intentionalLeave = sessionStorage.getItem("intentionalLeave");
 
-    // 🔴 Case 1: No roomId at all → go home
-    if (!roomId) {
+    // 🚫 user clicked Leave → DO NOT auto-join
+    if (intentionalLeave === "true") {
       navigate("/");
       return;
     }
 
-    // 🔴 Case 2: No username → go home
-    if (!savedUsername) {
+    if (!roomId || !savedUsername) {
       navigate("/");
       return;
     }
 
-    // 🟢 Case 3: Refresh → restore room
+    // ✅ auto-join ONLY on refresh
     if (!currentRoom) {
       joinRoom(roomId, savedUsername);
     }
   }, [roomId, currentRoom, joinRoom, navigate]);
 
   const handleLeave = () => {
-    leaveRoom();          // full cleanup
-    navigate("/");        // manual redirect
+    leaveRoom();
+    navigate("/");
   };
 
   return (
