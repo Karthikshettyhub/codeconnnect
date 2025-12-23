@@ -3,27 +3,36 @@ import { useRoom } from "../contexts/roomcontext";
 import { useNavigate } from "react-router-dom";
 import "./homepage.css";
 import { auth, googleProvider } from "../firebase";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signOut } from "firebase/auth";
 
 const Homepage = () => {
   const [roomId, setRoomId] = useState("");
   const [username, setUsername] = useState("");
   const [mode, setMode] = useState("join");
-  const [user, setUser] = useState(null); // firebase user state
+  const [user, setUser] = useState(null);
 
-  const { createRoom, joinRoom, currentRoom } = useRoom();
+  const { createRoom, joinRoom, currentRoom, leaveRoom } = useRoom();
   const navigate = useNavigate();
 
-  // Listen for Firebase auth state
+  // 🔐 Listen for Firebase auth state
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
-      if (currentUser && !username) {
+      if (currentUser) {
         setUsername(currentUser.displayName || "");
+      } else {
+        setUsername("");
       }
     });
     return () => unsubscribe();
-  }, [username]);
+  }, []);
+
+  // 🔁 Redirect when room is joined/created
+  useEffect(() => {
+    if (currentRoom) {
+      navigate(`/room/${currentRoom}`);
+    }
+  }, [currentRoom, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -39,18 +48,15 @@ const Homepage = () => {
     }
   };
 
-  // ✅ REDIRECT FIX
-  useEffect(() => {
-    if (currentRoom) {
-      navigate(`/room/${currentRoom}`);
-    }
-  }, [currentRoom, navigate]);
-
   const generateRoomId = () => {
-    const id = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const id = Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase();
     setRoomId(id);
   };
 
+  // 🔑 Google Login
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -58,7 +64,27 @@ const Homepage = () => {
       setUsername(result.user.displayName || "");
     } catch (err) {
       console.error("Login error:", err);
-      alert("Login failed! Check console for details.");
+      alert("Login failed");
+    }
+  };
+
+  // 🚪 LOGOUT (🔥 NEW)
+  const handleLogout = async () => {
+    try {
+      leaveRoom(); // safety cleanup
+      await signOut(auth);
+
+      sessionStorage.clear();
+      localStorage.clear();
+
+      setUser(null);
+      setUsername("");
+      setRoomId("");
+
+      navigate("/");
+    } catch (err) {
+      console.error("Logout error:", err);
+      alert("Logout failed");
     }
   };
 
@@ -67,7 +93,19 @@ const Homepage = () => {
       {/* ---------- NAVBAR ---------- */}
       <nav className="navbar">
         <h2 className="nav-logo">CodeCollab</h2>
-        <div className="nav-right" />
+
+        <div className="nav-right">
+          {user && (
+            <>
+              <span className="nav-user">
+                👋 {user.displayName}
+              </span>
+              <button className="logout-btn" onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          )}
+        </div>
       </nav>
 
       {/* ---------- MAIN CARD ---------- */}
@@ -75,7 +113,7 @@ const Homepage = () => {
         <h1 className="home-title">Start Collaborating</h1>
         <p className="home-subtitle">Create or join a room in seconds</p>
 
-        {/* ---------- LOGIN BUTTON ---------- */}
+        {/* ---------- LOGIN ---------- */}
         {!user && (
           <button
             onClick={handleGoogleLogin}
@@ -84,10 +122,6 @@ const Homepage = () => {
               marginBottom: "20px",
               background: "#4285F4",
               color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
             }}
           >
             Login with Google
@@ -101,6 +135,7 @@ const Homepage = () => {
             placeholder="Enter your name"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            disabled={!!user}
           />
 
           <label>Room ID</label>

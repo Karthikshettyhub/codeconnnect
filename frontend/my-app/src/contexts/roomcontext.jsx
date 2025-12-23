@@ -1,5 +1,11 @@
 // src/contexts/roomcontext.jsx
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import socketService from "../services/socket";
 import { getStarterCode } from "../services/pistonService";
 
@@ -57,12 +63,14 @@ export const RoomProvider = ({ children }) => {
     });
 
     socketService.onCodeReceive((data) => {
-      if (data?.code !== undefined) setCode(data.code);
+      if (data?.code !== undefined) {
+        setCode(data.code);
+      }
     });
 
+    // 🔥 FIXED: DO NOT CHECK usernameRef HERE
     socketService.onLanguageChange((data) => {
-      if (!data || !data.language || !data.username) return;
-      if (data.username === usernameRef.current) return;
+      if (!data?.language) return;
       setPendingLanguage(data.language);
     });
   }, []);
@@ -107,7 +115,6 @@ export const RoomProvider = ({ children }) => {
       socketService.leaveRoom(currentRoom, usernameRef.current);
     }
 
-    // 🔥 THIS IS THE KEY
     sessionStorage.setItem("intentionalLeave", "true");
 
     setCurrentRoom(null);
@@ -129,24 +136,39 @@ export const RoomProvider = ({ children }) => {
         code,
         language,
         pendingLanguage,
+
         createRoom,
         joinRoom,
         leaveRoom,
+
         sendMessage: (msg) =>
           currentRoom &&
           usernameRef.current &&
           socketService.sendMessage(currentRoom, usernameRef.current, msg),
+
         updateCodeRemote: (c) =>
           currentRoom && socketService.sendCode(currentRoom, c),
+
         updateLanguageRemote: (l) =>
           currentRoom &&
-          usernameRef.current &&
           socketService.sendLanguage(currentRoom, l, usernameRef.current),
+
+        // 🔥 FIXED ACCEPT
         acceptLanguageChange: () => {
-          setLanguage(pendingLanguage);
+          const newLang = pendingLanguage;
+          if (!newLang) return;
+
+          const starter = getStarterCode(newLang);
+          setLanguage(newLang);
+          setCode(starter);
+
+          socketService.sendCode(currentRoom, starter);
           setPendingLanguage(null);
         },
-        rejectLanguageChange: () => setPendingLanguage(null),
+
+        rejectLanguageChange: () => {
+          setPendingLanguage(null);
+        },
       }}
     >
       {children}
