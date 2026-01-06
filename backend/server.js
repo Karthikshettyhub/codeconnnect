@@ -21,7 +21,7 @@ const io = new Server(server, {
 
 // IMPORTANT: backend runs on 5005
 const PORT = process.env.PORT || 5005;
-const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_KEY = "AIzaSyB1VD0wTdEH2lHPzsyOkXN2MRVBw_xusvc";
 
 app.use(cors());
 app.use(express.json());

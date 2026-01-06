@@ -9,9 +9,7 @@ class SocketService {
   connect() {
     if (this.socket?.connected) return;
 
-    const SOCKET_URL =
-    import.meta.env.VITE_SOCKET_URL || "http://localhost:5005" || "https://codeconnnect.onrender.com";
-  
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
 
     this.socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
