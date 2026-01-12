@@ -201,3 +201,27 @@
     font-size: 22px;
   }
 }
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-user {
+  color: #ddd;
+  font-size: 14px;
+}
+
+.logout-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #ff4d4f;
+  color: #fff;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: #d9363e;
+}

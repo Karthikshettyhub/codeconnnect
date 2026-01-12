@@ -121,7 +121,7 @@ const CodeEditor = () => {
     setIsGenerating(true);
 
     try {
-      const res = await fetch("http://localhost:5005/boiler", {
+      const res = await fetch("https://codeconnnect.onrender.com/boiler", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
