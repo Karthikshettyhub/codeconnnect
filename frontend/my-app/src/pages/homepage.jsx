@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRoom } from "../contexts/roomcontext";
 import { useNavigate } from "react-router-dom";
 import "./homepage.css";
-import { auth, googleProvider } from "../firebase";
+// import { auth, googleProvider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
 
 const Homepage = () => {
@@ -15,15 +15,15 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   // Listen for Firebase auth state
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
-      if (currentUser && !username) {
-        setUsername(currentUser.displayName || "");
-      }
-    });
-    return () => unsubscribe();
-  }, [username]);
+  // useEffect(() => {
+  //   const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+  //     setUser(currentUser);
+  //     if (currentUser && !username) {
+  //       setUsername(currentUser.displayName || "");
+  //     }
+  //   });
+  //   return () => unsubscribe();
+  // }, [username]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -51,16 +51,16 @@ const Homepage = () => {
     setRoomId(id);
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      setUser(result.user);
-      setUsername(result.user.displayName || "");
-    } catch (err) {
-      console.error("Login error:", err);
-      alert("Login failed! Check console for details.");
-    }
-  };
+  // const handleGoogleLogin = async () => {
+  //   try {
+  //     const result = await signInWithPopup(auth, googleProvider);
+  //     setUser(result.user);
+  //     setUsername(result.user.displayName || "");
+  //   } catch (err) {
+  //     console.error("Login error:", err);
+  //     alert("Login failed! Check console for details.");
+  //   }
+  // };
 
   return (
     <div className="homepage-container">
@@ -78,7 +78,7 @@ const Homepage = () => {
         {/* ---------- LOGIN BUTTON ---------- */}
         {!user && (
           <button
-            onClick={handleGoogleLogin}
+            // onClick={handleGoogleLogin}
             className="submit-btn"
             style={{
               marginBottom: "20px",
