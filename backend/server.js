@@ -8,22 +8,23 @@ require("dotenv").config();
 const app = express();
 const server = http.createServer(app);
 
-
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173",process.env.FRONTEND_URL],
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
-// IMPORTANT: backend runs on 5005
 const PORT = process.env.PORT || 5005;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
+// ✅ NOW TEST HERE (after GEMINI_KEY is declared)
+console.log("🔑 API Key loaded:", GEMINI_KEY ? "YES (length: " + GEMINI_KEY.length + ")" : "NO");
+console.log("🔑 First 10 chars:", GEMINI_KEY ? GEMINI_KEY.substring(0, 10) + "..." : "NONE");
+
 app.use(cors());
 app.use(express.json());
-
 
 const clean = (text = "") =>
   text
@@ -36,9 +37,6 @@ const clean = (text = "") =>
     .replace(/Explanation:?/gi, "")
     .trim();
 
-// =============================
-// TEST ROUTE
-// =============================
 app.get("/", (req, res) => {
   res.json({ message: "Backend working!" });
 });
@@ -53,67 +51,86 @@ app.post("/boiler", async (req, res) => {
   console.log("===============================\n");
 
   if (!language || !userBody) {
-    return res.json({ ok: false, output: "" });
+    console.log("❌ Missing language or userBody");
+    return res.json({ ok: false, output: "", error: "Missing language or code" });
   }
 
-  const prompt = `
-Generate ONLY ${language} boilerplate code.
-DO NOT fix user code.
-DO NOT explain.
-DO NOT add markdown.
+  if (!GEMINI_KEY) {
+    console.log("❌ Missing GEMINI_API_KEY in .env");
+    return res.json({ ok: false, output: "", error: "API key not configured" });
+  }
 
-Wrap this USER BODY inside correct ${language} boilerplate.
+  const prompt = `Generate ONLY ${language} boilerplate code that wraps this user code.
 
-USER BODY:
+Rules:
+- DO NOT modify the user's code
+- DO NOT add explanations or comments
+- DO NOT use markdown code blocks
+- Output ONLY executable ${language} code
+
+User code to wrap:
 ${userBody}
-`;
+
+Generate the complete boilerplate now:`;
 
   try {
+    console.log("📤 Sending request to Gemini API...");
+
     const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
         contents: [{ parts: [{ text: prompt }] }],
       }
     );
 
-    const llmText =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    console.log("📥 Received response from Gemini");
+
+    const llmText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    if (!llmText) {
+      console.log("❌ Empty response from Gemini");
+      return res.json({ ok: false, output: "", error: "Empty response from AI" });
+    }
+
+    console.log("🟢 RAW RESPONSE:\n", llmText);
 
     const cleaned = clean(llmText);
 
-<<<<<<< HEAD
-
-
-    
-    console.log("🟢 RAW RESPONSE:\n", llmText);
     console.log("🟢 CLEANED OUTPUT:\n", cleaned);
-=======
-    console.log("RAW RESPONSE:\n", llmText);
-    console.log("CLEANED OUTPUT:\n", cleaned);
->>>>>>> 73346749cc05786b0fadce941fb26f9d92e7c116
+    console.log("🟢 CLEANED LENGTH:", cleaned.length);
 
-    if (!cleaned || cleaned.length < 5) {
-      return res.json({ ok: false, output: "" });
+    if (!cleaned || cleaned.length < 10) {
+      console.log("⚠️ Cleaned output too short or empty");
+      return res.json({
+        ok: false,
+        output: "",
+        error: `Generated code too short (${cleaned.length} chars)`
+      });
     }
+
+    console.log("✅ Boilerplate generated successfully");
 
     return res.json({
       ok: true,
       output: cleaned,
     });
   } catch (err) {
-    console.log("🟥 GEMINI ERROR:", err.response?.data || err);
-    return res.json({ ok: false, output: "" });
+    console.log("🟥 GEMINI ERROR:");
+    console.log("Error message:", err.message);
+    console.log("Error response:", err.response?.data);
+
+    const errorMessage = err.response?.data?.error?.message || err.message || "Unknown error";
+
+    return res.json({
+      ok: false,
+      output: "",
+      error: `Gemini API error: ${errorMessage}`
+    });
   }
 });
 
-// =============================
-// SOCKET HANDLER (UNCHANGED)
-// =============================
 require("./src/socketHandler")(io);
 
-// =============================
-// START SERVER
-// =============================
 server.listen(PORT, () => {
   console.log(`🔥 Backend + Gemini + Socket running on port ${PORT}`);
 });

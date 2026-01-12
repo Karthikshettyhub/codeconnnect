@@ -1,4 +1,3 @@
-// src/components/RoomPage.jsx
 import React, { useEffect } from "react";
 import { useRoom } from "../contexts/roomcontext";
 import { useNavigate, useParams } from "react-router-dom";
@@ -7,28 +6,30 @@ import CodeEditor from "../components/codeeditor";
 import "./roompage.css";
 
 const RoomPage = () => {
-  const { leaveRoom, currentRoom, joinRoom } = useRoom();
+  const { currentRoom, joinRoom, leaveRoom } = useRoom();
   const navigate = useNavigate();
   const { roomId } = useParams();
 
   useEffect(() => {
-    const savedUsername = sessionStorage.getItem("username");
+    const username = sessionStorage.getItem("username");
     const intentionalLeave = sessionStorage.getItem("intentionalLeave");
 
-    // 🚫 user clicked Leave → DO NOT auto-join
     if (intentionalLeave === "true") {
       navigate("/");
       return;
     }
 
-    if (!roomId || !savedUsername) {
+    if (!roomId || !username) {
       navigate("/");
       return;
     }
 
-    // ✅ auto-join ONLY on refresh
+    // ✅ SAVE ROOM ID FOR REFRESH
+    sessionStorage.setItem("roomId", roomId);
+
+    // ✅ AUTO REJOIN ONLY IF NOT IN ROOM
     if (!currentRoom) {
-      joinRoom(roomId, savedUsername);
+      joinRoom(roomId, username);
     }
   }, [roomId, currentRoom, joinRoom, navigate]);
 

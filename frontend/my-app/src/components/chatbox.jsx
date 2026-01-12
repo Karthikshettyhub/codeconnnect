@@ -1,22 +1,21 @@
-// src/components/chatbox.jsx
-import React, { useState, useEffect, useRef } from 'react';
-import { useRoom } from '../contexts/roomcontext';
+import React, { useState, useEffect, useRef } from "react";
+import { useRoom } from "../contexts/roomcontext";
 import socketService from "../services/socket";
 import "./chatbox.css";
 
-// =====================
-// 🔊 WebRTC refs
-// =====================
-let pc = null;
-let localStream = null;
+const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
 
 const ChatBox = ({ onLeave }) => {
-  const { currentRoom, messages, sendMessage, username } = useRoom();
-  const [inputMessage, setInputMessage] = useState('');
+  const { currentRoom, messages, sendMessage, username, users } = useRoom();
+
+  const [inputMessage, setInputMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
 
+  const peersRef = useRef({});           // socketId -> RTCPeerConnection
+  const localStreamRef = useRef(null);   // MediaStream
+  const audioRefs = useRef({});          // socketId -> audio element
+
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
 
   // =====================
   // AUTO SCROLL
@@ -26,171 +25,189 @@ const ChatBox = ({ onLeave }) => {
   }, [messages]);
 
   // =====================
-  // WEBRTC SOCKET LISTENERS (LOCAL ONLY)
+  // CREATE PEER CONNECTION
+  // =====================
+  const createPeer = (remoteSocketId) => {
+    if (peersRef.current[remoteSocketId]) {
+      return peersRef.current[remoteSocketId];
+    }
+
+    console.log("🧠 Creating peer for:", remoteSocketId);
+
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        console.log("🧊 ICE candidate →", remoteSocketId);
+        socketService.emit("webrtc-ice", {
+          target: remoteSocketId,
+          candidate: event.candidate,
+        });
+      }
+    };
+
+    pc.ontrack = (event) => {
+      console.log("🔊 Incoming audio from:", remoteSocketId);
+
+      if (!audioRefs.current[remoteSocketId]) {
+        const audio = document.createElement("audio");
+        audio.autoplay = true;
+        audio.srcObject = event.streams[0];
+        document.body.appendChild(audio);
+        audioRefs.current[remoteSocketId] = audio;
+      }
+    };
+
+    peersRef.current[remoteSocketId] = pc;
+    return pc;
+  };
+
+  // =====================
+  // SOCKET LISTENERS
   // =====================
   useEffect(() => {
-    const handleOffer = async ({ roomId, offer }) => {
-      pc = createPeer(roomId);
+    const handleOffer = async ({ from, offer }) => {
+      console.log("📥 Received OFFER from:", from);
 
-      await pc.setRemoteDescription(offer);
+      if (!offer) {
+        console.warn("⚠️ Offer is null, ignoring");
+        return;
+      }
 
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localStream.getTracks().forEach(track =>
-        pc.addTrack(track, localStream)
-      );
+      const pc = createPeer(from);
+
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+      localStreamRef.current?.getTracks().forEach((track) => {
+        pc.addTrack(track, localStreamRef.current);
+      });
 
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
-      socketService.emit("webrtc-answer", { roomId, answer });
+      console.log("📤 Sending ANSWER to:", from);
+
+      socketService.emit("webrtc-answer", {
+        target: from,
+        answer,
+      });
     };
 
-    const handleAnswer = async ({ answer }) => {
-      if (pc) await pc.setRemoteDescription(answer);
+    const handleAnswer = async ({ from, answer }) => {
+      console.log("📥 Received ANSWER from:", from);
+      const pc = peersRef.current[from];
+      if (!pc) return;
+
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
     };
 
-    const handleIce = async ({ candidate }) => {
-      if (candidate && pc) await pc.addIceCandidate(candidate);
+    const handleIce = async ({ from, candidate }) => {
+      console.log("🧊 ICE received from:", from);
+      const pc = peersRef.current[from];
+      if (pc && candidate) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      }
     };
 
     socketService.listen("webrtc-offer", handleOffer);
     socketService.listen("webrtc-answer", handleAnswer);
     socketService.listen("webrtc-ice", handleIce);
 
-    // ✅ CLEANUP ONLY WEBRTC (NOT GLOBAL SOCKET)
     return () => {
-      localStream?.getTracks().forEach(t => t.stop());
-      pc?.close();
-
-      pc = null;
-      localStream = null;
-      setIsRecording(false);
+      Object.values(peersRef.current).forEach((pc) => pc.close());
+      peersRef.current = {};
     };
-  }, []);
+  }, [currentRoom]);
 
   // =====================
-  // CREATE PEER
-  // =====================
-  const createPeer = (roomId) => {
-    const peer = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
-
-    peer.onicecandidate = (event) => {
-      if (event.candidate) {
-        socketService.emit("webrtc-ice", {
-          roomId,
-          candidate: event.candidate,
-        });
-      }
-    };
-
-    peer.ontrack = (event) => {
-      const audio = document.createElement("audio");
-      audio.srcObject = event.streams[0];
-      audio.autoplay = true;
-    };
-
-    return peer;
-  };
-
-  // =====================
-  // 🎤 MIC TOGGLE
+  // 🎤 TOGGLE MICROPHONE
   // =====================
   const toggleMic = async () => {
     if (!currentRoom) return;
 
     if (!isRecording) {
-      pc = createPeer(currentRoom);
+      console.log("🎤 Requesting microphone access...");
 
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localStream.getTracks().forEach(track =>
-        pc.addTrack(track, localStream)
-      );
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStreamRef.current = stream;
 
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
+      console.log("✅ Mic started:", stream);
 
-      socketService.emit("webrtc-offer", {
-        roomId: currentRoom,
-        offer,
+      // Create offer for every other user
+      users.forEach(async (user) => {
+        if (!user.socketId) return;
+        if (user.username === username) return;
+
+        console.log("📡 Connecting to peer:", user.socketId);
+
+        const pc = createPeer(user.socketId);
+
+        stream.getTracks().forEach((track) => {
+          pc.addTrack(track, stream);
+        });
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        console.log("📤 Sending OFFER to:", user.socketId);
+
+        socketService.emit("webrtc-offer", {
+          target: user.socketId,
+          offer,
+        });
       });
 
       setIsRecording(true);
     } else {
-      localStream?.getTracks().forEach(t => t.stop());
-      pc?.close();
-      pc = null;
-      localStream = null;
+      console.log("🛑 Stopping microphone");
+
+      Object.values(peersRef.current).forEach((pc) => pc.close());
+      peersRef.current = {};
+
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      localStreamRef.current = null;
+
       setIsRecording(false);
     }
   };
 
   // =====================
-  // SEND MESSAGE
+  // SEND CHAT MESSAGE
   // =====================
   const handleSend = (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
+
     sendMessage(inputMessage.trim());
-    setInputMessage('');
-  };
-
-  const formatTime = (timestamp) =>
-    new Date(timestamp).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-  // =====================
-  // 🔥 LEAVE ROOM (FIXED)
-  // =====================
-  const handleLeaveClick = () => {
-    localStream?.getTracks().forEach(t => t.stop());
-    pc?.close();
-
-    pc = null;
-    localStream = null;
-    setIsRecording(false);
-
-    onLeave(); // ✅ redirect works now
+    setInputMessage("");
   };
 
   return (
     <div className="chatbox">
       <div className="chatbox-header">
         <h3>💬 Chat</h3>
-        <button onClick={handleLeaveClick}>Leave</button>
+        <button onClick={onLeave}>Leave</button>
       </div>
 
       <div className="chatbox-messages">
         {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`message ${
-              msg.username === username ? 'own-message' : ''
-            }`}
-          >
-            <div className="message-header">
-              <span>{msg.username}</span>
-              <span>{formatTime(msg.timestamp)}</span>
-            </div>
-            <div>{msg.message}</div>
+          <div key={idx}>
+            <b>{msg.username}</b>: {msg.message}
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      <form className="chatbox-input" onSubmit={handleSend}>
+      <form onSubmit={handleSend} className="chatbox-input">
         <input
-          ref={inputRef}
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type a message..."
         />
         <button type="submit">Send</button>
+
         <button type="button" onClick={toggleMic}>
-          {isRecording ? "🔴 Mic On" : "🎤 Mic"}
+          {isRecording ? "🔴 Mic ON" : "🎤 Mic"}
         </button>
       </form>
     </div>

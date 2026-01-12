@@ -1,4 +1,3 @@
-// src/contexts/roomcontext.jsx
 import React, {
   createContext,
   useContext,
@@ -27,20 +26,29 @@ export const RoomProvider = ({ children }) => {
   const [language, setLanguage] = useState("javascript");
   const [pendingLanguage, setPendingLanguage] = useState(null);
 
-  const listenersSetup = useRef(false);
   const usernameRef = useRef("");
 
-  // ======================
-  // INIT SOCKET (ONCE)
-  // ======================
+  // =====================
+  // 🔌 SOCKET INIT + AUTO REJOIN
+  // =====================
   useEffect(() => {
-    if (listenersSetup.current) return;
-    listenersSetup.current = true;
-
     socketService.connect();
 
+    const savedRoom = sessionStorage.getItem("roomId");
+    const savedUsername = sessionStorage.getItem("username");
+    const intentionalLeave = sessionStorage.getItem("intentionalLeave");
+
+    // ✅ AUTO REJOIN ON REFRESH
+    if (savedRoom && savedUsername && intentionalLeave !== "true") {
+      usernameRef.current = savedUsername;
+      setUsername(savedUsername);
+      socketService.joinRoom(savedRoom, savedUsername);
+    }
+
+    // =====================
+    // SOCKET LISTENERS
+    // =====================
     socketService.onRoomCreated((data) => {
-      if (!data?.roomId) return;
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
@@ -49,7 +57,6 @@ export const RoomProvider = ({ children }) => {
     });
 
     socketService.onRoomJoined((data) => {
-      if (!data?.roomId) return;
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
@@ -58,55 +65,60 @@ export const RoomProvider = ({ children }) => {
     });
 
     socketService.onReceiveMessage((data) => {
-      if (!data) return;
       setMessages((prev) => [...prev, data]);
     });
 
     socketService.onCodeReceive((data) => {
-      if (data?.code !== undefined) {
-        setCode(data.code);
-      }
+      if (data?.code !== undefined) setCode(data.code);
     });
 
-    // 🔥 FIXED: DO NOT CHECK usernameRef HERE
     socketService.onLanguageChange((data) => {
-      if (!data?.language) return;
-      setPendingLanguage(data.language);
+      if (data?.language) setPendingLanguage(data.language);
     });
+
+    socketService.onError((err) => {
+      alert(err?.message || "Socket error");
+    });
+
+    return () => {
+      socketService.removeAllListeners();
+    };
   }, []);
 
-  // ======================
-  // STARTER CODE
-  // ======================
+  // =====================
+  // DEFAULT STARTER CODE
+  // =====================
   useEffect(() => {
     if (!currentRoom) return;
-    if (language && code === "") {
+    if (code === "" && language) {
       const starter = getStarterCode(language);
-      if (starter) {
-        setCode(starter);
-        socketService.sendCode(currentRoom, starter);
-      }
+      setCode(starter);
+      socketService.sendCode(currentRoom, starter);
     }
   }, [currentRoom, language]);
 
-  // ======================
-  // ACTIONS
-  // ======================
+  // =====================
+  // ROOM ACTIONS
+  // =====================
   const createRoom = (roomId, userName) => {
-    if (!roomId || !userName) return;
     sessionStorage.removeItem("intentionalLeave");
+    sessionStorage.setItem("roomId", roomId);
+    sessionStorage.setItem("username", userName);
+
     setUsername(userName);
     usernameRef.current = userName;
-    sessionStorage.setItem("username", userName);
+
     socketService.createRoom(roomId, userName);
   };
 
   const joinRoom = (roomId, userName) => {
-    if (!roomId || !userName) return;
     sessionStorage.removeItem("intentionalLeave");
+    sessionStorage.setItem("roomId", roomId);
+    sessionStorage.setItem("username", userName);
+
     setUsername(userName);
     usernameRef.current = userName;
-    sessionStorage.setItem("username", userName);
+
     socketService.joinRoom(roomId, userName);
   };
 
@@ -116,6 +128,7 @@ export const RoomProvider = ({ children }) => {
     }
 
     sessionStorage.setItem("intentionalLeave", "true");
+    sessionStorage.removeItem("roomId");
 
     setCurrentRoom(null);
     setUsers([]);
@@ -153,22 +166,16 @@ export const RoomProvider = ({ children }) => {
           currentRoom &&
           socketService.sendLanguage(currentRoom, l, usernameRef.current),
 
-        // 🔥 FIXED ACCEPT
         acceptLanguageChange: () => {
-          const newLang = pendingLanguage;
-          if (!newLang) return;
-
-          const starter = getStarterCode(newLang);
-          setLanguage(newLang);
+          if (!pendingLanguage) return;
+          const starter = getStarterCode(pendingLanguage);
+          setLanguage(pendingLanguage);
           setCode(starter);
-
           socketService.sendCode(currentRoom, starter);
           setPendingLanguage(null);
         },
 
-        rejectLanguageChange: () => {
-          setPendingLanguage(null);
-        },
+        rejectLanguageChange: () => setPendingLanguage(null),
       }}
     >
       {children}

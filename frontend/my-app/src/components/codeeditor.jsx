@@ -60,7 +60,7 @@ const CodeEditor = () => {
     if (!pendingLanguage) return;
     setShowLangPopup(true);
   }, [pendingLanguage]);
-////
+  ////
   // =====================
   // EDITOR CHANGE
   // =====================
@@ -115,13 +115,24 @@ const CodeEditor = () => {
   // =====================
   // BOILERPLATE
   // =====================
+  // =====================
+  // BOILERPLATE
+  // =====================
+  // =====================
+  // BOILERPLATE
+  // =====================
   const handleGenerateBoilerplate = async () => {
     if (!localCode || isGenerating) return;
 
     setIsGenerating(true);
 
     try {
-      const res = await fetch("https://codeconnnect.onrender.com/boiler", {
+      const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
+
+      console.log("🔵 Generating boilerplate for:", localLanguage);
+      console.log("📝 User code:", localCode);
+
+      const res = await fetch(`${BACKEND_URL}/boiler`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -130,23 +141,47 @@ const CodeEditor = () => {
         }),
       });
 
-      if (!res.ok) throw new Error("Boilerplate API failed");
+      console.log("📤 Response status:", res.status);
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("❌ API Error:", errorText);
+        throw new Error("Boilerplate API failed");
+      }
 
       const data = await res.json();
-      if (!data.ok || !data.output) {
-        throw new Error("Invalid boilerplate response");
+      console.log("✅ Full response data:", data);
+      console.log("✅ data.ok:", data.ok);
+      console.log("✅ data.output:", data.output);
+      console.log("✅ data.error:", data.error);
+
+      // ✅ FIXED: Check for error first
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.ok) {
+        throw new Error("Boilerplate generation returned ok: false");
+      }
+
+      if (!data.output) {
+        throw new Error("No output received from boilerplate generation");
       }
 
       setLocalCode(data.output);
       localStorage.setItem("currentCode", data.output);
       updateCodeRemote(data.output);
+
+      console.log("✅ Boilerplate generated successfully");
+      alert("Boilerplate generated successfully!");
     } catch (err) {
       console.error("❌ Boilerplate error:", err);
-      alert("Failed to generate boilerplate");
+      alert(`Failed to generate boilerplate: ${err.message}`);
     } finally {
       setIsGenerating(false);
     }
   };
+
 
   return (
     <div className="editor-container">

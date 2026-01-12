@@ -1,4 +1,3 @@
-// backend/src/roomManager.js
 class RoomManager {
   constructor() {
     this.rooms = {};
@@ -13,57 +12,61 @@ class RoomManager {
       return { success: false, message: "Room already exists" };
     }
 
-    const room = {
+    this.rooms[roomId] = {
       creator: userId,
-      users: [{ userId, username }],
+      users: [{ userId, username, socketId }],
       messages: [],
       code: "",
-      language: "javascript", // ✅ PERSIST LANGUAGE
+      language: "javascript",
       createdAt: Date.now(),
     };
 
-    this.rooms[roomId] = room;
-    console.log(`🏠 Room created: ${roomId}`);
-    return { success: true, room };
+    return { success: true, room: this.rooms[roomId] };
   }
 
   joinRoom(roomId, userId, username, socketId) {
     const room = this.rooms[roomId];
-    if (!room) return { success: false, message: "Room not found" };
+    if (!room) {
+      return { success: false, message: "Room not found" };
+    }
 
-    const exists = room.users.some((u) => u.userId === userId);
-    if (!exists) room.users.push({ userId, username });
+    const existingUser = room.users.find(u => u.userId === userId);
+
+    if (existingUser) {
+      // 🔥 REFRESH CASE → update socketId
+      existingUser.socketId = socketId;
+    } else {
+      room.users.push({ userId, username, socketId });
+    }
 
     return { success: true, room };
   }
 
   leaveRoom(roomId, userId) {
     const room = this.rooms[roomId];
-    if (!room) return { success: false };
+    if (!room) return;
 
-    room.users = room.users.filter((u) => u.userId !== userId);
-    if (room.users.length === 0) delete this.rooms[roomId];
+    room.users = room.users.filter(u => u.userId !== userId);
 
-    return { success: true };
+    // ✅ DELETE ROOM ONLY ON EXPLICIT LEAVE
+    if (room.users.length === 0) {
+      delete this.rooms[roomId];
+    }
   }
 
   addMessage(roomId, message) {
     const room = this.rooms[roomId];
-    if (!room) return;
-    room.messages.push(message);
+    if (room) room.messages.push(message);
   }
 
   updateCode(roomId, code) {
     const room = this.rooms[roomId];
-    if (!room) return;
-    room.code = code;
+    if (room) room.code = code;
   }
 
   updateLanguage(roomId, language) {
     const room = this.rooms[roomId];
-    if (!room) return;
-    room.language = language;
-    console.log("🌐 language saved:", language);
+    if (room) room.language = language;
   }
 
   getRoomData(roomId) {
@@ -74,35 +77,22 @@ class RoomManager {
       users: room.users,
       messages: room.messages,
       code: room.code,
-      language: room.language, // ✅ SEND LANGUAGE
+      language: room.language,
     };
   }
 
-  // 🔥🔥🔥 MISSING FUNCTION ADDED — FIXES BACKEND CRASH
+  // 🔥 IMPORTANT CHANGE
   removeUserBySocketId(socketId) {
-    let roomsLeft = [];
-
     for (const roomId in this.rooms) {
       const room = this.rooms[roomId];
+      const user = room.users.find(u => u.socketId === socketId);
 
-      const user = room.users.find((u) => u.socketId === socketId);
       if (user) {
-        room.users = room.users.filter((u) => u.socketId !== socketId);
-
-        roomsLeft.push({
-          roomId,
-          userId: user.userId,
-          username: user.username,
-        });
-
-        if (room.users.length === 0) {
-          delete this.rooms[roomId];
-          console.log(`🗑️ Room deleted (empty): ${roomId}`);
-        }
+        // ❌ DO NOT REMOVE USER ON DISCONNECT
+        // Just detach socket
+        user.socketId = null;
       }
     }
-
-    return roomsLeft;
   }
 }
 

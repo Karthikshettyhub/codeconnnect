@@ -2,13 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRoom } from "../contexts/roomcontext";
 import { useNavigate } from "react-router-dom";
 import "./homepage.css";
-<<<<<<< HEAD
-// import { auth, googleProvider } from "../firebase";
-import { signInWithPopup } from "firebase/auth";
-=======
-import { auth, googleProvider } from "../firebase";
-import { signInWithPopup, signOut } from "firebase/auth";
->>>>>>> 73346749cc05786b0fadce941fb26f9d92e7c116
+// import { signInWithPopup, signOut } from "firebase/auth";
 
 const Homepage = () => {
   const [roomId, setRoomId] = useState("");
@@ -19,38 +13,13 @@ const Homepage = () => {
   const { createRoom, joinRoom, currentRoom, leaveRoom } = useRoom();
   const navigate = useNavigate();
 
-<<<<<<< HEAD
-  // Listen for Firebase auth state
-  // useEffect(() => {
-  //   const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-  //     setUser(currentUser);
-  //     if (currentUser && !username) {
-  //       setUsername(currentUser.displayName || "");
-  //     }
-  //   });
-  //   return () => unsubscribe();
-  // }, [username]);
-=======
-  // 🔐 Listen for Firebase auth state
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        setUsername(currentUser.displayName || "");
-      } else {
-        setUsername("");
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // 🔁 Redirect when room is joined/created
-  useEffect(() => {
+    console.log("🔍 currentRoom changed:", currentRoom);
     if (currentRoom) {
+      console.log("🚀 Redirecting to:", `/room/${currentRoom}`);
       navigate(`/room/${currentRoom}`);
     }
   }, [currentRoom, navigate]);
->>>>>>> 73346749cc05786b0fadce941fb26f9d92e7c116
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -58,6 +27,8 @@ const Homepage = () => {
       alert("Enter both room ID and username");
       return;
     }
+
+    console.log("📝 Form submitted - Mode:", mode, "Room:", roomId, "User:", username);
 
     if (mode === "create") {
       createRoom(roomId, username);
@@ -74,23 +45,9 @@ const Homepage = () => {
     setRoomId(id);
   };
 
-  // 🔑 Google Login
-  const handleGoogleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      setUser(result.user);
-      setUsername(result.user.displayName || "");
-    } catch (err) {
-      console.error("Login error:", err);
-      alert("Login failed");
-    }
-  };
-
-  // 🚪 LOGOUT (🔥 NEW)
   const handleLogout = async () => {
     try {
-      leaveRoom(); // safety cleanup
-      await signOut(auth);
+      leaveRoom();
 
       sessionStorage.clear();
       localStorage.clear();
@@ -108,7 +65,6 @@ const Homepage = () => {
 
   return (
     <div className="homepage-container">
-      {/* ---------- NAVBAR ---------- */}
       <nav className="navbar">
         <h2 className="nav-logo">CodeCollab</h2>
 
@@ -126,15 +82,12 @@ const Homepage = () => {
         </div>
       </nav>
 
-      {/* ---------- MAIN CARD ---------- */}
       <div className="home-card">
         <h1 className="home-title">Start Collaborating</h1>
         <p className="home-subtitle">Create or join a room in seconds</p>
 
-        {/* ---------- LOGIN ---------- */}
         {!user && (
           <button
-            // onClick={handleGoogleLogin}
             className="submit-btn"
             style={{
               marginBottom: "20px",
