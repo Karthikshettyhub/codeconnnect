@@ -121,66 +121,66 @@ const CodeEditor = () => {
   // =====================
   // BOILERPLATE
   // =====================
-  const handleGenerateBoilerplate = async () => {
-    if (!localCode || isGenerating) return;
+  // const handleGenerateBoilerplate = async () => {
+  //   if (!localCode || isGenerating) return;
 
-    setIsGenerating(true);
+  //   setIsGenerating(true);
 
-    try {
-      const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
+  //   try {
+  //     const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
 
-      console.log("🔵 Generating boilerplate for:", localLanguage);
-      console.log("📝 User code:", localCode);
+  //     console.log("🔵 Generating boilerplate for:", localLanguage);
+  //     console.log("📝 User code:", localCode);
 
-      const res = await fetch(`${BACKEND_URL}/boiler`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          language: localLanguage,
-          userBody: localCode,
-        }),
-      });
+  //     const res = await fetch(`${BACKEND_URL}/boiler`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         language: localLanguage,
+  //         userBody: localCode,
+  //       }),
+  //     });
 
-      console.log("📤 Response status:", res.status);
+  //     console.log("📤 Response status:", res.status);
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("❌ API Error:", errorText);
-        throw new Error("Boilerplate API failed");
-      }
+  //     if (!res.ok) {
+  //       const errorText = await res.text();
+  //       console.error("❌ API Error:", errorText);
+  //       throw new Error("Boilerplate API failed");
+  //     }
 
-      const data = await res.json();
-      console.log("✅ Full response data:", data);
-      console.log("✅ data.ok:", data.ok);
-      console.log("✅ data.output:", data.output);
-      console.log("✅ data.error:", data.error);
+  //     const data = await res.json();
+  //     console.log("✅ Full response data:", data);
+  //     console.log("✅ data.ok:", data.ok);
+  //     console.log("✅ data.output:", data.output);
+  //     console.log("✅ data.error:", data.error);
 
-      // ✅ FIXED: Check for error first
-      if (data.error) {
-        throw new Error(data.error);
-      }
+  //     // ✅ FIXED: Check for error first
+  //     if (data.error) {
+  //       throw new Error(data.error);
+  //     }
 
-      if (!data.ok) {
-        throw new Error("Boilerplate generation returned ok: false");
-      }
+  //     if (!data.ok) {
+  //       throw new Error("Boilerplate generation returned ok: false");
+  //     }
 
-      if (!data.output) {
-        throw new Error("No output received from boilerplate generation");
-      }
+  //     if (!data.output) {
+  //       throw new Error("No output received from boilerplate generation");
+  //     }
 
-      setLocalCode(data.output);
-      localStorage.setItem("currentCode", data.output);
-      updateCodeRemote(data.output);
+  //     setLocalCode(data.output);
+  //     localStorage.setItem("currentCode", data.output);
+  //     updateCodeRemote(data.output);
 
-      console.log("✅ Boilerplate generated successfully");
-      alert("Boilerplate generated successfully!");
-    } catch (err) {
-      console.error("❌ Boilerplate error:", err);
-      alert(`Failed to generate boilerplate: ${err.message}`);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  //     console.log("✅ Boilerplate generated successfully");
+  //     alert("Boilerplate generated successfully!");
+  //   } catch (err) {
+  //     console.error("❌ Boilerplate error:", err);
+  //     alert(`Failed to generate boilerplate: ${err.message}`);
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
 
 
   return (
@@ -212,13 +212,13 @@ const CodeEditor = () => {
 
         <span>📄 main.{extensions[localLanguage]}</span>
 
-        <button
+        {/* <button
           className="boilerplate-btn"
           onClick={handleGenerateBoilerplate}
           disabled={isGenerating}
         >
           {isGenerating ? "Generating..." : "Generate Boilerplate"}
-        </button>
+        </button> */}
       </div>
 
       <Editor

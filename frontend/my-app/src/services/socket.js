@@ -14,8 +14,8 @@ class SocketService {
       return;
     }
 
-    const SOCKET_URL =
-      import.meta.env.VITE_SOCKET_URL || "http://localhost:5005";
+    const SOCKET_URL = "https://codeconnnect.onrender.com";
+
 
     console.log("🔌 Connecting to:", SOCKET_URL);
 

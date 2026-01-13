@@ -14,6 +14,7 @@ const ChatBox = ({ onLeave }) => {
   const peersRef = useRef({});
   const localStreamRef = useRef(null);
   const audioRefs = useRef({});
+  const audioUnlockedRef = useRef(false);
 
   const messagesEndRef = useRef(null);
 
@@ -22,7 +23,29 @@ const ChatBox = ({ onLeave }) => {
   }, [messages]);
 
   // =====================
-  // CREATE PEER (ONCE)
+  // 🔓 UNLOCK AUDIO ON JOIN (CRITICAL)
+  // =====================
+  useEffect(() => {
+    if (audioUnlockedRef.current) return;
+
+    const audio = document.createElement("audio");
+    audio.autoplay = true;
+    audio.muted = true;
+    audio.srcObject = new MediaStream();
+
+    audio
+      .play()
+      .then(() => {
+        audioUnlockedRef.current = true;
+        console.log("🔓 Audio unlocked");
+      })
+      .catch(() => {
+        console.warn("🔒 Audio locked until user gesture");
+      });
+  }, []);
+
+  // =====================
+  // CREATE PEER (WITH RECVONLY TRANSCEIVER)
   // =====================
   const createPeer = (remoteSocketId) => {
     if (peersRef.current[remoteSocketId]) {
@@ -30,6 +53,9 @@ const ChatBox = ({ onLeave }) => {
     }
 
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+    // 🔥 IMPORTANT: tell browser we expect audio
+    pc.addTransceiver("audio", { direction: "recvonly" });
 
     pc.onicecandidate = (e) => {
       if (e.candidate) {
@@ -48,9 +74,7 @@ const ChatBox = ({ onLeave }) => {
         audio.srcObject = e.streams[0];
         document.body.appendChild(audio);
         audioRefs.current[remoteSocketId] = audio;
-
-        // ensure play after user gesture
-        audio.play().catch(() => {});
+        audio.play().catch(() => { });
       }
     };
 
@@ -65,9 +89,7 @@ const ChatBox = ({ onLeave }) => {
     const handleOffer = async ({ from, offer }) => {
       const pc = createPeer(from);
 
-      await pc.setRemoteDescription(
-        new RTCSessionDescription(offer)
-      );
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => {
@@ -86,11 +108,9 @@ const ChatBox = ({ onLeave }) => {
 
     const handleAnswer = async ({ from, answer }) => {
       const pc = peersRef.current[from];
-      if (!pc) return;
-
-      await pc.setRemoteDescription(
-        new RTCSessionDescription(answer)
-      );
+      if (pc) {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      }
     };
 
     const handleIce = async ({ from, candidate }) => {
@@ -111,10 +131,9 @@ const ChatBox = ({ onLeave }) => {
   }, [currentRoom]);
 
   // =====================
-  // 🎤 MIC LOGIC (THE KEY FIX)
+  // 🎤 MIC TOGGLE (UNCHANGED)
   // =====================
   const toggleMic = async () => {
-    // FIRST TIME: get mic + connect
     if (!localStreamRef.current) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
@@ -141,7 +160,6 @@ const ChatBox = ({ onLeave }) => {
       return;
     }
 
-    // AFTER FIRST TIME: just mute/unmute
     localStreamRef.current.getAudioTracks().forEach((track) => {
       track.enabled = !isRecording;
     });
@@ -167,11 +185,22 @@ const ChatBox = ({ onLeave }) => {
       </div>
 
       <div className="chatbox-messages">
-        {messages.map((msg, idx) => (
-          <div key={idx}>
-            <b>{msg.username}</b>: {msg.message}
-          </div>
-        ))}
+        {messages.map((msg, idx) => {
+          const isOwn = msg.username === username;
+
+          return (
+            <div
+              key={idx}
+              className={`message ${isOwn ? "own-message" : ""}`}
+            >
+              <div className="message-header">
+                <span className="message-username">{msg.username}</span>
+              </div>
+              <div className="message-content">{msg.message}</div>
+            </div>
+          );
+        })}
+
         <div ref={messagesEndRef} />
       </div>
 
