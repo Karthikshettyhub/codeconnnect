@@ -36,13 +36,14 @@ export const RoomProvider = ({ children }) => {
 
     const savedRoom = sessionStorage.getItem("roomId");
     const savedUsername = sessionStorage.getItem("username");
+    const savedPasscode = sessionStorage.getItem("passcode");
     const intentionalLeave = sessionStorage.getItem("intentionalLeave");
 
     // ✅ AUTO REJOIN ON REFRESH
     if (savedRoom && savedUsername && intentionalLeave !== "true") {
       usernameRef.current = savedUsername;
       setUsername(savedUsername);
-      socketService.joinRoom(savedRoom, savedUsername);
+      socketService.joinRoom(savedRoom, savedUsername, savedPasscode);
     }
 
     // =====================
@@ -100,26 +101,28 @@ export const RoomProvider = ({ children }) => {
   // =====================
   // ROOM ACTIONS
   // =====================
-  const createRoom = (roomId, userName) => {
+  const createRoom = (roomId, userName, passcode) => {
     sessionStorage.removeItem("intentionalLeave");
     sessionStorage.setItem("roomId", roomId);
     sessionStorage.setItem("username", userName);
+    if (passcode) sessionStorage.setItem("passcode", passcode);
 
     setUsername(userName);
     usernameRef.current = userName;
 
-    socketService.createRoom(roomId, userName);
+    socketService.createRoom(roomId, userName, passcode);
   };
 
-  const joinRoom = (roomId, userName) => {
+  const joinRoom = (roomId, userName, passcode) => {
     sessionStorage.removeItem("intentionalLeave");
     sessionStorage.setItem("roomId", roomId);
     sessionStorage.setItem("username", userName);
+    if (passcode) sessionStorage.setItem("passcode", passcode);
 
     setUsername(userName);
     usernameRef.current = userName;
 
-    socketService.joinRoom(roomId, userName);
+    socketService.joinRoom(roomId, userName, passcode);
   };
 
   const leaveRoom = () => {

@@ -3,49 +3,51 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
   background: #1e1e1e;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  animation: editorFadeIn 0.25s ease-in-out;
 }
 
 /* ================= HEADER ================= */
 .editor-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   background: #252526;
   border-bottom: 1px solid #2a2a2a;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   flex-shrink: 0;
 }
 
-.language-dropdown {
-  padding: 6px 14px;
+.editor-header select {
+  padding: 6px 12px;
   background: #2a2d2e;
-  color: #fff;
+  color: #ffffff;
   border-radius: 6px;
   cursor: pointer;
-  border: 1px solid #444;
+  border: 1px solid #3c3c3c;
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
   transition: all 0.2s ease;
 }
 
-.language-dropdown:hover {
-  background: #3b3b3b;
+.editor-header select:hover {
+  background: #333;
+}
+
+.editor-header select:focus {
+  border-color: #0078ff;
+  box-shadow: 0 0 0 2px rgba(0, 120, 255, 0.25);
 }
 
 .file-label {
-  color: #bbb;
+  color: #9da5b4;
   font-size: 12px;
-  opacity: 0.9;
-}
-
-/* ================= MONACO EDITOR WRAPPER ================= */
-.editor-wrapper {
-  flex: 1;
-  min-height: 300px;
-  background: #1e1e1e;
-  border-bottom: 1px solid #2a2a2a;
-  overflow: hidden;
+  letter-spacing: 0.4px;
+  user-select: none;
 }
 
 /* ================= LANGUAGE POPUP ================= */
@@ -66,7 +68,7 @@
   width: 320px;
   text-align: center;
   border: 1px solid #333;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   color: #fff;
   animation: popupFade 0.2s ease-in-out;
 }
@@ -121,15 +123,28 @@
   transform: translateY(-1px);
 }
 
-/* ================= ANIMATION ================= */
+/* ================= ANIMATIONS ================= */
 @keyframes popupFade {
   from {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes editorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -140,7 +155,7 @@
     padding: 10px 12px;
   }
 
-  .language-dropdown {
+  .editor-header select {
     padding: 5px 10px;
     font-size: 13px;
   }
@@ -148,185 +163,5 @@
   .lang-popup {
     width: 90%;
     padding: 20px;
-  }
-
-  .popup-actions button {
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-}
-/* ================= GENERATE BOILERPLATE BUTTON ================= */
-.boilerplate-btn {
-  margin-left: auto;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #0078ff, #00c6ff);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  letter-spacing: 0.3px;
-  box-shadow: 0 4px 12px rgba(0, 120, 255, 0.35);
-  transition: 
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.25s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-/* ✨ Hover effect */
-.boilerplate-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 120, 255, 0.45);
-  background: linear-gradient(135deg, #0066e6, #00b4e6);
-}
-
-/* ✨ Click effect */
-.boilerplate-btn:active {
-  transform: scale(0.97);
-}
-
-/* 🚫 Disabled state */
-.boilerplate-btn:disabled {
-  cursor: not-allowed;
-  background: linear-gradient(135deg, #555, #777);
-  box-shadow: none;
-  transform: none;
-  opacity: 0.7;
-}
-
-/* ✨ Subtle shine animation */
-.boilerplate-btn::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -120%;
-  width: 120%;
-  height: 100%;
-  background: linear-gradient(
-    120deg,
-    transparent,
-    rgba(255, 255, 255, 0.25),
-    transparent
-  );
-  transition: left 0.6s ease;
-}
-
-.boilerplate-btn:hover::after {
-  left: 120%;
-}
-/* ================= HEADER POLISH ================= */
-.editor-header {
-  justify-content: space-between;
-}
-
-/* Wrap left controls nicely */
-.editor-header select {
-  padding: 7px 14px;
-  background: #2a2d2e;
-  color: #ffffff;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid #3c3c3c;
-  font-size: 13px;
-  font-weight: 500;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-/* Hover + focus for language dropdown */
-.editor-header select:hover {
-  background: #333;
-}
-
-.editor-header select:focus {
-  border-color: #0078ff;
-  box-shadow: 0 0 0 2px rgba(0, 120, 255, 0.25);
-}
-
-/* File label polish */
-.editor-header span {
-  color: #9da5b4;
-  font-size: 12px;
-  letter-spacing: 0.4px;
-  user-select: none;
-}
-
-/* ================= GENERATE BOILERPLATE BUTTON (ENHANCED) ================= */
-.boilerplate-btn {
-  margin-left: auto;
-  padding: 8px 18px;
-  background: linear-gradient(135deg, #0078ff, #00c6ff);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  letter-spacing: 0.4px;
-  box-shadow: 0 6px 16px rgba(0, 120, 255, 0.35);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.25s ease;
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-/* Hover */
-.boilerplate-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0, 120, 255, 0.5);
-  background: linear-gradient(135deg, #0066e6, #00b4e6);
-}
-
-/* Active (click) */
-.boilerplate-btn:active {
-  transform: scale(0.96);
-}
-
-/* Disabled */
-.boilerplate-btn:disabled {
-  background: linear-gradient(135deg, #444, #666);
-  box-shadow: none;
-  cursor: not-allowed;
-  opacity: 0.75;
-}
-
-/* Shine animation */
-.boilerplate-btn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    120deg,
-    transparent,
-    rgba(255, 255, 255, 0.35),
-    transparent
-  );
-  transform: translateX(-120%);
-  transition: transform 0.6s ease;
-}
-
-.boilerplate-btn:hover::after {
-  transform: translateX(120%);
-}
-
-/* ================= EDITOR SMOOTHNESS ================= */
-.editor-container {
-  animation: editorFadeIn 0.25s ease-in-out;
-}
-
-@keyframes editorFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }

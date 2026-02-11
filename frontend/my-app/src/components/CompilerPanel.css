@@ -1,109 +1,79 @@
+/* ================= COMPILER PANEL ================= */
 .compiler-panel {
   background: #252526;
-  border-top: 1px solid #333;
   color: white;
   display: flex;
   flex-direction: column;
-  height: 240px;
-}
-
-.compiler-header {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 16px;
-  border-bottom: 1px solid #333;
-  align-items: center;
-}
-
-.run-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: #0e639c;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.run-btn:hover {
-  background: #1177bb;
-}
-
-.compiler-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  gap: 10px;
-  overflow: auto;
-}
-
-.output-box {
-  background: #1e1e1e;
-  padding: 10px;
-  border: 1px solid #333;
-  white-space: pre-wrap;
-  height: 100px;
-  overflow: auto;
-}
-
-.error-box {
-  background: #4c1d1d;
-  color: #ff6b6b;
-  padding: 10px;
-  border: 1px solid #ff3d3d;
-}
-
-.input-box {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  color: white;
-  padding: 10px;
-  resize: vertical;
-}
-.output-area {
-  white-space: pre-wrap;
-  overflow-y: auto;
-  max-height: 300px;
-}
-
-/* ================= VS CODE–LIKE TERMINAL BEHAVIOR ================= */
-
-/* Keep compiler panel fixed, content scrolls */
-.compiler-panel {
-  height: 260px;
+  height: 100%;
+  width: 100%;
   overflow: hidden;
 }
 
-/* Header + tabs stay fixed */
-.compiler-header,
-.compiler-tabs {
+/* ================= HEADER ================= */
+.compiler-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid #333;
+  align-items: center;
   flex-shrink: 0;
 }
 
-/* Main content becomes scroll container */
+.compiler-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c9d1d9;
+}
+
+/* ================= TABS ================= */
+.compiler-tabs {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid #333;
+}
+
+.compiler-tabs .tab {
+  padding: 6px 16px;
+  background: transparent;
+  color: #8b949e;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.compiler-tabs .tab:hover {
+  color: #c9d1d9;
+}
+
+.compiler-tabs .tab.active {
+  color: #58a6ff;
+  border-bottom-color: #58a6ff;
+}
+
+/* ================= CONTENT ================= */
 .compiler-content {
   flex: 1;
   overflow-y: auto;
   background: #1e1e1e;
   padding: 10px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 13px;
   line-height: 1.5;
 }
 
-/* Output behaves like terminal */
 .output-area {
   white-space: pre-wrap;
   word-break: break-word;
-  overflow-y: auto;
-  max-height: none;
-  min-height: 100%;
   color: #d4d4d4;
+  min-height: 100%;
 }
 
-/* Input textarea like stdin */
 .input-textarea {
   width: 100%;
   height: 100%;
@@ -112,12 +82,65 @@
   border: 1px solid #333;
   color: #fff;
   padding: 10px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 13px;
   outline: none;
 }
 
-/* Scrollbar styling (VS Code–like) */
+/* ================= ERROR ================= */
+.error-box {
+  margin: 8px;
+  padding: 10px;
+  background: #4c1d1d;
+  color: #ff6b6b;
+  border: 1px solid #ff3d3d;
+  border-radius: 6px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  flex-shrink: 0;
+}
+
+/* ================= RUN BUTTON ================= */
+.btn-compiler {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  color: white;
+  transition: all 0.15s ease;
+}
+
+.btn-compiler.run {
+  background: #238636;
+}
+
+.btn-compiler.run:hover {
+  background: #2ea043;
+}
+
+.btn-compiler.running {
+  background: #444;
+  cursor: not-allowed;
+}
+
+/* ================= SPINNER ================= */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ================= SCROLLBAR ================= */
 .compiler-content::-webkit-scrollbar,
 .output-area::-webkit-scrollbar,
 .input-textarea::-webkit-scrollbar {
@@ -133,50 +156,4 @@
 
 .compiler-content::-webkit-scrollbar-thumb:hover {
   background: #555;
-}
-
-/* Error box stays visible but clean */
-.error-box {
-  margin: 8px;
-  border-radius: 6px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 13px;
-  white-space: pre-wrap;
-}
-
-/* Run button animation polish */
-.btn-compiler {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-compiler.run {
-  background: #0e639c;
-}
-
-.btn-compiler.run:hover {
-  background: #1177bb;
-}
-
-.btn-compiler.running {
-  background: #444;
-  cursor: not-allowed;
-}
-
-/* Spinner animation */
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }

@@ -5,7 +5,7 @@ import "./chatbox.css";
 
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
 
-const ChatBox = ({ onLeave }) => {
+const ChatBox = () => {
   const { currentRoom, messages, sendMessage, username, users } = useRoom();
 
   const [inputMessage, setInputMessage] = useState("");
@@ -181,7 +181,6 @@ const ChatBox = ({ onLeave }) => {
     <div className="chatbox">
       <div className="chatbox-header">
         <h3>💬 Chat</h3>
-        <button onClick={onLeave}>Leave</button>
       </div>
 
       <div className="chatbox-messages">

@@ -3,17 +3,18 @@ class RoomManager {
     this.rooms = {};
   }
 
-  createRoom(roomId, userId, username, socketId) {
+  createRoom(roomId, userId, username, socketId, passcode) {
     if (!roomId || !userId) {
-      return { success: false, message: "roomId and userId are required" };
+      return { success: false, message: "Room ID and Username are required" };
     }
 
     if (this.rooms[roomId]) {
-      return { success: false, message: "Room already exists" };
+      return { success: false, message: "Room ID already exists. Try another one." };
     }
 
     this.rooms[roomId] = {
       creator: userId,
+      passcode: passcode || null, // Optional passcode
       users: [{ userId, username, socketId }],
       messages: [],
       code: "",
@@ -24,13 +25,18 @@ class RoomManager {
     return { success: true, room: this.rooms[roomId] };
   }
 
-  joinRoom(roomId, userId, username, socketId) {
+  joinRoom(roomId, userId, username, socketId, passcode) {
     const room = this.rooms[roomId];
     if (!room) {
       return { success: false, message: "Room not found" };
     }
 
-    const existingUser = room.users.find(u => u.userId === userId);
+    // Passcode check
+    if (room.passcode && room.passcode !== passcode) {
+      return { success: false, message: "Invalid passcode" };
+    }
+
+    const existingUser = room.users.find(u => u.userId === userId || (u.username === username && u.socketId === null));
 
     if (existingUser) {
       // 🔥 REFRESH CASE → update socketId

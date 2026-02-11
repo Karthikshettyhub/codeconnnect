@@ -14,13 +14,12 @@ class SocketService {
       return;
     }
 
-    const SOCKET_URL = "https://codeconnnect.onrender.com";
-
+    const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
 
     console.log("🔌 Connecting to:", SOCKET_URL);
 
     this.socket = io(SOCKET_URL, {
-      transports: ["websocket", "polling"],
+      transports: ["websocket"], // Force websocket as per backend hint
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
@@ -52,12 +51,12 @@ class SocketService {
   // =====================
   // EMIT EVENTS
   // =====================
-  createRoom(roomId, username) {
-    this.socket?.emit("create-room", { roomId, username });
+  createRoom(roomId, username, passcode) {
+    this.socket?.emit("create-room", { roomId, username, passcode });
   }
 
-  joinRoom(roomId, username) {
-    this.socket?.emit("join-room", { roomId, username });
+  joinRoom(roomId, username, passcode) {
+    this.socket?.emit("join-room", { roomId, username, passcode });
   }
 
   leaveRoom(roomId, username) {

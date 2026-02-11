@@ -8,10 +8,11 @@ module.exports = (io) => {
     // =====================
     // CREATE ROOM
     // =====================
-    socket.on("create-room", ({ roomId, username }) => {
+    socket.on("create-room", ({ roomId, username, passcode }) => {
       console.log("📥 CREATE-ROOM EVENT:", {
         roomId,
         username,
+        hasPasscode: !!passcode,
         socketId: socket.id,
       });
 
@@ -19,7 +20,8 @@ module.exports = (io) => {
         roomId,
         socket.id, // userId
         username,
-        socket.id // socketId
+        socket.id, // socketId
+        passcode
       );
 
       if (!result.success) {
@@ -41,10 +43,11 @@ module.exports = (io) => {
     // =====================
     // JOIN ROOM (REFRESH SAFE)
     // =====================
-    socket.on("join-room", ({ roomId, username }) => {
+    socket.on("join-room", ({ roomId, username, passcode }) => {
       console.log("📥 JOIN-ROOM EVENT:", {
         roomId,
         username,
+        hasPasscode: !!passcode,
         socketId: socket.id,
       });
 
@@ -52,7 +55,8 @@ module.exports = (io) => {
         roomId,
         socket.id, // userId
         username,
-        socket.id
+        socket.id,
+        passcode
       );
 
       if (!result.success) {

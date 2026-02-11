@@ -54,14 +54,15 @@
 .home-card {
   width: 430px;
   margin: auto;
-  background: var(--bg-card);
-  padding: 42px 38px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
+  background: rgba(21, 24, 30, 0.7);
+  padding: 48px 42px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 30px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
   text-align: center;
+  backdrop-filter: blur(20px);
 }
 
 /* ================= TITLE ================= */
@@ -84,11 +85,19 @@
   gap: 16px;
 }
 
-.home-form label {
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   text-align: left;
+}
+
+.input-group label {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 650;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* ================= INPUTS ================= */

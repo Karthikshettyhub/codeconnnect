@@ -2,15 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useRoom } from "../contexts/roomcontext";
 import { useNavigate } from "react-router-dom";
 import "./homepage.css";
-// import { signInWithPopup, signOut } from "firebase/auth";
 
 const Homepage = () => {
   const [roomId, setRoomId] = useState("");
   const [username, setUsername] = useState("");
+  const [passcode, setPasscode] = useState("");
   const [mode, setMode] = useState("join");
-  const [user, setUser] = useState(null);
 
-  const { createRoom, joinRoom, currentRoom, leaveRoom } = useRoom();
+  const { createRoom, joinRoom, currentRoom } = useRoom();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,16 +23,16 @@ const Homepage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!roomId.trim() || !username.trim()) {
-      alert("Enter both room ID and username");
+      alert("Enter both Room ID and Username");
       return;
     }
 
-    console.log("📝 Form submitted - Mode:", mode, "Room:", roomId, "User:", username);
+    console.log("📝 Form submitted - Mode:", mode, "Room:", roomId, "User:", username, "Has Passcode:", !!passcode);
 
     if (mode === "create") {
-      createRoom(roomId, username);
+      createRoom(roomId.trim().toUpperCase(), username.trim(), passcode.trim());
     } else {
-      joinRoom(roomId, username);
+      joinRoom(roomId.trim().toUpperCase(), username.trim(), passcode.trim());
     }
   };
 
@@ -45,91 +44,65 @@ const Homepage = () => {
     setRoomId(id);
   };
 
-  const handleLogout = async () => {
-    try {
-      leaveRoom();
-
-      sessionStorage.clear();
-      localStorage.clear();
-
-      setUser(null);
-      setUsername("");
-      setRoomId("");
-
-      navigate("/");
-    } catch (err) {
-      console.error("Logout error:", err);
-      alert("Logout failed");
-    }
-  };
 
   return (
     <div className="homepage-container">
       <nav className="navbar">
         <h2 className="nav-logo">CodeCollab</h2>
 
-        <div className="nav-right">
-          {user && (
-            <>
-              <span className="nav-user">
-                👋 {user.displayName}
-              </span>
-              <button className="logout-btn" onClick={handleLogout}>
-                Logout
-              </button>
-            </>
-          )}
-        </div>
       </nav>
 
       <div className="home-card">
         <h1 className="home-title">Start Collaborating</h1>
         <p className="home-subtitle">Create or join a room in seconds</p>
 
-        {!user && (
-          <button
-            className="submit-btn"
-            style={{
-              marginBottom: "20px",
-              background: "#4285F4",
-              color: "#fff",
-            }}
-          >
-            Login with Google
-          </button>
-        )}
 
         <form className="home-form" onSubmit={handleSubmit}>
-          <label>Username</label>
-          <input
-            type="text"
-            placeholder="Enter your name"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            disabled={!!user}
-          />
-
-          <label>Room ID</label>
-          <div className="room-input-wrap">
+          <div className="input-group">
+            <label>Username</label>
             <input
               type="text"
-              placeholder={
-                mode === "create"
-                  ? "Generate or enter room ID"
-                  : "Enter room ID"
-              }
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
+              placeholder="Who are you?"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
             />
-            {mode === "create" && (
-              <button
-                type="button"
-                className="gen-btn"
-                onClick={generateRoomId}
-              >
-                Generate
-              </button>
-            )}
+          </div>
+
+          <div className="input-group">
+            <label>Room ID</label>
+            <div className="room-input-wrap">
+              <input
+                type="text"
+                placeholder={
+                  mode === "create"
+                    ? "Ex: PRO-DEV"
+                    : "Enter ID"
+                }
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                required
+              />
+              {mode === "create" && (
+                <button
+                  type="button"
+                  className="gen-btn"
+                  onClick={generateRoomId}
+                >
+                  Generate
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="input-group">
+            <label>Passcode (Optional)</label>
+            <input
+              type="password"
+              placeholder="Secret key"
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value)}
+            />
           </div>
 
           <div className="mode-toggle">
