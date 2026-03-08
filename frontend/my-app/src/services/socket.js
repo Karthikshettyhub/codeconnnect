@@ -5,9 +5,7 @@ class SocketService {
     this.socket = null;
   }
 
-  // =====================
-  // CONNECT
-  // =====================
+
   connect() {
     if (this.socket?.connected) {
       console.log("✅ Socket already connected");

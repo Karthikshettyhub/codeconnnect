@@ -9,9 +9,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   
 );
 
-// Note: When integrating with backend later:
-// 1. Add Socket.IO client for real-time collaboration
-// 2. Add WebRTC for video/audio streaming
-// 3. Add state management (Context API or Redux)
-// 4. Add authentication
-// 5. Connect API endpoints for room management
