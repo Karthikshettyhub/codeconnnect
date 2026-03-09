@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import socketService from "../services/socket";
-import { getStarterCode } from "../services/pistonService";
+import { getStarterCode } from "../services/judge0Service";
 
 const RoomContext = createContext();
 

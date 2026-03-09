@@ -12,7 +12,7 @@ class SocketService {
       return;
     }
 
-    const SOCKET_URL = import.meta.env.VITE_BACKEND_URL;
+    const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
 
     console.log("🔌 Connecting to:", SOCKET_URL);
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Play, Loader2, Terminal } from "lucide-react";
-import { executeCode } from "../services/pistonService";
+import { executeCode } from "../services/judge0Service";
 import "./CompilerPanel.css";
 
 const CompilerPanel = ({ language, code }) => {
@@ -10,13 +10,16 @@ const CompilerPanel = ({ language, code }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState("output");
 
-  const clean = (code) =>
-    (code || "")
-      .replace(/```[\s\S]*?```/g, "")
-      .replace(/```/g, "")
-      .replace(/`/g, "")
-      .replace(/[^\x00-\x7F]/g, "")
+  const clean = (code) => {
+    if (!code) return "";
+    // Remove markdown code block wrappers (```language ... ```) if they exist
+    // but keep backticks within the code itself.
+    return code
+      .replace(/^```[\s\S]*?\n/, "") // Remove opening ```lang\n
+      .replace(/\n```$/, "")         // Remove closing \n```
+      .replace(/^[ \t]*```|```[ \t]*$/g, "") // Remove remaining leading/trailing backticks
       .trim();
+  };
 
   const handleRunCode = async () => {
     if (!code?.trim()) {
@@ -41,7 +44,9 @@ const CompilerPanel = ({ language, code }) => {
       }
     } catch (err) {
       setOutput("");
-      setError("Runtime error: " + err.message);
+      const errorMessage = err.response?.data?.message || err.message;
+      setError(`Runtime/Network error: ${errorMessage}\n(Check if your internet allows calls to emkc.org)`);
+      console.error("Execution Error Details:", err);
     }
 
     setIsRunning(false);

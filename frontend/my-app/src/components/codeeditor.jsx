@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import "./codeeditor.css";
 import { useRoom } from "../contexts/roomcontext";
-import { getStarterCode } from "../services/pistonService";
+import { getStarterCode } from "../services/judge0Service";
 
 const EXTENSIONS = {
   javascript: "js",
