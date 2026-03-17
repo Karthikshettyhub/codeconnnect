@@ -1,18 +1,40 @@
 version: "3.9"
 
 services:
+
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: karthiksdumb/codeconnect-backend:latest
+    container_name: codeconnect-backend
     ports:
       - "5005:5005"
     env_file:
       - ./backend/.env
-    restart: always
+    restart: unless-stopped
+    networks:
+      - codeconnect-net
 
   frontend:
-    build: ./frontend/my-app
+    build:
+      context: ./frontend/my-app
+      dockerfile: Dockerfile
+      args:
+        # VITE_ vars are baked in at build time - backend is accessed by the
+        # browser (not inside Docker), so localhost:5005 is correct for local use
+        VITE_BACKEND_URL: http://localhost:5005
+        VITE_JUDGE0_API: https://ce.judge0.com/submissions?base64_encoded=false&wait=true
+    image: karthiksdumb/codeconnect-frontend:latest
+    container_name: codeconnect-frontend
     ports:
-      - "5173:5173"
+      - "80:80"
     depends_on:
       - backend
-    restart: always
+    restart: unless-stopped
+    networks:
+      - codeconnect-net
+
+networks:
+  codeconnect-net:
+    driver: bridge
