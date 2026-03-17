@@ -9,11 +9,11 @@ export const LANGUAGE_MAPPING = {
   cpp: 54,
   c: 50,
   typescript: 74,
-  csharp: 51, // Mono 6.6.0.161
-  go: 60,     // Go 1.13.5
-  rust: 73,   // Rust 1.40.0
-  ruby: 72,   // Ruby 2.7.0
-  php: 68     // PHP 7.4.1
+  csharp: 51,
+  go: 60,
+  rust: 73,
+  ruby: 72,
+  php: 68,
 };
 
 export const executeCode = async (source_code, language, stdin = "") => {
@@ -24,25 +24,20 @@ export const executeCode = async (source_code, language, stdin = "") => {
       throw new Error(`Language "${language}" is not supported by Judge0.`);
     }
 
-    console.log("🚀 Executing on Judge0...");
-
     const response = await axios.post(JUDGE0_API, {
       source_code,
       language_id: languageId,
-      stdin
+      stdin,
     });
 
     const { stdout, stderr, compile_output, message, status } = response.data;
 
-    console.log("🔥 Judge0 Result:", response.data);
-
-    // Check for errors (status.id 3 is "Accepted")
     if (status.id > 4) {
       return {
         success: false,
         output: stdout || "",
         error: stderr || compile_output || message || status.description,
-        status: status.description
+        status: status.description,
       };
     }
 
@@ -50,17 +45,14 @@ export const executeCode = async (source_code, language, stdin = "") => {
       success: true,
       output: stdout || "",
       error: stderr || "",
-      status: status.description
+      status: status.description,
     };
-
   } catch (error) {
-    console.error("❌ Judge0 execution error:", error.response?.data || error.message);
-    
     return {
       success: false,
       output: "",
       error: error.response?.data?.message || error.message || "Unknown execution error",
-      status: "Error"
+      status: "Error",
     };
   }
 };
@@ -107,7 +99,7 @@ func main() {
     ruby: `puts "Hello World"`,
     php: `<?php
 echo "Hello World";
-?>`
+?>`,
   };
 
   return templates[language.toLowerCase()] || "";

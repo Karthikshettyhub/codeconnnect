@@ -10,43 +10,40 @@ const CompilerPanel = ({ language, code }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState("output");
 
-  const clean = (code) => {
-    if (!code) return "";
-    // Remove markdown code block wrappers (```language ... ```) if they exist
-    // but keep backticks within the code itself.
-    return code
-      .replace(/^```[\s\S]*?\n/, "") // Remove opening ```lang\n
-      .replace(/\n```$/, "")         // Remove closing \n```
-      .replace(/^[ \t]*```|```[ \t]*$/g, "") // Remove remaining leading/trailing backticks
+  const cleanCode = (raw) => {
+    if (!raw) return "";
+    return raw
+      .replace(/^```[\s\S]*?\n/, "")
+      .replace(/\n```$/, "")
+      .replace(/^[ \t]*```|```[ \t]*$/g, "")
       .trim();
   };
 
   const handleRunCode = async () => {
     if (!code?.trim()) {
-      setError("⚠️ No code to execute");
+      setError("No code to execute");
       return;
     }
 
     setIsRunning(true);
-    setOutput("⏳ Running code...");
+    setOutput("Running code...");
     setError("");
 
     try {
-      const finalCode = clean(code);
+      const finalCode = cleanCode(code);
       const result = await executeCode(finalCode, language, input);
 
       if (!result.success) {
         setOutput("");
         setError(result.error || "Execution failed");
       } else {
-        setOutput(result.output || "✔ Ran successfully — no output");
+        setOutput(result.output || "Ran successfully — no output");
         setError("");
       }
     } catch (err) {
       setOutput("");
       const errorMessage = err.response?.data?.message || err.message;
       setError(`Runtime/Network error: ${errorMessage}\n(Check if your internet allows calls to emkc.org)`);
-      console.error("Execution Error Details:", err);
     }
 
     setIsRunning(false);

@@ -13,9 +13,7 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("🔍 currentRoom changed:", currentRoom);
     if (currentRoom) {
-      console.log("🚀 Redirecting to:", `/room/${currentRoom}`);
       navigate(`/room/${currentRoom}`);
     }
   }, [currentRoom, navigate]);
@@ -26,8 +24,6 @@ const Homepage = () => {
       alert("Enter both Room ID and Username");
       return;
     }
-
-    console.log("📝 Form submitted - Mode:", mode, "Room:", roomId, "User:", username, "Has Passcode:", !!passcode);
 
     if (mode === "create") {
       createRoom(roomId.trim().toUpperCase(), username.trim(), passcode.trim());
@@ -44,18 +40,15 @@ const Homepage = () => {
     setRoomId(id);
   };
 
-
   return (
     <div className="homepage-container">
       <nav className="navbar">
         <h2 className="nav-logo">CodeCollab</h2>
-
       </nav>
 
       <div className="home-card">
         <h1 className="home-title">Start Collaborating</h1>
         <p className="home-subtitle">Create or join a room in seconds</p>
-
 
         <form className="home-form" onSubmit={handleSubmit}>
           <div className="input-group">
@@ -74,11 +67,7 @@ const Homepage = () => {
             <div className="room-input-wrap">
               <input
                 type="text"
-                placeholder={
-                  mode === "create"
-                    ? "Ex: PRO-DEV"
-                    : "Enter ID"
-                }
+                placeholder={mode === "create" ? "Ex: PRO-DEV" : "Enter ID"}
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value.toUpperCase())}
                 required

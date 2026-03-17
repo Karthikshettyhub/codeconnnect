@@ -5,40 +5,31 @@ class SocketService {
     this.socket = null;
   }
 
-
   connect() {
-    if (this.socket?.connected) {
-      console.log("✅ Socket already connected");
-      return;
-    }
+    if (this.socket?.connected) return;
 
     const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
 
-    console.log("🔌 Connecting to:", SOCKET_URL);
-
     this.socket = io(SOCKET_URL, {
-      transports: ["websocket"], // Force websocket as per backend hint
+      transports: ["websocket"],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
     });
 
     this.socket.on("connect", () => {
-      console.log("🟢 Socket connected:", this.socket.id);
+      console.log("Socket connected:", this.socket.id);
     });
 
     this.socket.on("disconnect", (reason) => {
-      console.log("🔴 Socket disconnected:", reason);
+      console.log("Socket disconnected:", reason);
     });
 
     this.socket.on("connect_error", (error) => {
-      console.error("❌ Socket connection error:", error.message);
+      console.error("Socket connection error:", error.message);
     });
   }
 
-  // =====================
-  // DISCONNECT
-  // =====================
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
@@ -46,9 +37,6 @@ class SocketService {
     }
   }
 
-  // =====================
-  // EMIT EVENTS
-  // =====================
   createRoom(roomId, username, passcode) {
     this.socket?.emit("create-room", { roomId, username, passcode });
   }
@@ -78,9 +66,6 @@ class SocketService {
     this.socket?.emit(event, data);
   }
 
-  // =====================
-  // LISTENERS
-  // =====================
   listen(event, callback) {
     this.socket?.off(event);
     this.socket?.on(event, callback);

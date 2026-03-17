@@ -33,7 +33,6 @@ const CodeEditor = () => {
   const [localLanguage, setLocalLanguage] = useState(language);
   const [showLangPopup, setShowLangPopup] = useState(false);
 
-  // Sync context → local
   useEffect(() => {
     if (code !== localCode) {
       setLocalCode(code);
@@ -46,7 +45,6 @@ const CodeEditor = () => {
     }
   }, [language]);
 
-  // Popup trigger
   useEffect(() => {
     if (pendingLanguage) setShowLangPopup(true);
   }, [pendingLanguage]);

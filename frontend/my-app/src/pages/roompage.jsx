@@ -12,19 +12,13 @@ const RoomPage = () => {
   const navigate = useNavigate();
   const { roomId } = useParams();
 
-  // ============================
-  // LAYOUT STATE
-  // ============================
-  const [leftWidth, setLeftWidth] = useState(65); // % width of Editor+Compiler area
-  const [topHeight, setTopHeight] = useState(70); // % height of Editor (vs Compiler)
-
+  const [leftWidth, setLeftWidth] = useState(65);
+  const [topHeight, setTopHeight] = useState(70);
   const [isChatCollapsed, setIsChatCollapsed] = useState(false);
   const [isCompilerCollapsed, setIsCompilerCollapsed] = useState(false);
 
   const containerRef = useRef(null);
   const leftPaneRef = useRef(null);
-  const verticalSplitter = useRef(null);
-  const horizontalSplitter = useRef(null);
 
   useEffect(() => {
     const username = sessionStorage.getItem("username");
@@ -53,9 +47,6 @@ const RoomPage = () => {
     navigate("/");
   };
 
-  // ============================
-  // DRAG HANDLERS
-  // ============================
   const startVerticalResize = (e) => {
     e.preventDefault();
     document.addEventListener("mousemove", onVerticalResize);
@@ -111,14 +102,11 @@ const RoomPage = () => {
       </header>
 
       <div className="room-layout" ref={containerRef}>
-
-        {/* LEFT AREA: EDITOR + COMPILER */}
         <div
           className="left-pane"
           ref={leftPaneRef}
           style={{ width: isChatCollapsed ? "98%" : `${leftWidth}%` }}
         >
-          {/* EDITOR SECTION */}
           <div
             className="editor-section"
             style={{ height: isCompilerCollapsed ? "96%" : `${topHeight}%` }}
@@ -126,18 +114,15 @@ const RoomPage = () => {
             <CodeEditor />
           </div>
 
-          {/* HORIZONTAL RESIZER */}
           {!isCompilerCollapsed && (
             <div
               className="resizer-horizontal"
               onMouseDown={startHorizontalResize}
-              ref={horizontalSplitter}
             >
               <GripHorizontal size={14} className="grip-icon" />
             </div>
           )}
 
-          {/* COMPILER SECTION */}
           <div
             className={`compiler-section ${isCompilerCollapsed ? "collapsed" : ""}`}
             style={{ height: isCompilerCollapsed ? "30px" : `calc(${100 - topHeight}% - 8px)` }}
@@ -161,17 +146,14 @@ const RoomPage = () => {
           </div>
         </div>
 
-        {/* VERTICAL DIVIDER */}
         <div
           className="resizer-vertical"
           onMouseDown={startVerticalResize}
-          ref={verticalSplitter}
           style={{ display: isChatCollapsed ? "none" : "flex" }}
         >
           <GripVertical size={14} className="grip-icon" />
         </div>
 
-        {/* RIGHT AREA: CHAT */}
         <div
           className={`right-pane ${isChatCollapsed ? "collapsed" : ""}`}
           style={{ width: isChatCollapsed ? "40px" : `calc(${100 - leftWidth}% - 8px)` }}
@@ -192,7 +174,6 @@ const RoomPage = () => {
             <div className="vertical-text">CHAT</div>
           )}
         </div>
-
       </div>
     </div>
   );

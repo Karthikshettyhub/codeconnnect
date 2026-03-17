@@ -28,9 +28,6 @@ export const RoomProvider = ({ children }) => {
 
   const usernameRef = useRef("");
 
-  // =====================
-  // 🔌 SOCKET INIT + AUTO REJOIN
-  // =====================
   useEffect(() => {
     socketService.connect();
 
@@ -39,16 +36,12 @@ export const RoomProvider = ({ children }) => {
     const savedPasscode = sessionStorage.getItem("passcode");
     const intentionalLeave = sessionStorage.getItem("intentionalLeave");
 
-    // ✅ AUTO REJOIN ON REFRESH
     if (savedRoom && savedUsername && intentionalLeave !== "true") {
       usernameRef.current = savedUsername;
       setUsername(savedUsername);
       socketService.joinRoom(savedRoom, savedUsername, savedPasscode);
     }
 
-    // =====================
-    // SOCKET LISTENERS
-    // =====================
     socketService.onRoomCreated((data) => {
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
@@ -86,9 +79,6 @@ export const RoomProvider = ({ children }) => {
     };
   }, []);
 
-  // =====================
-  // DEFAULT STARTER CODE
-  // =====================
   useEffect(() => {
     if (!currentRoom) return;
     if (code === "" && language) {
@@ -98,9 +88,6 @@ export const RoomProvider = ({ children }) => {
     }
   }, [currentRoom, language]);
 
-  // =====================
-  // ROOM ACTIONS
-  // =====================
   const createRoom = (roomId, userName, passcode) => {
     sessionStorage.removeItem("intentionalLeave");
     sessionStorage.setItem("roomId", roomId);

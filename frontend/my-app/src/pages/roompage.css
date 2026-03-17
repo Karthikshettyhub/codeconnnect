@@ -62,9 +62,6 @@
   background-color: #b62324;
 }
 
-/* ===========================
-   LAYOUT CONTAINER
-   =========================== */
 .room-layout {
   flex: 1;
   display: flex;
@@ -74,9 +71,6 @@
   width: 100vw;
 }
 
-/* ===========================
-   LEFT PANE (EDITOR + COMPILER)
-   =========================== */
 .left-pane {
   display: flex;
   flex-direction: column;
@@ -139,9 +133,6 @@
   background-color: #161b22;
 }
 
-/* ===========================
-   RESIZERS
-   =========================== */
 .resizer-vertical {
   width: 8px;
   background-color: #0d1117;
@@ -187,16 +178,12 @@
   color: white;
 }
 
-/* ===========================
-   RIGHT PANE (CHAT)
-   =========================== */
 .right-pane {
   height: 100%;
   background-color: #161b22;
   display: flex;
   flex-direction: column;
   min-width: 40px;
-  /* Collapsed width */
   position: relative;
 }
 
@@ -231,7 +218,6 @@
   user-select: none;
 }
 
-/* Mobile Responsive */
 @media (max-width: 768px) {
   .room-layout {
     flex-direction: column;

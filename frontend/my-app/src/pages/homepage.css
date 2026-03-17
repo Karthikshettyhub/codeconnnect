@@ -1,23 +1,18 @@
-/* ================= ROOT THEME ================= */
 :root {
   --bg-main: #0b0d12;
   --bg-card: #15181e;
   --bg-input: #1c1f26;
   --border-subtle: #2a2e36;
-
   --text-main: #ffffff;
   --text-muted: #b5bac1;
-
-  --accent-primary: #5865f2;   /* Discord blurple */
+  --accent-primary: #5865f2;
   --accent-success: #23a559;
   --accent-hover: #4752c4;
-
   --radius-lg: 18px;
   --radius-md: 12px;
   --radius-sm: 8px;
 }
 
-/* ================= PAGE WRAPPER ================= */
 .homepage-container {
   min-height: 100vh;
   background: radial-gradient(
@@ -31,7 +26,6 @@
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* ================= NAVBAR ================= */
 .navbar {
   height: 64px;
   padding: 0 28px;
@@ -50,7 +44,6 @@
   color: var(--accent-primary);
 }
 
-/* ================= CARD ================= */
 .home-card {
   width: 430px;
   margin: auto;
@@ -65,7 +58,6 @@
   backdrop-filter: blur(20px);
 }
 
-/* ================= TITLE ================= */
 .home-title {
   font-size: 26px;
   font-weight: 700;
@@ -78,7 +70,6 @@
   margin-bottom: 28px;
 }
 
-/* ================= FORM ================= */
 .home-form {
   display: flex;
   flex-direction: column;
@@ -100,7 +91,6 @@
   letter-spacing: 0.5px;
 }
 
-/* ================= INPUTS ================= */
 .home-form input {
   padding: 12px 14px;
   background: var(--bg-input);
@@ -121,7 +111,6 @@
   box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.25);
 }
 
-/* ================= ROOM INPUT + BUTTON ================= */
 .room-input-wrap {
   display: flex;
   gap: 10px;
@@ -147,7 +136,6 @@
   transform: scale(0.96);
 }
 
-/* ================= MODE TOGGLE ================= */
 .mode-toggle {
   display: flex;
   gap: 10px;
@@ -177,7 +165,6 @@
   border-color: var(--accent-primary);
 }
 
-/* ================= SUBMIT BUTTON ================= */
 .submit-btn {
   margin-top: 14px;
   padding: 13px;
@@ -199,17 +186,6 @@
   transform: scale(0.97);
 }
 
-/* ================= RESPONSIVE ================= */
-@media (max-width: 600px) {
-  .home-card {
-    width: 92%;
-    padding: 32px 24px;
-  }
-
-  .home-title {
-    font-size: 22px;
-  }
-}
 .nav-right {
   display: flex;
   align-items: center;
@@ -233,4 +209,15 @@
 
 .logout-btn:hover {
   background: #d9363e;
+}
+
+@media (max-width: 600px) {
+  .home-card {
+    width: 92%;
+    padding: 32px 24px;
+  }
+
+  .home-title {
+    font-size: 22px;
+  }
 }
