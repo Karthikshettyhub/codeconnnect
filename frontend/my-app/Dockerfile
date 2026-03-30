@@ -12,8 +12,9 @@ ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 ENV VITE_JUDGE0_API=$VITE_JUDGE0_API
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
+# Copy the rest of the source code
 COPY . .
 RUN npm run build
 
