@@ -1,87 +1,73 @@
 const roomManager = require("./roomManager");
 
 module.exports = (io) => {
+
   io.on("connection", (socket) => {
-    console.log("Connected:", socket.id);
+    console.log("User connected:", socket.id);
 
-    socket.on("create-room", ({ roomId, username, passcode }) => {
-      const result = roomManager.createRoom(
-        roomId,
-        socket.id,
-        username,
-        socket.id,
-        passcode
-      );
-
+    // When a user creates a new room
+    socket.on("create-room", ({ roomId, username, passcode } = {}) => {
+      const result = roomManager.createRoom(roomId, socket.id, username, passcode);
       if (!result.success) {
         socket.emit("error", { message: result.message });
         return;
       }
-
       socket.join(roomId);
-      socket.emit("room-created", {
-        roomId,
-        ...roomManager.getRoomData(roomId),
-      });
+      socket.emit("room-created", { roomId, ...roomManager.getRoomData(roomId) });
     });
 
-    socket.on("join-room", ({ roomId, username, passcode }) => {
-      const result = roomManager.joinRoom(
-        roomId,
-        socket.id,
-        username,
-        socket.id,
-        passcode
-      );
-
+    // When a user joins an existing room
+    socket.on("join-room", ({ roomId, username, passcode } = {}) => {
+      const result = roomManager.joinRoom(roomId, socket.id, username, passcode);
       if (!result.success) {
         socket.emit("error", { message: result.message });
         return;
       }
-
       socket.join(roomId);
-      socket.emit("room-joined", {
-        roomId,
-        ...roomManager.getRoomData(roomId),
-      });
+      socket.emit("room-joined", { roomId, ...roomManager.getRoomData(roomId) });
+      socket.to(roomId).emit("user-joined", { username, socketId: socket.id });
     });
 
-    socket.on("chat-message", ({ roomId, username, message }) => {
-      const data = {
-        username,
-        message,
+    // When a user sends a chat message
+    socket.on("chat-message", ({ roomId, message } = {}) => {
+      const room = roomManager.getRoomData(roomId);
+      const sender = room?.users?.find(u => u.socketId === socket.id);
+      if (!sender) {
+        socket.emit("error", { message: "You are not in this room." });
+        return;
+      }
+      const chatData = {
+        username: sender.username,
+        message: message,
         timestamp: Date.now(),
       };
-
-      roomManager.addMessage(roomId, data);
-      io.to(roomId).emit("receive-message", data);
+      roomManager.addMessage(roomId, chatData);
+      io.to(roomId).emit("receive-message", chatData);
     });
 
-    socket.on("code-change", ({ roomId, code }) => {
+    // When a user types in the code editor
+    socket.on("code-change", ({ roomId, code } = {}) => {
       roomManager.updateCode(roomId, code);
       socket.to(roomId).emit("code-receive", { code });
     });
 
-    socket.on("language-change", ({ roomId, language, username }) => {
+    // When a user changes the coding language
+    socket.on("language-change", ({ roomId, language } = {}) => {
+      const room = roomManager.getRoomData(roomId);
+      const sender = room?.users?.find(u => u.socketId === socket.id);
       roomManager.updateLanguage(roomId, language);
-      socket.to(roomId).emit("language-change", { language, username });
+      socket.to(roomId).emit("language-change", {
+        language,
+        username: sender?.username ?? "Someone"
+      });
     });
 
-    socket.on("disconnect", () => {
-      console.log("Disconnected:", socket.id);
+    // When a user closes the tab or loses connection
+    socket.on("disconnect", (reason) => {
+      console.log("User disconnected:", socket.id, "reason:", reason);
       roomManager.removeUserBySocketId(socket.id);
     });
 
-    socket.on("webrtc-offer", ({ target, offer }) => {
-      io.to(target).emit("webrtc-offer", { from: socket.id, offer });
-    });
-
-    socket.on("webrtc-answer", ({ target, answer }) => {
-      io.to(target).emit("webrtc-answer", { from: socket.id, answer });
-    });
-
-    socket.on("webrtc-ice", ({ target, candidate }) => {
-      io.to(target).emit("webrtc-ice", { from: socket.id, candidate });
-    });
   });
+
 };

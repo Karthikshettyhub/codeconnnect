@@ -1,11 +1,15 @@
 class RoomManager {
   constructor() {
+    // All active rooms stored by roomId
     this.rooms = {};
   }
 
-  createRoom(roomId, userId, username, socketId, passcode) {
-    if (!roomId || !userId) {
-      return { success: false, message: "Room ID and Username are required" };
+
+  // ── CREATE ROOM ───────────────────────────────────────────────
+  // Called when a user starts a new room
+  createRoom(roomId, socketId, username, passcode) {
+    if (!roomId || !socketId || !username) {
+      return { success: false, message: "Room ID and username are required." };
     }
 
     if (this.rooms[roomId]) {
@@ -13,67 +17,89 @@ class RoomManager {
     }
 
     this.rooms[roomId] = {
-      creator: userId,
+      createdBy: socketId,
       passcode: passcode || null,
-      users: [{ userId, username, socketId }],
+      users: [{ socketId, username }],
       messages: [],
       code: "",
       language: "javascript",
       createdAt: Date.now(),
     };
 
-    return { success: true, room: this.rooms[roomId] };
+    return { success: true };
   }
 
-  joinRoom(roomId, userId, username, socketId, passcode) {
+
+  // ── JOIN ROOM ─────────────────────────────────────────────────
+  // Called when a user joins an existing room
+  joinRoom(roomId, socketId, username, passcode) {
     const room = this.rooms[roomId];
+
     if (!room) {
-      return { success: false, message: "Room not found" };
+      return { success: false, message: "Room not found." };
     }
 
     if (room.passcode && room.passcode !== passcode) {
-      return { success: false, message: "Invalid passcode" };
+      return { success: false, message: "Invalid passcode." };
     }
 
-    const existingUser = room.users.find(
-      (u) => u.userId === userId || (u.username === username && u.socketId === null)
+    // If same username is already in the room with no socket (disconnected),
+    // reconnect them instead of adding a duplicate
+    const disconnectedUser = room.users.find(
+      u => u.username === username && u.socketId === null
     );
 
-    if (existingUser) {
-      existingUser.socketId = socketId;
+    if (disconnectedUser) {
+      disconnectedUser.socketId = socketId;
     } else {
-      room.users.push({ userId, username, socketId });
+      room.users.push({ socketId, username });
     }
 
-    return { success: true, room };
+    return { success: true };
   }
 
-  leaveRoom(roomId, userId) {
+
+  // ── LEAVE ROOM ────────────────────────────────────────────────
+  // Removes a user from the room. Deletes the room if it's now empty.
+  leaveRoom(roomId, socketId) {
     const room = this.rooms[roomId];
     if (!room) return;
 
-    room.users = room.users.filter((u) => u.userId !== userId);
+    room.users = room.users.filter(u => u.socketId !== socketId);
 
     if (room.users.length === 0) {
       delete this.rooms[roomId];
+      console.log(`Room "${roomId}" was deleted — no users left.`);
     }
   }
 
+
+  // ── ADD MESSAGE ───────────────────────────────────────────────
+  // Saves a chat message to the room's message history
   addMessage(roomId, message) {
     const room = this.rooms[roomId];
     if (room) room.messages.push(message);
   }
 
+
+  // ── UPDATE CODE ───────────────────────────────────────────────
+  // Saves the latest code from the shared editor
   updateCode(roomId, code) {
     const room = this.rooms[roomId];
     if (room) room.code = code;
   }
 
+
+  // ── UPDATE LANGUAGE ───────────────────────────────────────────
+  // Updates which programming language the editor is set to
   updateLanguage(roomId, language) {
     const room = this.rooms[roomId];
     if (room) room.language = language;
   }
 
+
+  // ── GET ROOM DATA ─────────────────────────────────────────────
+  // Returns the safe public data for a room (no passcode exposed)
   getRoomData(roomId) {
     const room = this.rooms[roomId];
     if (!room) return null;
@@ -86,13 +112,18 @@ class RoomManager {
     };
   }
 
+
+  // ── REMOVE USER BY SOCKET ID ──────────────────────────────────
+  // Called on disconnect — marks the user as offline (socketId = null)
+  // instead of fully removing them, so they can reconnect later
   removeUserBySocketId(socketId) {
     for (const roomId in this.rooms) {
       const room = this.rooms[roomId];
-      const user = room.users.find((u) => u.socketId === socketId);
+      const user = room.users.find(u => u.socketId === socketId);
 
       if (user) {
         user.socketId = null;
+        console.log(`User "${user.username}" went offline in room "${roomId}"`);
       }
     }
   }
