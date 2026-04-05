@@ -1,40 +1,49 @@
+# ── docker-compose.yml ──────────────────────────────────────────────────────
+# Orchestrates both containers together
+
 version: "3.9"
 
 services:
 
+  # ── Backend Container ──────────────────────────────────────────────────────
   backend:
     build:
-      context: ./backend
+      context: ./backend       # folder where Dockerfile lives
       dockerfile: Dockerfile
-    image: karthiksdumb/codeconnect-backend:latest
+    image: karthiksdumb/codeconnect-backend:latest   # Docker Hub image name
     container_name: codeconnect-backend
     ports:
-      - "5005:5005"
+      - "5005:5005"            # host:container - exposes backend to browser
     env_file:
-      - ./backend/.env
-    restart: unless-stopped
+      - ./backend/.env         # loads your secrets - never hardcode these
+    restart: unless-stopped    # auto restart on crash, stop only if manually stopped
     networks:
-      - codeconnect-net
+      - codeconnect-net        # private network shared with frontend
 
+  # ── Frontend Container ─────────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend/my-app
       dockerfile: Dockerfile
       args:
-        # VITE_ vars are baked in at build time - backend is accessed by the
-        # browser (not inside Docker), so localhost:5005 is correct for local use
+        # These are baked into the JS bundle at build time by Vite
+        # For local: localhost:5005 is correct because browser accesses backend directly
+        # For production: change to your actual domain eg. https://api.yourdomain.com
         VITE_BACKEND_URL: http://localhost:5005
         VITE_JUDGE0_API: https://ce.judge0.com/submissions?base64_encoded=false&wait=true
-    image: karthiksdumb/codeconnect-frontend:latest
+    image: karthiksdumb/codeconnect-frontend:latest  # Docker Hub image name
     container_name: codeconnect-frontend
     ports:
-      - "80:80"
+      - "80:80"                # exposes frontend on port 80 (default HTTP)
     depends_on:
-      - backend
+      - backend                # wait for backend container to start first
     restart: unless-stopped
     networks:
       - codeconnect-net
 
+# ── Private Network ──────────────────────────────────────────────────────────
+# Both containers can talk to each other through this network
+# Isolated from other Docker containers on your machine
 networks:
   codeconnect-net:
     driver: bridge
