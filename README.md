@@ -35,4 +35,19 @@ CodeConnect is a project designed to [brief description of the project purpose a
 [Guidelines on how others can contribute to the project]
 
 ## License
-[License information]
+[License information]\
+
+TODOS 1. MongoDB Atlas setup          → free cloud database
+2. Mongoose connection          → connect backend to MongoDB
+3. User model                   → username, email, password, avatar, created at
+4. Room model                   → room name, passcode, creator, created at, members
+5. Message model                → message, sender, room, timestamp
+6. Code snapshot model          → save code at end of session per room
+7. Auth endpoints               → register, login with JWT
+8. User endpoints               → get profile, update profile, avatar upload
+9. Room endpoints               → get room history, rooms user created, rooms user joined
+10. Message endpoints           → get chat history per room
+11. Protect routes with JWT     → middleware
+12. Connect socket to userId    → attach user info to socket connection
+13. Update roomManager          → use MongoDB instead of memory
+14. Room cleanup                → delete empty rooms after X minutes
