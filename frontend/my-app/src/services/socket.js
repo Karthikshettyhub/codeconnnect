@@ -8,10 +8,13 @@ class SocketService {
   connect() {
     if (this.socket?.connected) return;
 
-    const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
+    const SOCKET_URL =
+      import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
 
     this.socket = io(SOCKET_URL, {
-      transports: ["websocket"],
+      // FIX 2: allow polling as fallback if websocket is slow or blocked
+      // previously was ["websocket"] only — caused silent failures on slow connections
+      transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
@@ -30,6 +33,16 @@ class SocketService {
     });
   }
 
+  // FIX 1: added waitForConnection helper
+  // socket.io connect() is async — if user clicks "Create Room" before
+  // handshake completes, emit fires into void silently. this waits for it.
+  waitForConnection() {
+    return new Promise((resolve) => {
+      if (this.socket?.connected) return resolve();
+      this.socket.once("connect", resolve);
+    });
+  }
+
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
@@ -37,12 +50,16 @@ class SocketService {
     }
   }
 
-  createRoom(roomId, username, passcode) {
-    this.socket?.emit("create-room", { roomId, username, passcode });
+  // FIX 1 applied: await connection before emitting
+  async createRoom(roomId, username, passcode) {
+    await this.waitForConnection();
+    this.socket.emit("create-room", { roomId, username, passcode });
   }
 
-  joinRoom(roomId, username, passcode) {
-    this.socket?.emit("join-room", { roomId, username, passcode });
+  // FIX 1 applied: await connection before emitting
+  async joinRoom(roomId, username, passcode) {
+    await this.waitForConnection();
+    this.socket.emit("join-room", { roomId, username, passcode });
   }
 
   leaveRoom(roomId, username) {
@@ -91,21 +108,12 @@ class SocketService {
     this.listen("language-change", callback);
   }
 
-  onWebRTCOffer(callback) {
-    this.listen("webrtc-offer", callback);
-  }
-
-  onWebRTCAnswer(callback) {
-    this.listen("webrtc-answer", callback);
-  }
-
-  onWebRTCIce(callback) {
-    this.listen("webrtc-ice", callback);
-  }
-
   onError(callback) {
     this.listen("error", callback);
   }
+
+  // FIX 3: removed unused WebRTC listener methods (onWebRTCOffer, onWebRTCAnswer, onWebRTCIce)
+  // they were dead code — not used anywhere in the app
 
   removeAllListeners() {
     this.socket?.removeAllListeners();

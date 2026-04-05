@@ -6,16 +6,16 @@ import { RoomProvider } from "./contexts/roomcontext";
 
 function App() {
   return (
-    <RoomProvider>
       <Router>
+        <RoomProvider>
         <div className="app">
           <Routes>
             <Route path="/" element={<Homepage />} />
             <Route path="/room/:roomId" element={<RoomPage />} />
           </Routes>
         </div>
+        </RoomProvider>
       </Router>
-    </RoomProvider>
   );
 }
 
