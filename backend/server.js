@@ -4,7 +4,7 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
-
+const connectDB = require("./src/config/Db.js");
 const app = express();
 const server = http.createServer(app);
 
@@ -29,6 +29,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+
 // Static files
 app.use(express.static(frontendPath));
 
@@ -38,6 +39,8 @@ app.get("*splat", (req, res) => {
 });
 
 require("./src/socketHandler")(io);
+
+connectDB()
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
