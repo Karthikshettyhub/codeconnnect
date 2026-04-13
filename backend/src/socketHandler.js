@@ -62,10 +62,41 @@ module.exports = (io) => {
       });
     });
 
-    // When a user closes the tab or loses connection
+    // ADDED
+    socket.on("leave-room", ({ roomId }) => {
+      roomManager.leaveRoom(roomId, socket.id);
+    });
+
+    // UPDATED with DEBUG LOGS
     socket.on("disconnect", (reason) => {
-      console.log("User disconnected:", socket.id, "reason:", reason);
-      roomManager.removeUserBySocketId(socket.id);
+      console.log("DEBUG: socket.id disconnecting:", socket.id);
+
+      // Step 1: Mark user offline
+      const result = roomManager.removeUserBySocketId(socket.id);
+      if (!result) return;
+
+      // Step 2: Get roomId
+      const { roomId } = result;
+      console.log("DEBUG: returned roomId:", roomId);
+
+      console.log("DEBUG: users BEFORE timeout:", roomManager.getRoomUsers(roomId));
+
+      // Step 3: Wait 5 seconds
+      setTimeout(() => {
+        // Step 4: Check if room is still empty (all users offline)
+        const users = roomManager.getRoomUsers(roomId);
+        console.log("DEBUG: users AFTER timeout:", users);
+
+        if (!users) return;
+
+        const allOffline = users.every((u) => u.socketId === null);
+        console.log("DEBUG: allOffline check:", allOffline);
+
+        if (allOffline) {
+          // Step 5: Trigger cleanup
+          roomManager.leaveRoom(roomId, null);
+        }
+      }, 5000);
     });
 
   });

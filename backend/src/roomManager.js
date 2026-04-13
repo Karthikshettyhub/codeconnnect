@@ -59,18 +59,35 @@ class RoomManager {
   }
 
 
-  // ── LEAVE ROOM ────────────────────────────────────────────────
-  // Removes a user from the room. Deletes the room if it's now empty.
+  // UPDATED
   leaveRoom(roomId, socketId) {
     const room = this.rooms[roomId];
-    if (!room) return;
+    if (!room) return false;
 
-    room.users = room.users.filter(u => u.socketId !== socketId);
-
-    if (room.users.length === 0) {
-      delete this.rooms[roomId];
-      console.log(`Room "${roomId}" was deleted — no users left.`);
+    if (socketId === null) {
+      // CLEANUP MODE: remove room only if ALL users are null (offline)
+      const allOffline = room.users.every((u) => u.socketId === null);
+      if (allOffline) {
+        delete this.rooms[roomId];
+        console.log(`[CLEANUP] Room "${roomId}" was DELETED from memory.`);
+        return true;
+      }
+    } else {
+      // Manual Leave Mode: Remove specific user
+      room.users = room.users.filter((u) => u.socketId !== socketId);
+      if (room.users.length === 0) {
+        delete this.rooms[roomId];
+        console.log(`[MANUAL] Room "${roomId}" was DELETED — no users left.`);
+        return true;
+      }
     }
+
+    return false;
+  }
+
+  // ADDED
+  getRoomUsers(roomId) {
+    return this.rooms[roomId]?.users || null;
   }
 
 
@@ -113,19 +130,20 @@ class RoomManager {
   }
 
 
-  // ── REMOVE USER BY SOCKET ID ──────────────────────────────────
-  // Called on disconnect — marks the user as offline (socketId = null)
-  // instead of fully removing them, so they can reconnect later
+  // UPDATED
   removeUserBySocketId(socketId) {
     for (const roomId in this.rooms) {
       const room = this.rooms[roomId];
-      const user = room.users.find(u => u.socketId === socketId);
+      const user = room.users.find((u) => u.socketId === socketId);
 
       if (user) {
-        user.socketId = null;
-        console.log(`User "${user.username}" went offline in room "${roomId}"`);
+        const username = user.username;
+        user.socketId = null; // Mark as offline (keep for reconnection)
+        console.log(`User "${username}" went offline in room "${roomId}"`);
+        return { roomId, username };
       }
     }
+    return null;
   }
 }
 
