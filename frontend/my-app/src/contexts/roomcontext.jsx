@@ -72,6 +72,13 @@ export const RoomProvider = ({ children }) => {
 
     socketService.onError((err) => {
       alert(err?.message || "Socket error");
+      // UPDATED: clear local state and force redirect
+      sessionStorage.removeItem("roomId");
+      sessionStorage.removeItem("username");
+      sessionStorage.removeItem("passcode");
+      setCurrentRoom(null);
+      setUsers([]);
+      window.location.href = "/";
     });
 
     return () => {

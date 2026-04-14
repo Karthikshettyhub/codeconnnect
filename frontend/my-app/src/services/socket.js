@@ -8,16 +8,14 @@ class SocketService {
   connect() {
     if (this.socket?.connected) return;
 
-    const SOCKET_URL =
-      import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
+    const BACKEND_URL = "https://codeconnnect.onrender.com";
 
-    this.socket = io(SOCKET_URL, {
-      // FIX 2: allow polling as fallback if websocket is slow or blocked
-      // previously was ["websocket"] only — caused silent failures on slow connections
+    this.socket = io(BACKEND_URL, {
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
+      timeout: 20000,
     });
 
     this.socket.on("connect", () => {

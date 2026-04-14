@@ -12,6 +12,10 @@ module.exports = (io) => {
         socket.emit("error", { message: result.message });
         return;
       }
+
+      // UPDATED: EXTRA SAFETY CHECK
+      if (!roomManager.rooms[roomId]) return;
+
       socket.join(roomId);
       socket.emit("room-created", { roomId, ...roomManager.getRoomData(roomId) });
     });
@@ -23,6 +27,10 @@ module.exports = (io) => {
         socket.emit("error", { message: result.message });
         return;
       }
+
+      // UPDATED: EXTRA SAFETY CHECK
+      if (!roomManager.rooms[roomId]) return;
+
       socket.join(roomId);
       socket.emit("room-joined", { roomId, ...roomManager.getRoomData(roomId) });
       socket.to(roomId).emit("user-joined", { username, socketId: socket.id });
@@ -62,7 +70,12 @@ module.exports = (io) => {
       });
     });
 
-    // When a user closes the tab or loses connection
+    // ADDED
+    socket.on("leave-room", ({ roomId }) => {
+      roomManager.leaveRoom(roomId, socket.id);
+    });
+
+    // UPDATED with DEBUG LOGS
     socket.on("disconnect", (reason) => {
   console.log("User disconnected:", socket.id, "reason:", reason);
   

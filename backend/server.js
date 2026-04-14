@@ -4,7 +4,7 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
-const connectDB = require("./src/config/Db.js");
+// const connectDB = require("./src/config/Db.js");
 const app = express();
 const server = http.createServer(app);
 
@@ -17,7 +17,10 @@ const corsOptions = {
 };
 
 const io = new Server(server, {
-  cors: corsOptions,
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  },
   transports: ["websocket", "polling"],
 });
 
@@ -27,6 +30,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 const frontendPath = path.join(__dirname, "../frontend/my-app/dist");
+
+app.get("/", (req, res) => {
+  res.send("Server running");
+});
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
@@ -43,7 +50,7 @@ app.get("*splat", (req, res) => {
 
 require("./src/socketHandler")(io);
 
-connectDB()
+// connectDB()
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
