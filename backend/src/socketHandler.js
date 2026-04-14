@@ -64,9 +64,18 @@ module.exports = (io) => {
 
     // When a user closes the tab or loses connection
     socket.on("disconnect", (reason) => {
-      console.log("User disconnected:", socket.id, "reason:", reason);
-      roomManager.removeUserBySocketId(socket.id);
-    });
+  console.log("User disconnected:", socket.id, "reason:", reason);
+  
+  // find which room this socket was in
+  for (const roomId in roomManager.rooms) {
+    const room = roomManager.rooms[roomId];
+    if (room && room.users.some(u => u.socketId === socket.id)) {
+      roomManager.leaveRoom(roomId, socket.id);
+      console.log(`Removed socket ${socket.id} from room ${roomId}`);
+      break;
+    }
+  }
+});
 
   });
 
