@@ -77,28 +77,18 @@ module.exports = (io) => {
 
     // UPDATED with DEBUG LOGS
     socket.on("disconnect", (reason) => {
-      console.log("DEBUG: socket.id disconnecting:", socket.id);
-
-      // Step 1: Mark user offline
-      const affectedRooms = roomManager.removeUserBySocketId(socket.id);
-      if (!affectedRooms || affectedRooms.length === 0) return;
-
-      affectedRooms.forEach(({ roomId }) => {
-        // Step 3: Wait 5 seconds
-        setTimeout(() => {
-          // Step 4: Check if room is still empty (all users offline)
-          const users = roomManager.getRoomUsers(roomId);
-          if (!users) return;
-
-          const allOffline = users.every(u => u.socketId === null);
-
-          if (allOffline) {
-            // Step 5: Trigger cleanup
-            roomManager.leaveRoom(roomId, null);
-          }
-        }, 5000);
-      });
-    });
+  console.log("User disconnected:", socket.id, "reason:", reason);
+  
+  // find which room this socket was in
+  for (const roomId in roomManager.rooms) {
+    const room = roomManager.rooms[roomId];
+    if (room && room.users.some(u => u.socketId === socket.id)) {
+      roomManager.leaveRoom(roomId, socket.id);
+      console.log(`Removed socket ${socket.id} from room ${roomId}`);
+      break;
+    }
+  }
+});
 
   });
 

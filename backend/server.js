@@ -8,6 +8,14 @@ require("dotenv").config();
 const app = express();
 const server = http.createServer(app);
 
+const corsOptions = {
+  origin: [
+     process.env.VERCEL_URL,
+     process.env.FRONTEND_URL,
+    ], 
+  methods: ["GET", "POST"],
+};
+
 const io = new Server(server, {
   cors: {
     origin: "*",
