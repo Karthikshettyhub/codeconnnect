@@ -16,15 +16,18 @@ class RoomManager {
       return { success: false, message: "Room ID already exists. Try another one." };
     }
 
-    this.rooms[roomId] = {
-      createdBy: socketId,
-      passcode: passcode || null,
-      users: [{ socketId, username }],
-      messages: [],
-      code: "",
-      language: "javascript",
-      createdAt: Date.now(),
-    };
+    // UPDATED: Added safety check before creating room
+    if (!this.rooms[roomId]) {
+      this.rooms[roomId] = {
+        createdBy: socketId,
+        passcode: passcode || null,
+        users: [{ socketId, username }],
+        messages: [],
+        code: "",
+        language: "javascript",
+        createdAt: Date.now(),
+      };
+    }
 
     return { success: true };
   }
@@ -33,11 +36,12 @@ class RoomManager {
   // ── JOIN ROOM ─────────────────────────────────────────────────
   // Called when a user joins an existing room
   joinRoom(roomId, socketId, username, passcode) {
-    const room = this.rooms[roomId];
-
-    if (!room) {
+    // UPDATED: STRICT validation directly on memory object
+    if (!this.rooms[roomId]) {
       return { success: false, message: "Room not found." };
     }
+
+    const room = this.rooms[roomId];
 
     if (room.passcode && room.passcode !== passcode) {
       return { success: false, message: "Invalid passcode." };
@@ -132,6 +136,7 @@ class RoomManager {
 
   // UPDATED
   removeUserBySocketId(socketId) {
+    const affectedRooms = [];
     for (const roomId in this.rooms) {
       const room = this.rooms[roomId];
       const user = room.users.find((u) => u.socketId === socketId);
@@ -140,10 +145,10 @@ class RoomManager {
         const username = user.username;
         user.socketId = null; // Mark as offline (keep for reconnection)
         console.log(`User "${username}" went offline in room "${roomId}"`);
-        return { roomId, username };
+        affectedRooms.push({ roomId, username });
       }
     }
-    return null;
+    return affectedRooms;
   }
 }
 

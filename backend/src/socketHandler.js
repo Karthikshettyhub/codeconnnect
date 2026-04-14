@@ -12,6 +12,10 @@ module.exports = (io) => {
         socket.emit("error", { message: result.message });
         return;
       }
+
+      // UPDATED: EXTRA SAFETY CHECK
+      if (!roomManager.rooms[roomId]) return;
+
       socket.join(roomId);
       socket.emit("room-created", { roomId, ...roomManager.getRoomData(roomId) });
     });
@@ -23,6 +27,10 @@ module.exports = (io) => {
         socket.emit("error", { message: result.message });
         return;
       }
+
+      // UPDATED: EXTRA SAFETY CHECK
+      if (!roomManager.rooms[roomId]) return;
+
       socket.join(roomId);
       socket.emit("room-joined", { roomId, ...roomManager.getRoomData(roomId) });
       socket.to(roomId).emit("user-joined", { username, socketId: socket.id });
@@ -72,31 +80,24 @@ module.exports = (io) => {
       console.log("DEBUG: socket.id disconnecting:", socket.id);
 
       // Step 1: Mark user offline
-      const result = roomManager.removeUserBySocketId(socket.id);
-      if (!result) return;
+      const affectedRooms = roomManager.removeUserBySocketId(socket.id);
+      if (!affectedRooms || affectedRooms.length === 0) return;
 
-      // Step 2: Get roomId
-      const { roomId } = result;
-      console.log("DEBUG: returned roomId:", roomId);
+      affectedRooms.forEach(({ roomId }) => {
+        // Step 3: Wait 5 seconds
+        setTimeout(() => {
+          // Step 4: Check if room is still empty (all users offline)
+          const users = roomManager.getRoomUsers(roomId);
+          if (!users) return;
 
-      console.log("DEBUG: users BEFORE timeout:", roomManager.getRoomUsers(roomId));
+          const allOffline = users.every(u => u.socketId === null);
 
-      // Step 3: Wait 5 seconds
-      setTimeout(() => {
-        // Step 4: Check if room is still empty (all users offline)
-        const users = roomManager.getRoomUsers(roomId);
-        console.log("DEBUG: users AFTER timeout:", users);
-
-        if (!users) return;
-
-        const allOffline = users.every((u) => u.socketId === null);
-        console.log("DEBUG: allOffline check:", allOffline);
-
-        if (allOffline) {
-          // Step 5: Trigger cleanup
-          roomManager.leaveRoom(roomId, null);
-        }
-      }, 5000);
+          if (allOffline) {
+            // Step 5: Trigger cleanup
+            roomManager.leaveRoom(roomId, null);
+          }
+        }, 5000);
+      });
     });
 
   });
