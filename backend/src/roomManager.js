@@ -12,22 +12,27 @@ class RoomManager {
       return { success: false, message: "Room ID and username are required." };
     }
 
-    if (this.rooms[roomId]) {
-      return { success: false, message: "Room ID already exists. Try another one." };
+    const room = this.rooms[roomId];
+
+    if (room) {
+      // UPDATED: Check if room is a ghost room
+      const allOffline = room.users.every((u) => u.socketId === null);
+      if (allOffline) {
+        delete this.rooms[roomId];
+      } else {
+        return { success: false, message: "Room already exists" };
+      }
     }
 
-    // UPDATED: Added safety check before creating room
-    if (!this.rooms[roomId]) {
-      this.rooms[roomId] = {
-        createdBy: socketId,
-        passcode: passcode || null,
-        users: [{ socketId, username }],
-        messages: [],
-        code: "",
-        language: "javascript",
-        createdAt: Date.now(),
-      };
-    }
+    this.rooms[roomId] = {
+      createdBy: socketId,
+      passcode: passcode || null,
+      users: [{ socketId, username }],
+      messages: [],
+      code: "",
+      language: "javascript",
+      createdAt: Date.now(),
+    };
 
     return { success: true };
   }
@@ -36,12 +41,18 @@ class RoomManager {
   // ── JOIN ROOM ─────────────────────────────────────────────────
   // Called when a user joins an existing room
   joinRoom(roomId, socketId, username, passcode) {
-    // UPDATED: STRICT validation directly on memory object
-    if (!this.rooms[roomId]) {
-      return { success: false, message: "Room not found." };
+    const room = this.rooms[roomId];
+
+    if (!room) {
+      return { success: false, message: "Room not found" };
     }
 
-    const room = this.rooms[roomId];
+    // UPDATED: Check for ghost room before joining
+    const allOffline = room.users.every((u) => u.socketId === null);
+    if (allOffline) {
+      delete this.rooms[roomId];
+      return { success: false, message: "Room expired" };
+    }
 
     if (room.passcode && room.passcode !== passcode) {
       return { success: false, message: "Invalid passcode." };
@@ -65,23 +76,20 @@ class RoomManager {
 
   // UPDATED
   leaveRoom(roomId, socketId) {
-    const room = this.rooms[roomId];
-    if (!room) return false;
+    if (socketId !== null) {
+      const room = this.rooms[roomId];
+      if (room) {
+        room.users = room.users.filter((u) => u.socketId !== socketId);
+      }
+    }
 
-    if (socketId === null) {
-      // CLEANUP MODE: remove room only if ALL users are null (offline)
+    const room = this.rooms[roomId];
+
+    if (room) {
       const allOffline = room.users.every((u) => u.socketId === null);
       if (allOffline) {
         delete this.rooms[roomId];
         console.log(`[CLEANUP] Room "${roomId}" was DELETED from memory.`);
-        return true;
-      }
-    } else {
-      // Manual Leave Mode: Remove specific user
-      room.users = room.users.filter((u) => u.socketId !== socketId);
-      if (room.users.length === 0) {
-        delete this.rooms[roomId];
-        console.log(`[MANUAL] Room "${roomId}" was DELETED — no users left.`);
         return true;
       }
     }
