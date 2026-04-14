@@ -18,7 +18,7 @@ const corsOptions = {
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: corsOptions,
     methods: ["GET", "POST"]
   },
   transports: ["websocket", "polling"],
