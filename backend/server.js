@@ -8,13 +8,11 @@ require("dotenv").config();
 const app = express();
 const server = http.createServer(app);
 
-const corsOptions = {
-  origin: process.env.FRONTEND_URL,
-  methods: ["GET", "POST"],
-};
-
 const io = new Server(server, {
-  cors: corsOptions,
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  },
   transports: ["websocket", "polling"],
 });
 
@@ -24,6 +22,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 const frontendPath = path.join(__dirname, "../frontend/my-app/dist");
+
+app.get("/", (req, res) => {
+  res.send("Server running");
+});
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
