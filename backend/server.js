@@ -29,6 +29,9 @@ const PORT = process.env.PORT || 5005;
 app.use(cors(corsOptions));
 app.use(express.json());
 
+const compilerRoute = require('./src/routes/compiler.js');
+app.use('/api/compiler', compilerRoute);
+
 const frontendPath = path.join(__dirname, "../frontend/my-app/dist");
 
 app.get("/", (req, res) => {
