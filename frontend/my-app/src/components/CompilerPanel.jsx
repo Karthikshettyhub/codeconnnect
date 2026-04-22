@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Play, Loader2, Terminal } from "lucide-react";
-import { executeCode } from "../services/judge0Service";
+import { executeCode } from "../services/compilerService";
 import "./CompilerPanel.css";
 
 const CompilerPanel = ({ language, code }) => {

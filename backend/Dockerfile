@@ -3,6 +3,7 @@
 # Use Node 18 on Alpine Linux (tiny, production standard)
 FROM node:18-alpine
 
+RUN apk add --no-cache docker-cli
 # All commands run inside /app
 WORKDIR /app
 

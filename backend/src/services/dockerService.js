@@ -1,13 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 const crypto = require('crypto');
 const { exec } = require('child_process');
 
 const DOCKER_IMAGES = {
   python: 'python:3.11-alpine',
   cpp: 'gcc:latest',
-  java: 'openjdk:11-alpine',
+  java: 'eclipse-temurin:17-alpine',
   javascript: 'node:alpine',
 };
 
@@ -25,10 +24,15 @@ const FILE_NAMES = {
   javascript: 'code.js',
 };
 
+// use /tmp directly — not os.tmpdir()
+// reason: backend runs in Docker, os.tmpdir() returns container's /tmp
+// but Docker daemon mounts from HOST /tmp
+// by using /tmp directly and mounting /tmp:/tmp in compose
+// both container and host share the same /tmp
 const writeCodeToFolder = (code, language) => {
   const id = crypto.randomBytes(6).toString('hex');
-  const folder = path.join(os.tmpdir(), `${language}_${id}`);
-  fs.mkdirSync(folder);
+  const folder = `/tmp/${language}_${id}`;
+  fs.mkdirSync(folder, { recursive: true });
   const filepath = path.join(folder, FILE_NAMES[language]);
   fs.writeFileSync(filepath, code);
   return folder;
@@ -69,7 +73,7 @@ const runInDocker = (code, language) => {
 
     const folder = writeCodeToFolder(code, language);
     const cmd = buildDockerCommand(language, folder);
-
+    const timeout = language === 'java' ? 30000 : 10000;
     exec(cmd, { timeout: 10000 }, (error, stdout, stderr) => {
 
       cleanup(folder);
