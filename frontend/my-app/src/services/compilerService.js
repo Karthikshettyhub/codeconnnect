@@ -2,16 +2,19 @@ import axios from "axios";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
 
-export const executeCode = async (source_code, language) => {
-    console.log("calling backend:", `${BACKEND_URL}/api/compiler/run`);
-  console.log("language:", language);
+export const executeCode = async (source_code, language, input = "") => {
+  const payload = {
+    code: source_code,
+    language: language.toLowerCase(),
+    input: input
+  };
+  console.log("Compiler Request:", payload);
   try {
-    const response = await axios.post(`${BACKEND_URL}/api/compiler/run`, {
-      code: source_code,
-      language: language.toLowerCase(),
-    });
+    const response = await axios.post(`${BACKEND_URL}/api/compiler/run`, payload);
+    console.log("Compiler Response:", response.data);
     return response.data;
   } catch (error) {
+    console.error("Compiler Error:", error.response?.data || error.message);
     return {
       success: false,
       output: "",

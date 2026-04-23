@@ -42,8 +42,8 @@ const CompilerPanel = ({ language, code }) => {
       }
     } catch (err) {
       setOutput("");
-      const errorMessage = err.response?.data?.message || err.message;
-      setError(`Runtime/Network error: ${errorMessage}\n(Check if your internet allows calls to emkc.org)`);
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message;
+      setError(`Runtime/Network error: ${errorMessage}`);
     }
 
     setIsRunning(false);
