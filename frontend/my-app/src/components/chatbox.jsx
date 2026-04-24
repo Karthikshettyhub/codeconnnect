@@ -224,6 +224,8 @@ const ChatBox = () => {
   const handleSend = (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
+    
+    console.log("📤 Sending [CHAT]:", currentRoom, username, inputMessage.trim());
     sendMessage(inputMessage.trim());
     setInputMessage("");
   };

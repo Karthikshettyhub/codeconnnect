@@ -1,27 +1,35 @@
+const fs = require("fs");
+const path = require("path");
+
 class RoomManager {
   constructor() {
-    // All active rooms stored by roomId
-    this.rooms = {};
+    this.filePath = path.join(__dirname, "rooms.json");
+    try {
+      if (fs.existsSync(this.filePath)) {
+        const data = fs.readFileSync(this.filePath, "utf-8");
+        this.rooms = JSON.parse(data);
+        console.log("✅ [BACKEND] rooms.json loaded.");
+      } else {
+        this.rooms = {};
+      }
+    } catch (err) {
+      this.rooms = {};
+    }
   }
 
+  saveRooms() {
+    try {
+      fs.writeFileSync(this.filePath, JSON.stringify(this.rooms, null, 2));
+    } catch (err) {}
+  }
 
-  // ── CREATE ROOM ───────────────────────────────────────────────
-  // Called when a user starts a new room
+  // ALWAYS SUCCESS: Create if missing, Join if exists
   createRoom(roomId, socketId, username, passcode) {
-    if (!roomId || !socketId || !username) {
-      return { success: false, message: "Room ID and username are required." };
-    }
-
-    const room = this.rooms[roomId];
-
-    if (room) {
-      // UPDATED: Check if room is a ghost room
-      const allOffline = room.users.every((u) => u.socketId === null);
-      if (allOffline) {
-        delete this.rooms[roomId];
-      } else {
-        return { success: false, message: "Room already exists" };
-      }
+    console.log("CREATE ATTEMPT:", roomId, username);
+    
+    // If room exists, treat as join
+    if (this.rooms[roomId]) {
+      return this.joinRoom(roomId, socketId, username, passcode);
     }
 
     this.rooms[roomId] = {
@@ -34,105 +42,75 @@ class RoomManager {
       createdAt: Date.now(),
     };
 
+    this.saveRooms();
+    console.log("ROOM CREATED:", roomId);
     return { success: true };
   }
 
-
-  // ── JOIN ROOM ─────────────────────────────────────────────────
-  // Called when a user joins an existing room
+  // ALWAYS SUCCESS: Auto-create missing rooms
   joinRoom(roomId, socketId, username, passcode) {
+    console.log("JOIN ATTEMPT:", roomId, username);
+    
+    if (!this.rooms[roomId]) {
+      console.log("🔄 AUTO-CREATING MISSING ROOM:", roomId);
+      this.rooms[roomId] = {
+        createdBy: "system",
+        passcode: passcode || null,
+        users: [],
+        messages: [],
+        code: "",
+        language: "javascript",
+        createdAt: Date.now(),
+      };
+    }
+
     const room = this.rooms[roomId];
 
-    if (!room) {
-      return { success: false, message: "Room not found" };
-    }
-
-    // UPDATED: Check for ghost room before joining
-    const allOffline = room.users.every((u) => u.socketId === null);
-    if (allOffline) {
-      delete this.rooms[roomId];
-      return { success: false, message: "Room expired" };
-    }
-
+    // Check passcode only if it exists
     if (room.passcode && room.passcode !== passcode) {
-      return { success: false, message: "Invalid passcode." };
+       return { success: false, message: "Invalid passcode." };
     }
 
-    // If same username is already in the room with no socket (disconnected),
-    // reconnect them instead of adding a duplicate
-    const disconnectedUser = room.users.find(
-      u => u.username === username && u.socketId === null
-    );
-
-    if (disconnectedUser) {
-      disconnectedUser.socketId = socketId;
+    // Mark as online
+    const user = room.users.find(u => u.username === username);
+    if (user) {
+      user.socketId = socketId;
     } else {
       room.users.push({ socketId, username });
     }
 
+    this.saveRooms();
+    console.log("JOIN SUCCESS:", roomId, username);
     return { success: true };
   }
 
-
-  // UPDATED
-  leaveRoom(roomId, socketId) {
-    if (socketId !== null) {
+  // DISCONNECT: Mark offline but NEVER delete
+  removeUserBySocketId(socketId) {
+    for (const roomId in this.rooms) {
       const room = this.rooms[roomId];
-      if (room) {
-        room.users = room.users.filter((u) => u.socketId !== socketId);
+      const user = room.users.find((u) => u.socketId === socketId);
+      if (user) {
+        user.socketId = null;
+        console.log("OFFLINE:", user.username, "in", roomId);
+        this.saveRooms();
       }
     }
+  }
 
+  // EXPLICIT LEAVE: Just mark offline or ignore for now to keep rooms alive
+  leaveRoom(roomId, socketId) {
     const room = this.rooms[roomId];
-
     if (room) {
-      const allOffline = room.users.every((u) => u.socketId === null);
-      if (allOffline) {
-        delete this.rooms[roomId];
-        console.log(`[CLEANUP] Room "${roomId}" was DELETED from memory.`);
-        return true;
-      }
+      const user = room.users.find(u => u.socketId === socketId);
+      if (user) user.socketId = null;
     }
-
-    return false;
+    this.saveRooms();
+    return true;
   }
 
-  // ADDED
-  getRoomUsers(roomId) {
-    return this.rooms[roomId]?.users || null;
-  }
-
-
-  // ── ADD MESSAGE ───────────────────────────────────────────────
-  // Saves a chat message to the room's message history
-  addMessage(roomId, message) {
-    const room = this.rooms[roomId];
-    if (room) room.messages.push(message);
-  }
-
-
-  // ── UPDATE CODE ───────────────────────────────────────────────
-  // Saves the latest code from the shared editor
-  updateCode(roomId, code) {
-    const room = this.rooms[roomId];
-    if (room) room.code = code;
-  }
-
-
-  // ── UPDATE LANGUAGE ───────────────────────────────────────────
-  // Updates which programming language the editor is set to
-  updateLanguage(roomId, language) {
-    const room = this.rooms[roomId];
-    if (room) room.language = language;
-  }
-
-
-  // ── GET ROOM DATA ─────────────────────────────────────────────
-  // Returns the safe public data for a room (no passcode exposed)
   getRoomData(roomId) {
     const room = this.rooms[roomId];
     if (!room) return null;
-
     return {
       users: room.users,
       messages: room.messages,
@@ -141,22 +119,32 @@ class RoomManager {
     };
   }
 
-
-  // UPDATED
-  removeUserBySocketId(socketId) {
-    const affectedRooms = [];
-    for (const roomId in this.rooms) {
-      const room = this.rooms[roomId];
-      const user = room.users.find((u) => u.socketId === socketId);
-
-      if (user) {
-        const username = user.username;
-        user.socketId = null; // Mark as offline (keep for reconnection)
-        console.log(`User "${username}" went offline in room "${roomId}"`);
-        affectedRooms.push({ roomId, username });
-      }
+  addMessage(roomId, message) {
+    if (this.rooms[roomId]) {
+      this.rooms[roomId].messages.push(message);
+      this.saveRooms();
     }
-    return affectedRooms;
+  }
+
+  updateCode(roomId, code) {
+    if (this.rooms[roomId]) {
+      this.rooms[roomId].code = code;
+      this.saveRooms();
+    }
+  }
+
+  updateLanguage(roomId, language) {
+    if (this.rooms[roomId]) {
+      this.rooms[roomId].language = language;
+      this.saveRooms();
+    }
+  }
+
+  addMessage(roomId, message) {
+    if (this.rooms[roomId]) {
+      this.rooms[roomId].messages.push(message);
+      this.saveRooms();
+    }
   }
 }
 

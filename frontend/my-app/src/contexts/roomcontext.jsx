@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import socketService from "../services/socket";
 import { getStarterCode } from "../services/compilerService";
 
@@ -21,45 +15,56 @@ export const RoomProvider = ({ children }) => {
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
-
-  const [code, setCode] = useState("");
-  const [language, setLanguage] = useState("javascript");
+  const [code, setCode] = useState(() => localStorage.getItem("code") || "");
+  const [language, setLanguage] = useState(() => localStorage.getItem("language") || "javascript");
   const [pendingLanguage, setPendingLanguage] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const usernameRef = useRef("");
+  const retryCount = useRef(0);
 
   useEffect(() => {
     socketService.connect();
 
-    const savedRoom = sessionStorage.getItem("roomId");
-    const savedUsername = sessionStorage.getItem("username");
-    const savedPasscode = sessionStorage.getItem("passcode");
-    const intentionalLeave = sessionStorage.getItem("intentionalLeave");
-
-    if (savedRoom && savedUsername && intentionalLeave !== "true") {
-      usernameRef.current = savedUsername;
-      setUsername(savedUsername);
-      socketService.joinRoom(savedRoom, savedUsername, savedPasscode);
-    }
-
     socketService.onRoomCreated((data) => {
+      console.log("✅ Room created:", data.roomId);
+      retryCount.current = 0;
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
-      setCode(data.code || "");
+      if (data.code) setCode(data.code);
       if (data.language) setLanguage(data.language);
     });
 
     socketService.onRoomJoined((data) => {
+      console.log("🚀 [ROOM] Successfully joined:", data.roomId);
+      retryCount.current = 0;
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
-      setCode(data.code || "");
+      if (data.code) setCode(data.code);
       if (data.language) setLanguage(data.language);
     });
 
+    socketService.onUserJoined((data) => {
+      setUsers((prev) => {
+        const exists = prev.find((u) => u.username === data.username);
+        if (exists) return prev.map((u) => u.username === data.username ? { ...u, socketId: data.socketId } : u);
+        return [...prev, data];
+      });
+    });
+
+    socketService.onUserLeft((data) => {
+      setUsers((prev) => prev.filter((u) => u.username !== data.username));
+    });
+
     socketService.onReceiveMessage((data) => {
-      setMessages((prev) => [...prev, data]);
+      console.log("📥 Received [CHAT]:", data);
+      setMessages((prev) => {
+        const isDuplicate = prev.some(m => m.timestamp === data.timestamp && m.username === data.username && m.message === data.message);
+        if (isDuplicate) return prev;
+        return [...prev, data];
+      });
     });
 
     socketService.onCodeReceive((data) => {
@@ -71,114 +76,72 @@ export const RoomProvider = ({ children }) => {
     });
 
     socketService.onError((err) => {
-      alert(err?.message || "Socket error");
-      // UPDATED: clear local state and force redirect
-      sessionStorage.removeItem("roomId");
-      sessionStorage.removeItem("username");
-      sessionStorage.removeItem("passcode");
-      setCurrentRoom(null);
-      setUsers([]);
-      window.location.href = "/";
+      // FIX: Retry join instead of failing
+      if (err?.message === "Room not found" && retryCount.current < 3) {
+        console.log("🔁 Retrying room join...");
+        retryCount.current++;
+        
+        const storedRoomId = localStorage.getItem("roomId");
+        const storedUsername = localStorage.getItem("username");
+        const storedPasscode = localStorage.getItem("passcode");
+
+        if (storedRoomId && storedUsername) {
+          socketService.joinRoom(storedRoomId, storedUsername, storedPasscode);
+        }
+        return; // DO NOT reset state
+      }
+
+      console.error("🚫 Fatal error:", err?.message);
     });
 
-    return () => {
-      socketService.removeAllListeners();
-    };
+    setIsInitialized(true);
+    return () => socketService.removeAllListeners();
   }, []);
 
   useEffect(() => {
     if (!currentRoom) return;
-    if (code === "" && language) {
-      const starter = getStarterCode(language);
-      setCode(starter);
-      socketService.sendCode(currentRoom, starter);
-    }
-  }, [currentRoom, language]);
+    localStorage.setItem("roomId", currentRoom);
+    localStorage.setItem("code", code);
+    localStorage.setItem("language", language);
+  }, [currentRoom, code, language]);
 
   const createRoom = (roomId, userName, passcode) => {
-    sessionStorage.removeItem("intentionalLeave");
-    sessionStorage.setItem("roomId", roomId);
-    sessionStorage.setItem("username", userName);
-    if (passcode) sessionStorage.setItem("passcode", passcode);
-
     setUsername(userName);
     usernameRef.current = userName;
-
     socketService.createRoom(roomId, userName, passcode);
   };
 
   const joinRoom = (roomId, userName, passcode) => {
-    sessionStorage.removeItem("intentionalLeave");
-    sessionStorage.setItem("roomId", roomId);
-    sessionStorage.setItem("username", userName);
-    if (passcode) sessionStorage.setItem("passcode", passcode);
-
     setUsername(userName);
     usernameRef.current = userName;
-
     socketService.joinRoom(roomId, userName, passcode);
   };
 
   const leaveRoom = () => {
-    if (currentRoom && usernameRef.current) {
-      socketService.leaveRoom(currentRoom, usernameRef.current);
-    }
-
-    sessionStorage.setItem("intentionalLeave", "true");
-    sessionStorage.removeItem("roomId");
-
+    if (currentRoom && usernameRef.current) socketService.leaveRoom(currentRoom, usernameRef.current);
+    localStorage.clear();
     setCurrentRoom(null);
     setUsers([]);
     setMessages([]);
     setCode("");
-    setPendingLanguage(null);
     setUsername("");
-    usernameRef.current = "";
+  };
+
+  const sendMessage = (msg) => {
+    if (currentRoom && usernameRef.current) {
+      console.log("📤 Sending [CHAT]:", currentRoom, usernameRef.current, msg);
+      socketService.sendMessage(currentRoom, usernameRef.current, msg);
+    }
   };
 
   return (
     <RoomContext.Provider
       value={{
-        currentRoom,
-        users,
-        messages,
-        username,
-        code,
-        language,
-        pendingLanguage,
-
-        createRoom,
-        joinRoom,
-        leaveRoom,
-
-        sendMessage: (msg) =>
-          currentRoom &&
-          usernameRef.current &&
-          socketService.sendMessage(currentRoom, usernameRef.current, msg),
-
-        updateCodeRemote: (c) => {
-          if (currentRoom) {
-            setCode(c); // Sync local state
-            socketService.sendCode(currentRoom, c);
-          }
-        },
-
-        updateLanguageRemote: (l) => {
-          if (currentRoom) {
-            setLanguage(l); // Sync local state
-            socketService.sendLanguage(currentRoom, l, usernameRef.current);
-          }
-        },
-
-        acceptLanguageChange: () => {
-          if (!pendingLanguage) return;
-          const starter = getStarterCode(pendingLanguage);
-          setLanguage(pendingLanguage);
-          setCode(starter);
-          socketService.sendCode(currentRoom, starter);
-          setPendingLanguage(null);
-        },
-
+        currentRoom, users, messages, username, code, language, pendingLanguage, isInitialized,
+        createRoom, joinRoom, leaveRoom, sendMessage,
+        updateCodeRemote: (c) => { setCode(c); socketService.sendCode(currentRoom, c); },
+        updateLanguageRemote: (l) => { setLanguage(l); socketService.sendLanguage(currentRoom, l, usernameRef.current); },
+        acceptLanguageChange: () => { if (pendingLanguage) { setLanguage(pendingLanguage); setPendingLanguage(null); } },
         rejectLanguageChange: () => setPendingLanguage(null),
       }}
     >

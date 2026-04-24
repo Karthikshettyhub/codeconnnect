@@ -8,7 +8,7 @@ import { Maximize2, Minimize2, GripVertical, GripHorizontal } from "lucide-react
 import "./roompage.css";
 
 const RoomPage = () => {
-  const { currentRoom, joinRoom, leaveRoom, code, language } = useRoom();
+  const { currentRoom, joinRoom, leaveRoom, code, language, isInitialized } = useRoom();
   const navigate = useNavigate();
   const { roomId } = useParams();
 
@@ -21,26 +21,26 @@ const RoomPage = () => {
   const leftPaneRef = useRef(null);
 
   useEffect(() => {
-    const username = sessionStorage.getItem("username");
-    const passcode = sessionStorage.getItem("passcode");
-    const intentionalLeave = sessionStorage.getItem("intentionalLeave");
+    if (!isInitialized) return;
 
-    if (intentionalLeave === "true") {
-      navigate("/");
+    if (!roomId) {
+      console.warn("🚫 No roomId found in URL params.");
       return;
     }
 
-    if (!roomId || !username) {
+    const storedUsername = localStorage.getItem("username");
+    const passcode = localStorage.getItem("passcode");
+
+    if (storedUsername && !currentRoom) {
+      console.log("🔄 Re-joining room from page load:", roomId);
+      joinRoom(roomId, storedUsername, passcode);
+    } else if (!storedUsername) {
+      console.warn("🚫 No username found in storage, redirecting to home.");
       navigate("/");
-      return;
     }
+  }, [roomId, currentRoom, joinRoom, navigate, isInitialized]);
 
-    sessionStorage.setItem("roomId", roomId);
-
-    if (!currentRoom) {
-      joinRoom(roomId, username, passcode);
-    }
-  }, [roomId, currentRoom, joinRoom, navigate]);
+  if (!roomId) return null;
 
   const handleLeave = () => {
     leaveRoom();
@@ -86,6 +86,15 @@ const RoomPage = () => {
     document.removeEventListener("mouseup", stopHorizontalResize);
     document.body.style.cursor = "default";
   };
+
+  if (!isInitialized) {
+    return (
+      <div className="loading-container">
+        <div className="loader"></div>
+        <p>Initializing room...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="roompage">

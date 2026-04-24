@@ -8,10 +8,10 @@ class SocketService {
   connect() {
     if (this.socket?.connected) return;
 
-    const BACKEND_URL = "https://codeconnnect.onrender.com";
+    const BACKEND_URL = "http://localhost:5005";
 
     this.socket = io(BACKEND_URL, {
-      transports: ["websocket", "polling"],
+      transports: ["websocket"],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
@@ -64,7 +64,8 @@ class SocketService {
     this.socket?.emit("leave-room", { roomId, username });
   }
 
-  sendMessage(roomId, username, message) {
+  async sendMessage(roomId, username, message) {
+    await this.waitForConnection();
     this.socket?.emit("chat-message", { roomId, username, message });
   }
 
@@ -82,7 +83,6 @@ class SocketService {
   }
 
   listen(event, callback) {
-    this.socket?.off(event);
     this.socket?.on(event, callback);
   }
 
@@ -96,6 +96,14 @@ class SocketService {
 
   onReceiveMessage(callback) {
     this.listen("receive-message", callback);
+  }
+
+  onUserJoined(callback) {
+    this.listen("user-joined", callback);
+  }
+
+  onUserLeft(callback) {
+    this.listen("user-left", callback);
   }
 
   onCodeReceive(callback) {

@@ -13,10 +13,8 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (currentRoom) {
-      navigate(`/room/${currentRoom}`);
-    }
-  }, [currentRoom, navigate]);
+    // Standard Homepage mount - No auto-navigation here.
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,11 +23,20 @@ const Homepage = () => {
       return;
     }
 
+    const finalRoomId = roomId.trim().toUpperCase();
+    // CRITICAL: Must persist identity to localStorage before navigation 
+    // to prevent RoomPage from redirecting back to home.
+    localStorage.setItem("username", username.trim());
+    if (passcode) localStorage.setItem("passcode", passcode.trim());
+
     if (mode === "create") {
-      createRoom(roomId.trim().toUpperCase(), username.trim(), passcode.trim());
+      createRoom(finalRoomId, username.trim(), passcode.trim());
     } else {
-      joinRoom(roomId.trim().toUpperCase(), username.trim(), passcode.trim());
+      joinRoom(finalRoomId, username.trim(), passcode.trim());
     }
+
+    console.log("✅ Navigating to room:", finalRoomId);
+    navigate(`/room/${finalRoomId}`);
   };
 
   const generateRoomId = () => {
