@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Play, Loader2, Terminal } from "lucide-react";
-import { executeCode } from "../services/compilerService";
+import { executeCode, getStarterCode } from "../services/compilerService";
 import "./CompilerPanel.css";
 
-const CompilerPanel = ({ language, code }) => {
+const CompilerPanel = ({ language = "javascript", code }) => {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
@@ -12,10 +12,11 @@ const CompilerPanel = ({ language, code }) => {
 
   const cleanCode = (raw) => {
     if (!raw) return "";
+    
+    // ✅ FIXED: Only remove markdown code fences, preserve actual code
     return raw
-      .replace(/^```[\s\S]*?\n/, "")
-      .replace(/\n```$/, "")
-      .replace(/^[ \t]*```|```[ \t]*$/g, "")
+      .replace(/^```[a-z]*\n?/i, "")    // Remove opening ```javascript
+      .replace(/\n?```$/i, "")            // Remove closing ```
       .trim();
   };
 
@@ -31,6 +32,14 @@ const CompilerPanel = ({ language, code }) => {
 
     try {
       const finalCode = cleanCode(code);
+      console.log("-----------------------------------------");
+      console.log("🚀 [COMPILE] Click detected");
+      console.log("📝 Context Code State:", JSON.stringify(code));
+      console.log("🧹 Cleaned Code for API:", JSON.stringify(finalCode));
+      console.log("🌐 Language Target:", language);
+      console.log("📥 Input Provided:", input);
+      console.log("-----------------------------------------");
+      
       const result = await executeCode(finalCode, language, input);
 
       if (!result.success) {
@@ -74,6 +83,7 @@ const CompilerPanel = ({ language, code }) => {
         </button>
       </div>
 
+      {/* ✅ Tabs */}
       <div className="compiler-tabs">
         <button
           className={`tab ${activeTab === "output" ? "active" : ""}`}
@@ -97,6 +107,7 @@ const CompilerPanel = ({ language, code }) => {
             className="input-textarea"
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            placeholder="Enter input (if needed)..."
           />
         )}
       </div>

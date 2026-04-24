@@ -156,12 +156,19 @@ export const RoomProvider = ({ children }) => {
           usernameRef.current &&
           socketService.sendMessage(currentRoom, usernameRef.current, msg),
 
-        updateCodeRemote: (c) =>
-          currentRoom && socketService.sendCode(currentRoom, c),
+        updateCodeRemote: (c) => {
+          if (currentRoom) {
+            setCode(c); // Sync local state
+            socketService.sendCode(currentRoom, c);
+          }
+        },
 
-        updateLanguageRemote: (l) =>
-          currentRoom &&
-          socketService.sendLanguage(currentRoom, l, usernameRef.current),
+        updateLanguageRemote: (l) => {
+          if (currentRoom) {
+            setLanguage(l); // Sync local state
+            socketService.sendLanguage(currentRoom, l, usernameRef.current);
+          }
+        },
 
         acceptLanguageChange: () => {
           if (!pendingLanguage) return;

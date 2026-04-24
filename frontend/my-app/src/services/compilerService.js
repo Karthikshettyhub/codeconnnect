@@ -6,19 +6,44 @@ export const executeCode = async (source_code, language, input = "") => {
   const payload = {
     code: source_code,
     language: language.toLowerCase(),
-    input: input
+    input: input,
   };
-  console.log("Compiler Request:", payload);
+
+  console.log("🚀 Compiler Request:", payload);
+  console.log("📡 Backend URL:", BACKEND_URL);
+
   try {
-    const response = await axios.post(`${BACKEND_URL}/api/compiler/run`, payload);
-    console.log("Compiler Response:", response.data);
+    const response = await axios.post(`${BACKEND_URL}/api/compiler/run`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeout: 120000, // 120 second timeout for client
+    });
+
+    console.log("✅ Compiler Response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Compiler Error:", error.response?.data || error.message);
+    console.error("❌ Compiler Error:", error);
+
+    // Better error handling
+    let errorMessage = "Unknown execution error";
+
+    if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    } else if (error.code === "ECONNREFUSED") {
+      errorMessage = "Backend is not running. Start your server on port 5005.";
+    }
+
+    console.error("Error details:", errorMessage);
+
     return {
       success: false,
       output: "",
-      error: error.response?.data?.error || error.message || "Unknown execution error",
+      error: errorMessage,
     };
   }
 };
