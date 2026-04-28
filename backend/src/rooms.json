@@ -4,7 +4,7 @@
     "passcode": null,
     "users": [
       {
-        "socketId": "lzq14_NVXB0esw09AAAN",
+        "socketId": null,
         "username": "a"
       }
     ],
@@ -23,5 +23,25 @@
     "code": "consl",
     "language": "javascript",
     "createdAt": 1777396268106
+  },
+  "5PXXVQ": {
+    "createdBy": "ZYjm59NCABfuLawMAAAD",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": "0Mm5lx6IbtL201bqAAAF",
+        "username": "q"
+      }
+    ],
+    "messages": [
+      {
+        "username": "q",
+        "message": "hi",
+        "timestamp": 1777398281643
+      }
+    ],
+    "code": "console",
+    "language": "javascript",
+    "createdAt": 1777398276789
   }
 }

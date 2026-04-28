@@ -8,7 +8,7 @@ class SocketService {
   connect() {
     if (this.socket?.connected) return;
 
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ||import.meta.env.BACKEND_URL||" http://localhost:5005";
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
 
     this.socket = io(BACKEND_URL, {
       transports: ["websocket"],
