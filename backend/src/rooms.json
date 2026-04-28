@@ -1,0 +1,82 @@
+{
+  "I1WFTY": {
+    "createdBy": "cRINmXVjupm6SKXTAAAB",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": null,
+        "username": "a"
+      }
+    ],
+    "messages": [
+      {
+        "username": "a",
+        "message": "hello",
+        "timestamp": 1777035012785
+      }
+    ],
+    "code": "using System;\nclass Program {\n    static void Main() {\n        Console.WriteLine(\"Hello World\");\n    }\n}",
+    "language": "csharp",
+    "createdAt": 1777034948135
+  },
+  "6MNWFH": {
+    "createdBy": "Oa3VyXEltYturAC2AAAB",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": null,
+        "username": "hi"
+      }
+    ],
+    "messages": [
+      {
+        "username": "hi",
+        "message": "hi\\",
+        "timestamp": 1777216003004
+      }
+    ],
+    "code": "console.log(\"hello\")",
+    "language": "javascript",
+    "createdAt": 1777215998605
+  },
+  "9FZHZM": {
+    "createdBy": "LT1trNrii8JXf3tvAAAD",
+    "passcode": "123",
+    "users": [
+      {
+        "socketId": null,
+        "username": "Chirag"
+      }
+    ],
+    "messages": [
+      {
+        "username": "Chirag",
+        "message": "hello",
+        "timestamp": 1777216367119
+      }
+    ],
+    "code": "console.log(\"hello\")",
+    "language": "javascript",
+    "createdAt": 1777216337263
+  },
+  "GK1EA5": {
+    "createdBy": "2xh-zgWJzafhs7PGAAAB",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": "F7QT5EFC_UOgMNipAAAD",
+        "username": "hi"
+      }
+    ],
+    "messages": [
+      {
+        "username": "hi",
+        "message": "hi",
+        "timestamp": 1777389579849
+      }
+    ],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777389572175
+  }
+}

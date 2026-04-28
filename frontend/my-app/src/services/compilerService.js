@@ -17,7 +17,8 @@ export const executeCode = async (source_code, language, input = "") => {
       headers: {
         "Content-Type": "application/json",
       },
-      timeout: 120000, // 120 second timeout for client
+      withCredentials: true,
+      timeout: 20000
     });
 
     console.log("✅ Compiler Response:", response.data);
