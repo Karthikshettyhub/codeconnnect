@@ -224,7 +224,7 @@ const ChatBox = () => {
   const handleSend = (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
-    
+
     console.log("📤 Sending [CHAT]:", currentRoom, username, inputMessage.trim());
     sendMessage(inputMessage.trim());
     setInputMessage("");
@@ -238,7 +238,8 @@ const ChatBox = () => {
 
       <div className="chatbox-messages">
         {messages.map((msg, idx) => {
-          const isOwn = msg.username === username;
+          // ✅ FIXED LINE
+          const isOwn = username && msg.username === username;
 
           return (
             <div

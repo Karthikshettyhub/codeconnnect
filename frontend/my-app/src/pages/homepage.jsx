@@ -9,34 +9,46 @@ const Homepage = () => {
   const [passcode, setPasscode] = useState("");
   const [mode, setMode] = useState("join");
 
-  const { createRoom, joinRoom, currentRoom } = useRoom();
+  const { createRoom, joinRoom } = useRoom();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Standard Homepage mount - No auto-navigation here.
+    // No auto navigation
   }, []);
 
-  const handleSubmit = (e) => {
+  // ✅ FIXED: make async + await
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!roomId.trim() || !username.trim()) {
       alert("Enter both Room ID and Username");
       return;
     }
 
     const finalRoomId = roomId.trim().toUpperCase();
-    // CRITICAL: Must persist identity to localStorage before navigation 
-    // to prevent RoomPage from redirecting back to home.
-    localStorage.setItem("username", username.trim());
-    if (passcode) localStorage.setItem("passcode", passcode.trim());
 
-    if (mode === "create") {
-      createRoom(finalRoomId, username.trim(), passcode.trim());
-    } else {
-      joinRoom(finalRoomId, username.trim(), passcode.trim());
+    // Save user identity
+    localStorage.setItem("username", username.trim());
+    if (passcode) {
+      localStorage.setItem("passcode", passcode.trim());
     }
 
-    console.log("✅ Navigating to room:", finalRoomId);
-    navigate(`/room/${finalRoomId}`);
+    try {
+      // ✅ WAIT for backend confirmation
+      if (mode === "create") {
+        await createRoom(finalRoomId, username.trim(), passcode.trim());
+      } else {
+        await joinRoom(finalRoomId, username.trim(), passcode.trim());
+      }
+
+      console.log("✅ Room ready → Navigating:", finalRoomId);
+
+      // ✅ Navigate ONLY after success
+      navigate(`/room/${finalRoomId}`);
+    } catch (err) {
+      console.error("❌ Failed to join/create room:", err);
+      alert("Unable to join room. Please try again.");
+    }
   };
 
   const generateRoomId = () => {

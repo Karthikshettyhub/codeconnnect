@@ -7,15 +7,17 @@ class SocketService {
 
   connect() {
     if (this.socket?.connected) return;
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
+
+    const BACKEND_URL =
+      import.meta.env.VITE_BACKEND_URL || "http://localhost:5005";
 
     this.socket = io(BACKEND_URL, {
-      transports: ["polling", "websocket"], // fallback first
+      transports: ["websocket"], // ✅ production-safe
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
       timeout: 20000,
-  });
+    });
 
     this.socket.on("connect", () => {
       console.log("Socket connected:", this.socket.id);
@@ -30,10 +32,6 @@ class SocketService {
     });
   }
 
-  // FIX 1: added waitForConnection helper
-
-  // socket.io connect() is async — if user clicks "Create Room" before
-  // handshake completes, emit fires into void silently. this waits for it.
   waitForConnection() {
     return new Promise((resolve) => {
       if (this.socket?.connected) return resolve();
@@ -48,16 +46,38 @@ class SocketService {
     }
   }
 
-  // FIX 1 applied: await connection before emitting
+  // ✅ FIXED: Promise-based createRoom
   async createRoom(roomId, username, passcode) {
     await this.waitForConnection();
-    this.socket.emit("create-room", { roomId, username, passcode });
+
+    return new Promise((resolve, reject) => {
+      this.socket.emit("create-room", { roomId, username, passcode });
+
+      this.socket.once("room-created", (data) => {
+        resolve(data);
+      });
+
+      this.socket.once("error", (err) => {
+        reject(err);
+      });
+    });
   }
 
-  // FIX 1 applied: await connection before emitting
+  // ✅ FIXED: Promise-based joinRoom
   async joinRoom(roomId, username, passcode) {
     await this.waitForConnection();
-    this.socket.emit("join-room", { roomId, username, passcode });
+
+    return new Promise((resolve, reject) => {
+      this.socket.emit("join-room", { roomId, username, passcode });
+
+      this.socket.once("room-joined", (data) => {
+        resolve(data);
+      });
+
+      this.socket.once("error", (err) => {
+        reject(err);
+      });
+    });
   }
 
   leaveRoom(roomId, username) {
@@ -66,7 +86,13 @@ class SocketService {
 
   async sendMessage(roomId, username, message) {
     await this.waitForConnection();
-    this.socket?.emit("chat-message", { roomId, username, message });
+
+    if (!roomId) {
+      console.error("❌ Cannot send message: roomId null");
+      return;
+    }
+
+    this.socket.emit("chat-message", { roomId, username, message });
   }
 
   sendCode(roomId, code) {
@@ -117,9 +143,6 @@ class SocketService {
   onError(callback) {
     this.listen("error", callback);
   }
-
-  // FIX 3: removed unused WebRTC listener methods (onWebRTCOffer, onWebRTCAnswer, onWebRTCIce)
-  // they were dead code — not used anywhere in the app
 
   removeAllListeners() {
     this.socket?.removeAllListeners();
