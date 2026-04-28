@@ -1,0 +1,27 @@
+{
+  "M0JSZS": {
+    "createdBy": "3wnDqTLedf8E3KNLAAAB",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": "lzq14_NVXB0esw09AAAN",
+        "username": "a"
+      }
+    ],
+    "messages": [
+      {
+        "username": "a",
+        "message": "a",
+        "timestamp": 1777396271229
+      },
+      {
+        "username": "a",
+        "message": "hello",
+        "timestamp": 1777396316819
+      }
+    ],
+    "code": "consl",
+    "language": "javascript",
+    "createdAt": 1777396268106
+  }
+}
