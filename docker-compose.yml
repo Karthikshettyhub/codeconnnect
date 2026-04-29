@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   backend:
     build: ./backend
@@ -8,6 +6,8 @@ services:
     env_file:
       - ./backend/.env
     restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # mount docker socket so backend can run docker containers
 
   frontend:
     build: ./frontend/my-app

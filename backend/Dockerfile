@@ -1,6 +1,9 @@
 # Use lightweight Node.js image
 FROM node:18-alpine
 
+# install docker CLI so backend can spin up sandbox containers
+RUN apk add --no-cache docker-cli
+
 # Set working directory inside container
 WORKDIR /app
 
