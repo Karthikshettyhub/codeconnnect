@@ -24,7 +24,9 @@ const CodeEditor = () => {
     language,
     pendingLanguage,
     updateCodeRemote,
+    updateCodeLocal,
     updateLanguageRemote,
+    updateLanguageLocal, // ✅ ADDED HERE
     acceptLanguageChange,
     rejectLanguageChange,
   } = useRoom();
@@ -52,6 +54,7 @@ const CodeEditor = () => {
   const handleEditorChange = (value) => {
     if (value == null) return;
     setLocalCode(value);
+    updateCodeLocal(value);
     updateCodeRemote(value);
   };
 
@@ -65,10 +68,15 @@ const CodeEditor = () => {
     if (!ok) return;
 
     setLocalLanguage(newLang);
+
+    // ✅ NEW: update local context immediately
+    updateLanguageLocal(newLang);
+
     updateLanguageRemote(newLang);
 
     const template = getStarterCode(newLang);
     setLocalCode(template);
+    updateCodeLocal(template);
     updateCodeRemote(template);
   };
 
@@ -109,7 +117,9 @@ const CodeEditor = () => {
             </option>
           ))}
         </select>
-        <span className="file-label">main.{EXTENSIONS[localLanguage]}</span>
+        <span className="file-label">
+          main.{EXTENSIONS[localLanguage]}
+        </span>
       </div>
 
       <Editor

@@ -129,6 +129,9 @@ export const RoomProvider = ({ children }) => {
     usernameRef.current = "";
   };
 
+  // ✅ NEW — updates context code locally without socket
+  const updateCodeLocal = (c) => setCode(c);
+
   return (
     <RoomContext.Provider
       value={{
@@ -143,6 +146,8 @@ export const RoomProvider = ({ children }) => {
         createRoom,
         joinRoom,
         leaveRoom,
+
+        updateCodeLocal,
 
         sendMessage: (msg) =>
           currentRoom &&

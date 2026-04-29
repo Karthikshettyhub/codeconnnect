@@ -1,5 +1,5 @@
+version: "3.9"
 services:
-
   backend:
     build:
       context: ./backend
@@ -10,6 +10,8 @@ services:
       - "5005:5005"
     env_file:
       - ./backend/.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: always
 
   frontend:
@@ -17,8 +19,6 @@ services:
       context: ./frontend/my-app
       dockerfile: Dockerfile
       args:
-        # VITE_ vars are baked in at build time - backend is accessed by the
-        # browser (not inside Docker), so localhost:5005 is correct for local use
         VITE_BACKEND_URL: http://localhost:5005
         VITE_JUDGE0_API: https://ce.judge0.com/submissions?base64_encoded=false&wait=true
     image: karthiksdumb/codeconnect-frontend:latest
