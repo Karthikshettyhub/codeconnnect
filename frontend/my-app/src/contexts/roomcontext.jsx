@@ -6,7 +6,6 @@ import React, {
   useRef,
 } from "react";
 import socketService from "../services/socket";
-import { getStarterCode } from "../services/judge0Service";
 
 const RoomContext = createContext();
 
@@ -16,13 +15,27 @@ export const useRoom = () => {
   return ctx;
 };
 
+export const STARTER_CODE = {
+  javascript: `// JavaScript\nconsole.log("Hello, World!");`,
+  python: `# Python\nprint("Hello, World!")`,
+  java: `// Java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`,
+  cpp: `// C++\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}`,
+  c: `// C\n#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}`,
+  csharp: `// C#\nusing System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}`,
+  go: `// Go\npackage main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, World!")\n}`,
+  rust: `// Rust\nfn main() {\n    println!("Hello, World!");\n}`,
+  typescript: `// TypeScript\nconst message: string = "Hello, World!";\nconsole.log(message);`,
+  ruby: `# Ruby\nputs "Hello, World!"`,
+  php: `<?php\necho "Hello, World!";\n?>`,
+};
+
 export const RoomProvider = ({ children }) => {
   const [currentRoom, setCurrentRoom] = useState(null);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
 
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(STARTER_CODE.javascript);
   const [language, setLanguage] = useState("javascript");
   const [pendingLanguage, setPendingLanguage] = useState(null);
 
@@ -46,7 +59,7 @@ export const RoomProvider = ({ children }) => {
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
-      setCode(data.code || "");
+      setCode(data.code || STARTER_CODE.javascript);
       if (data.language) setLanguage(data.language);
     });
 
@@ -54,7 +67,7 @@ export const RoomProvider = ({ children }) => {
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
-      setCode(data.code || "");
+      setCode(data.code || STARTER_CODE.javascript);
       if (data.language) setLanguage(data.language);
     });
 
@@ -78,15 +91,6 @@ export const RoomProvider = ({ children }) => {
       socketService.removeAllListeners();
     };
   }, []);
-
-  useEffect(() => {
-    if (!currentRoom) return;
-    if (code === "" && language) {
-      const starter = getStarterCode(language);
-      setCode(starter);
-      socketService.sendCode(currentRoom, starter);
-    }
-  }, [currentRoom, language]);
 
   const createRoom = (roomId, userName, passcode) => {
     sessionStorage.removeItem("intentionalLeave");
@@ -129,8 +133,8 @@ export const RoomProvider = ({ children }) => {
     usernameRef.current = "";
   };
 
-  // ✅ NEW — updates context code locally without socket
   const updateCodeLocal = (c) => setCode(c);
+  const updateLanguageLocal = (l) => setLanguage(l);
 
   return (
     <RoomContext.Provider
@@ -148,6 +152,7 @@ export const RoomProvider = ({ children }) => {
         leaveRoom,
 
         updateCodeLocal,
+        updateLanguageLocal,
 
         sendMessage: (msg) =>
           currentRoom &&
@@ -163,10 +168,7 @@ export const RoomProvider = ({ children }) => {
 
         acceptLanguageChange: () => {
           if (!pendingLanguage) return;
-          const starter = getStarterCode(pendingLanguage);
           setLanguage(pendingLanguage);
-          setCode(starter);
-          socketService.sendCode(currentRoom, starter);
           setPendingLanguage(null);
         },
 

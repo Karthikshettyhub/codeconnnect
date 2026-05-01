@@ -7,9 +7,7 @@ WORKDIR /app
 
 # Accept build-time env vars (VITE_ vars are baked in at build time)
 ARG VITE_BACKEND_URL=http://localhost:5005
-ARG VITE_JUDGE0_API=https://ce.judge0.com/submissions?base64_encoded=false&wait=true
 ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
-ENV VITE_JUDGE0_API=$VITE_JUDGE0_API
 
 COPY package*.json ./
 RUN npm install
