@@ -3,8 +3,7 @@
 # Use Node 18 on Alpine Linux (tiny, production standard)
 FROM node:18-alpine
 
-RUN apk add --no-cache docker-cli
-# All commands run inside /app
+# Set working directory
 WORKDIR /app
 
 # Copy package files first for better layer caching
@@ -20,5 +19,5 @@ COPY . .
 # Tell Docker this container uses port 5005
 EXPOSE 5005
 
-# Start the server
+# Start backend server directly
 CMD ["node", "server.js"]

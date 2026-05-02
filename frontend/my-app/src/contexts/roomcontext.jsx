@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import socketService from "../services/socket";
-import { getStarterCode } from "../services/compilerService";
 
 const RoomContext = createContext();
 
@@ -10,13 +9,28 @@ export const useRoom = () => {
   return ctx;
 };
 
+export const STARTER_CODE = {
+  javascript: `// JavaScript\nconsole.log("Hello, World!");`,
+  python: `# Python\nprint("Hello, World!")`,
+  java: `// Java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`,
+  cpp: `// C++\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}`,
+  c: `// C\n#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}`,
+  csharp: `// C#\nusing System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}`,
+  go: `// Go\npackage main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, World!")\n}`,
+  rust: `// Rust\nfn main() {\n    println!("Hello, World!");\n}`,
+  typescript: `// TypeScript\nconst message: string = "Hello, World!";\nconsole.log(message);`,
+  ruby: `# Ruby\nputs "Hello, World!"`,
+  php: `<?php\necho "Hello, World!";\n?>`,
+};
+
 export const RoomProvider = ({ children }) => {
   const [currentRoom, setCurrentRoom] = useState(null);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
-  const [code, setCode] = useState(() => localStorage.getItem("code") || "");
-  const [language, setLanguage] = useState(() => localStorage.getItem("language") || "javascript");
+
+  const [code, setCode] = useState(STARTER_CODE.javascript);
+  const [language, setLanguage] = useState("javascript");
   const [pendingLanguage, setPendingLanguage] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -32,7 +46,7 @@ export const RoomProvider = ({ children }) => {
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
-      if (data.code) setCode(data.code);
+      setCode(data.code || STARTER_CODE.javascript);
       if (data.language) setLanguage(data.language);
     });
 
@@ -42,7 +56,7 @@ export const RoomProvider = ({ children }) => {
       setCurrentRoom(data.roomId);
       setUsers(data.users || []);
       setMessages(data.messages || []);
-      if (data.code) setCode(data.code);
+      setCode(data.code || STARTER_CODE.javascript);
       if (data.language) setLanguage(data.language);
     });
 
@@ -120,12 +134,11 @@ export const RoomProvider = ({ children }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (!currentRoom) return;
-    localStorage.setItem("roomId", currentRoom);
-    localStorage.setItem("code", code);
-    localStorage.setItem("language", language);
-  }, [currentRoom, code, language]);
+  const createRoom = (roomId, userName, passcode) => {
+    sessionStorage.removeItem("intentionalLeave");
+    sessionStorage.setItem("roomId", roomId);
+    sessionStorage.setItem("username", userName);
+    if (passcode) sessionStorage.setItem("passcode", passcode);
 
   const createRoom = async (roomId, userName, passcode) => {
     setUsername(userName);
@@ -173,6 +186,9 @@ export const RoomProvider = ({ children }) => {
     socketService.sendMessage(currentRoom, usernameRef.current, msg);
   };
 
+  const updateCodeLocal = (c) => setCode(c);
+  const updateLanguageLocal = (l) => setLanguage(l);
+
   return (
     <RoomContext.Provider
       value={{
@@ -187,20 +203,26 @@ export const RoomProvider = ({ children }) => {
         createRoom,
         joinRoom,
         leaveRoom,
-        sendMessage,
-        updateCodeRemote: (c) => {
-          setCode(c);
-          socketService.sendCode(currentRoom, c);
-        },
-        updateLanguageRemote: (l) => {
-          setLanguage(l);
-          socketService.sendLanguage(currentRoom, l, usernameRef.current);
-        },
+
+        updateCodeLocal,
+        updateLanguageLocal,
+
+        sendMessage: (msg) =>
+          currentRoom &&
+          usernameRef.current &&
+          socketService.sendMessage(currentRoom, usernameRef.current, msg),
+
+        updateCodeRemote: (c) =>
+          currentRoom && socketService.sendCode(currentRoom, c),
+
+        updateLanguageRemote: (l) =>
+          currentRoom &&
+          socketService.sendLanguage(currentRoom, l, usernameRef.current),
+
         acceptLanguageChange: () => {
-          if (pendingLanguage) {
-            setLanguage(pendingLanguage);
-            setPendingLanguage(null);
-          }
+          if (!pendingLanguage) return;
+          setLanguage(pendingLanguage);
+          setPendingLanguage(null);
         },
         rejectLanguageChange: () => setPendingLanguage(null),
       }}

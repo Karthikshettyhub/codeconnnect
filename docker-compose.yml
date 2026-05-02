@@ -13,10 +13,7 @@ services:
       - ./backend/.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp
-    restart: unless-stopped
-    networks:
-      - codeconnect-net
+    restart: always
 
   frontend:
     build:
@@ -31,10 +28,4 @@ services:
       - "80:80"
     depends_on:
       - backend
-    restart: unless-stopped
-    networks:
-      - codeconnect-net
-
-networks:
-  codeconnect-net:
-    driver: bridge
+    restart: always

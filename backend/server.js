@@ -7,61 +7,51 @@ require("dotenv").config();
 const app = express();
 const server = http.createServer(app);
 
+// cors config — controls who can access your backend
+const corsOptions = {
+  origin: [
+    process.env.FRONTEND_URL, // local docker frontend
+    process.env.VERCEL_URL,   // deployed vercel frontend
+  ],
+  methods: ["GET", "POST"],
+};
+
+// socket.io server with same cors config
+const io = new Server(server, {
+  cors: corsOptions,
+  transports: ["websocket", "polling"], // polling as fallback
+});
+
 const PORT = process.env.PORT || 5005;
 
-// ✅ Detect environment
-const isProduction = process.env.NODE_ENV === "production";
-
-// ✅ Allowed origins
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
-// ✅ Flexible CORS (handles Vercel)
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-
-    if (
-      allowedOrigins.includes(origin) ||
-      origin.endsWith(".vercel.app")
-    ) {
-      return callback(null, true);
-    }
-
-    console.log("❌ Blocked by CORS:", origin);
-    return callback(null, false);
-  },
-  credentials: true
-}));
-
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// ✅ Routes
-const compilerRoute = require("./src/routes/compiler");
-app.use("/api/compiler", compilerRoute);
+// ── API routes ────────────────────────────────────────────────
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 
-// ✅ Health check
-app.get("/", (req, res) => res.send("Server running"));
-app.get("/health", (req, res) => res.json({ status: "ok" }));
+// compiler route — must be before static files
+const compilerRoutes = require("./src/routes/compiler.route");
+app.use("/api/compiler", compilerRoutes);
 
-// ✅ Socket.IO
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST"],
-    credentials: true
+// ── Static frontend files ─────────────────────────────────────
+const frontendPath = path.join(__dirname, "../frontend/my-app/dist");
+app.use(express.static(frontendPath));
+
+// SPA fallback — send index.html for all non-api GET requests
+// so React Router handles the routing on frontend
+app.use((req, res, next) => {
+  if (req.method === "GET" && !req.path.startsWith("/api")) {
+    return res.sendFile(path.join(frontendPath, "index.html"));
   }
 });
 
+// ── Socket handler ────────────────────────────────────────────
 require("./src/socketHandler")(io);
 
-// ✅ Prevent timeout issues
-server.timeout = 30000;
-
-// ✅ Start server
+// ── Start server ──────────────────────────────────────────────
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log("ENV:", process.env.NODE_ENV);
+  console.log(`Server running on port ${PORT}`);
 });
