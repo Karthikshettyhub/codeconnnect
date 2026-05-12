@@ -16,6 +16,7 @@ class SocketService {
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
       timeout: 20000,
+       withCredentials: true
     });
 
     this.socket.on("connect", () => {

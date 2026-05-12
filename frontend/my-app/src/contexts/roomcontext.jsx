@@ -32,9 +32,8 @@ export const RoomProvider = ({ children }) => {
   const [code, setCode] = useState(STARTER_CODE.javascript);
   const [language, setLanguage] = useState("javascript");
   const [pendingLanguage, setPendingLanguage] = useState(null);
+  const usernameRef = useRef(localStorage.getItem("username") || "");
   const [isInitialized, setIsInitialized] = useState(false);
-
-  const usernameRef = useRef("");
   const retryCount = useRef(0);
 
   useEffect(() => {
@@ -61,19 +60,30 @@ export const RoomProvider = ({ children }) => {
     });
 
     socketService.onUserJoined((data) => {
+
       setUsers((prev) => {
-        const exists = prev.find((u) => u.username === data.username);
+
+        // already exists by socketId
+        const exists = prev.find(
+          (u) => u.socketId === data.socketId
+        );
+
         if (exists) {
-          return prev.map((u) =>
-            u.username === data.username ? { ...u, socketId: data.socketId } : u
-          );
+          return prev;
         }
+
+        // allow same username
         return [...prev, data];
       });
     });
 
     socketService.onUserLeft((data) => {
-      setUsers((prev) => prev.filter((u) => u.username !== data.username));
+
+      setUsers((prev) =>
+        prev.filter(
+          (u) => u.socketId !== data.socketId
+        )
+      );
     });
 
     socketService.onReceiveMessage((data) => {
@@ -100,7 +110,6 @@ export const RoomProvider = ({ children }) => {
 
     socketService.onError((err) => {
       if (err?.message === "Room not found" && retryCount.current < 3) {
-        console.log("🔁 Retrying room join...");
         retryCount.current++;
 
         const storedRoomId = localStorage.getItem("roomId");
@@ -123,22 +132,14 @@ export const RoomProvider = ({ children }) => {
     return () => socketService.removeAllListeners();
   }, []);
 
-  // ✅ FIX: Restore username after refresh
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
 
     if (storedUsername) {
-      console.log("🔄 Restoring username:", storedUsername);
       setUsername(storedUsername);
       usernameRef.current = storedUsername;
     }
   }, []);
-
-  const createRoom = (roomId, userName, passcode) => {
-    sessionStorage.removeItem("intentionalLeave");
-    sessionStorage.setItem("roomId", roomId);
-    sessionStorage.setItem("username", userName);
-    if (passcode) sessionStorage.setItem("passcode", passcode);
 
   const createRoom = async (roomId, userName, passcode) => {
     setUsername(userName);
@@ -175,15 +176,13 @@ export const RoomProvider = ({ children }) => {
     setUsername("");
   };
 
+  // 🔥 FIXED FUNCTION (already correct)
   const sendMessage = (msg) => {
-    if (!currentRoom || !usernameRef.current) {
-      console.error("❌ Cannot send: room not ready");
-      return;
-    }
+    const finalUsername = usernameRef.current;
 
-    console.log("📤 Sending [CHAT]:", currentRoom, usernameRef.current, msg);
+    if (!currentRoom || !finalUsername) return;
 
-    socketService.sendMessage(currentRoom, usernameRef.current, msg);
+    socketService.sendMessage(currentRoom, finalUsername, msg);
   };
 
   const updateCodeLocal = (c) => setCode(c);
@@ -207,10 +206,12 @@ export const RoomProvider = ({ children }) => {
         updateCodeLocal,
         updateLanguageLocal,
 
-        sendMessage: (msg) =>
-          currentRoom &&
-          usernameRef.current &&
-          socketService.sendMessage(currentRoom, usernameRef.current, msg),
+        // ✅ FIX APPLIED HERE
+        sendMessage: (msg) => {
+          if (!currentRoom || !usernameRef.current) return;
+
+          socketService.sendMessage(currentRoom, usernameRef.current, msg);
+        },
 
         updateCodeRemote: (c) =>
           currentRoom && socketService.sendCode(currentRoom, c),

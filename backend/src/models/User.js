@@ -3,44 +3,53 @@ const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
     username: {
       type: String,
-      required: true,
-      unique: true,
       trim: true,
-      minlength: 3,
-      maxlength: 20,
     },
+
     email: {
       type: String,
       required: true,
       unique: true,
-      trim: true,
-      lowercase: true,
     },
+
     password: {
       type: String,
-      required: true,
-      minlength: 6,
     },
+
     avatar: {
       type: String,
       default: "",
     },
+
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+// 🔐 only for normal login
+userSchema.pre("save", async function () {
+  if (!this.password) return;
+
+  if (!this.isModified("password")) return;
+
   this.password = await bcrypt.hash(this.password, 10);
-  next();
 });
 
 userSchema.methods.comparePassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model("User", userSchema);                 
+module.exports = mongoose.model("User", userSchema);

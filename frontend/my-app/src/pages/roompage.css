@@ -1,3 +1,6 @@
+/* =========================
+   BASE LAYOUT (UNCHANGED)
+========================= */
 .roompage {
   height: 100vh;
   display: flex;
@@ -54,18 +57,18 @@
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.9rem;
-  transition: background 0.2s;
 }
 
 .leave-btn-header:hover {
   background-color: #b62324;
 }
 
+/* =========================
+   MAIN LAYOUT
+========================= */
 .room-layout {
   flex: 1;
   display: flex;
-  flex-direction: row;
   overflow: hidden;
   position: relative;
   width: 100vw;
@@ -85,6 +88,9 @@
   display: flex;
 }
 
+/* =========================
+   COMPILER
+========================= */
 .compiler-section {
   width: 100%;
   background-color: #0d1117;
@@ -112,9 +118,6 @@
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .toggle-btn:hover {
@@ -129,99 +132,126 @@
   padding-left: 15px;
   font-size: 0.85rem;
   color: #8b949e;
-  font-weight: 500;
   background-color: #161b22;
 }
 
+/* =========================
+   RESIZERS
+========================= */
 .resizer-vertical {
   width: 8px;
-  background-color: #0d1117;
   cursor: col-resize;
-  border-left: 1px solid #21262d;
-  border-right: 1px solid #21262d;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
-  z-index: 5;
-}
-
-.resizer-vertical:hover {
-  background-color: #388bfd;
 }
 
 .resizer-horizontal {
   height: 8px;
   width: 100%;
-  background-color: #0d1117;
   cursor: row-resize;
-  border-top: 1px solid #21262d;
-  border-bottom: 1px solid #21262d;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
-  z-index: 5;
 }
 
-.resizer-horizontal:hover {
-  background-color: #388bfd;
-}
-
-.grip-icon {
-  color: #484f58;
-  pointer-events: none;
-}
-
-.resizer-vertical:hover .grip-icon,
-.resizer-horizontal:hover .grip-icon {
-  color: white;
-}
-
+/* =========================
+   RIGHT PANE (FIXED)
+========================= */
 .right-pane {
   height: 100%;
   background-color: #161b22;
+  position: relative;
+  overflow: hidden; /* 🔥 CRITICAL FIX */
+}
+
+/* =========================
+   VIDEO LAYER (BACKGROUND)
+========================= */
+.video-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* =========================
+   FLOAT CHAT BUTTON
+========================= */
+.chat-float-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 30;
+  background: #238636;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.chat-float-btn:hover {
+  background: #2ea043;
+}
+
+/* =========================
+   CHAT OVERLAY (FIXED)
+========================= */
+.chat-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 350px;
+  height: 100%;
+
   display: flex;
   flex-direction: column;
-  min-width: 40px;
-  position: relative;
+
+  background: #161b22;
+  z-index: 20;
+
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
 }
 
-.right-pane.collapsed {
-  width: 40px !important;
-  align-items: center;
-  padding-top: 10px;
+/* OPEN */
+.chat-overlay.open {
+  transform: translateX(0);
 }
 
-.chat-header-controls {
-  position: absolute;
-  top: 14px;
-  right: 15px;
-  z-index: 10;
-}
+/* HEADER */
+.chat-overlay-header {
+  height: 70px;            /* 🔥 increase height */
+  flex-shrink: 0;
 
-.right-pane.collapsed .chat-header-controls {
-  right: 0;
-  left: 0;
-  top: 10px;
   display: flex;
-  justify-content: center;
+  align-items: flex-end;   /* 🔥 push content to bottom */
+  justify-content: flex-end;
+
+  padding: 0 12px 10px 12px; /* 🔥 bottom padding pushes button down */
+
+  border-bottom: 1px solid #30363d;
 }
 
-.vertical-text {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  color: #8b949e;
-  font-weight: 600;
-  letter-spacing: 2px;
-  margin-top: 50px;
-  user-select: none;
+/* CLOSE BUTTON */
+.chat-overlay-header button {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
+/* =========================
+   MOBILE
+========================= */
 @media (max-width: 768px) {
   .room-layout {
     flex-direction: column;
-    overflow-y: auto;
   }
 
   .left-pane {
@@ -233,8 +263,75 @@
     width: 100% !important;
     height: 40vh;
   }
+}
 
-  .resizer-vertical {
-    display: none;
-  }
+.chat-close-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chat-close-btn:hover {
+  background: rgba(255,255,255,0.2);
+  transform: scale(1.05);
+}
+
+.chat-close-btn:active {
+  transform: scale(0.92);
+}
+
+/* =========================
+   VIDEO FLOAT BUTTON
+========================= */
+
+/* =========================
+   VIDEO FLOAT BUTTON
+========================= */
+
+.video-float-btn {
+  position: absolute;
+
+  bottom: 25px;
+  right: 25px;
+
+  width: 60px;
+  height: 60px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #2563eb;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  z-index: 40;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+
+  transition: all 0.25s ease;
+}
+
+.video-float-btn:hover {
+  transform: scale(1.08);
+  background: #3b82f6;
+}
+
+.active-video {
+  background: #dc2626 !important;
 }

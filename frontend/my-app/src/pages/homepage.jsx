@@ -6,19 +6,49 @@ import "./homepage.css";
 const Homepage = () => {
   const [roomId, setRoomId] = useState("");
   const [username, setUsername] = useState("");
-  const [passcode, setPasscode] = useState("");
   const [mode, setMode] = useState("join");
+
+  const [user, setUser] = useState(null);
 
   const { createRoom, joinRoom } = useRoom();
   const navigate = useNavigate();
 
+  // 🔥 CHECK LOGIN
   useEffect(() => {
-    // No auto navigation
+    fetch("http://localhost:5005/auth/me", {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data.user);
+
+        // 🔥 AUTO FILL USERNAME (ONLY IF EMPTY)
+        if (data.user && !username) {
+          setUsername(data.user.username);
+        }
+      })
+      .catch(() => setUser(null));
   }, []);
 
-  // ✅ FIXED: make async + await
+  // 🔥 LOGOUT
+  const handleLogout = async () => {
+    await fetch("http://localhost:5005/auth/logout", {
+      method: "GET",
+      credentials: "include",
+    });
+
+    setUser(null);
+    window.location.reload();
+  };
+
+  // 🔥 SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!user) {
+      alert("⚠️ Please login first to continue");
+      return;
+    }
 
     if (!roomId.trim() || !username.trim()) {
       alert("Enter both Room ID and Username");
@@ -27,35 +57,23 @@ const Homepage = () => {
 
     const finalRoomId = roomId.trim().toUpperCase();
 
-    // Save user identity
     localStorage.setItem("username", username.trim());
-    if (passcode) {
-      localStorage.setItem("passcode", passcode.trim());
-    }
 
     try {
-      // ✅ WAIT for backend confirmation
       if (mode === "create") {
-        await createRoom(finalRoomId, username.trim(), passcode.trim());
+        await createRoom(finalRoomId, username.trim());
       } else {
-        await joinRoom(finalRoomId, username.trim(), passcode.trim());
+        await joinRoom(finalRoomId, username.trim());
       }
 
-      console.log("✅ Room ready → Navigating:", finalRoomId);
-
-      // ✅ Navigate ONLY after success
       navigate(`/room/${finalRoomId}`);
     } catch (err) {
-      console.error("❌ Failed to join/create room:", err);
       alert("Unable to join room. Please try again.");
     }
   };
 
   const generateRoomId = () => {
-    const id = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase();
+    const id = Math.random().toString(36).substring(2, 8).toUpperCase();
     setRoomId(id);
   };
 
@@ -63,9 +81,44 @@ const Homepage = () => {
     <div className="homepage-container">
       <nav className="navbar">
         <h2 className="nav-logo">CodeCollab</h2>
+
+        <div className="nav-right">
+          {user && (
+            <>
+              <span className="nav-user">{user.username}</span>
+              <button className="logout-btn" onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          )}
+        </div>
       </nav>
 
       <div className="home-card">
+
+        {!user ? (
+          <button
+            className="google-btn"
+            onClick={() => {
+              window.location.href = "http://localhost:5005/auth/google";
+            }}
+          >
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="google"
+            />
+            Continue with Google
+          </button>
+        ) : (
+          <div className="logged-in-box">
+            <p>Welcome, <b>{user.username}</b> 👋</p>
+          </div>
+        )}
+
+        <div className="divider">
+          <span>OR</span>
+        </div>
+
         <h1 className="home-title">Start Collaborating</h1>
         <p className="home-subtitle">Create or join a room in seconds</p>
 
@@ -101,16 +154,6 @@ const Homepage = () => {
                 </button>
               )}
             </div>
-          </div>
-
-          <div className="input-group">
-            <label>Passcode (Optional)</label>
-            <input
-              type="password"
-              placeholder="Secret key"
-              value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
-            />
           </div>
 
           <div className="mode-toggle">

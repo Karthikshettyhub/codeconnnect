@@ -3,7 +3,24 @@ import { useRoom } from "../contexts/roomcontext";
 import socketService from "../services/socket";
 import "./chatbox.css";
 
-const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+// 🔥 PRODUCTION ICE SERVERS
+const ICE_SERVERS = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+
+    // ✅ FREE PUBLIC TURN (for testing)
+    {
+      urls: "turn:openrelay.metered.ca:80",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+    {
+      urls: "turn:openrelay.metered.ca:443",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+  ],
+};
 
 const ChatBox = () => {
   const { currentRoom, messages, sendMessage, username, users } = useRoom();
@@ -14,7 +31,6 @@ const ChatBox = () => {
   const peersRef = useRef({});
   const localStreamRef = useRef(null);
   const audioRefs = useRef({});
-  const audioUnlockedRef = useRef(false);
   const iceCandidatesQueue = useRef({});
   const messagesEndRef = useRef(null);
 
@@ -22,50 +38,15 @@ const ChatBox = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
-    if (audioUnlockedRef.current) return;
-
-    const audio = document.createElement("audio");
-    audio.autoplay = true;
-    audio.muted = true;
-    audio.srcObject = new MediaStream();
-
-    const unlock = () => {
-      audio
-        .play()
-        .then(() => {
-          audioUnlockedRef.current = true;
-
-          Object.values(audioRefs.current).forEach((a) => {
-            if (a.paused) a.play().catch(() => {});
-          });
-
-          document.removeEventListener("click", unlock);
-          document.removeEventListener("touchstart", unlock);
-          document.removeEventListener("keydown", unlock);
-        })
-        .catch(() => {});
-    };
-
-    unlock();
-
-    document.addEventListener("click", unlock);
-    document.addEventListener("touchstart", unlock);
-    document.addEventListener("keydown", unlock);
-
-    return () => {
-      document.removeEventListener("click", unlock);
-      document.removeEventListener("touchstart", unlock);
-      document.removeEventListener("keydown", unlock);
-    };
-  }, []);
-
+  // 🔗 CREATE PEER
   const createPeer = (remoteSocketId) => {
     if (peersRef.current[remoteSocketId]) {
       return peersRef.current[remoteSocketId];
     }
 
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    console.log("🔗 Creating peer:", remoteSocketId);
+
+    const pc = new RTCPeerConnection(ICE_SERVERS);
 
     pc.onicecandidate = (e) => {
       if (e.candidate) {
@@ -77,41 +58,75 @@ const ChatBox = () => {
     };
 
     pc.ontrack = (e) => {
+      console.log("🎧 TRACK RECEIVED from:", remoteSocketId);
+
       const stream = e.streams[0];
       if (!stream) return;
 
-      if (!audioRefs.current[remoteSocketId]) {
-        const audio = document.createElement("audio");
+      let audio = audioRefs.current[remoteSocketId];
+
+      if (!audio) {
+        audio = document.createElement("audio");
         audio.autoplay = true;
-        audio.playsInline = true;
-        audio.srcObject = stream;
+        audio.controls = false;
         document.body.appendChild(audio);
         audioRefs.current[remoteSocketId] = audio;
-        audio.play().catch(() => {});
-      } else if (audioRefs.current[remoteSocketId].srcObject !== stream) {
-        audioRefs.current[remoteSocketId].srcObject = stream;
-        audioRefs.current[remoteSocketId].play().catch(() => {});
       }
+
+      audio.srcObject = stream;
+
+      audio.play().then(() => {
+        console.log("🔊 Playing audio from:", remoteSocketId);
+      }).catch((err) => {
+        console.error("❌ Audio play failed:", err);
+      });
     };
 
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
-      }
+      console.log("📡 Connection:", remoteSocketId, pc.connectionState);
     };
 
     peersRef.current[remoteSocketId] = pc;
     return pc;
   };
 
+  // 🔥 SEND OFFER
+  const sendOffer = async (targetSocketId) => {
+    try {
+      const pc = createPeer(targetSocketId);
+
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => {
+          if (!pc.getSenders().some((s) => s.track === track)) {
+            pc.addTrack(track, localStreamRef.current);
+          }
+        });
+      }
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      socketService.emit("webrtc-offer", {
+        target: targetSocketId,
+        offer,
+      });
+
+      console.log("📤 Offer sent to:", targetSocketId);
+    } catch (err) {
+      console.error("❌ Offer error:", err);
+    }
+  };
+
+  // 📥 LISTENERS
   useEffect(() => {
     const handleOffer = async ({ from, offer }) => {
+      console.log("📥 Offer from:", from);
+
       const pc = createPeer(from);
 
-      if (localStreamRef.current && isRecording) {
+      if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => {
-          const senders = pc.getSenders();
-          const hasTrack = senders.some((s) => s.track === track);
-          if (!hasTrack) {
+          if (!pc.getSenders().some((s) => s.track === track)) {
             pc.addTrack(track, localStreamRef.current);
           }
         });
@@ -119,42 +134,28 @@ const ChatBox = () => {
 
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
-      if (iceCandidatesQueue.current[from]) {
-        for (const candidate of iceCandidatesQueue.current[from]) {
-          await pc.addIceCandidate(candidate).catch(() => {});
-        }
-        delete iceCandidatesQueue.current[from];
-      }
-
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
-      socketService.emit("webrtc-answer", { target: from, answer });
+      socketService.emit("webrtc-answer", {
+        target: from,
+        answer,
+      });
     };
 
     const handleAnswer = async ({ from, answer }) => {
-      const pc = peersRef.current[from];
-      if (pc) {
-        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      console.log("📥 Answer from:", from);
 
-        if (iceCandidatesQueue.current[from]) {
-          for (const candidate of iceCandidatesQueue.current[from]) {
-            await pc.addIceCandidate(candidate).catch(() => {});
-          }
-          delete iceCandidatesQueue.current[from];
-        }
-      }
+      const pc = peersRef.current[from];
+      if (!pc) return;
+
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
     };
 
     const handleIce = async ({ from, candidate }) => {
       const pc = peersRef.current[from];
-      if (pc && pc.remoteDescription) {
+      if (pc) {
         await pc.addIceCandidate(candidate).catch(() => {});
-      } else {
-        if (!iceCandidatesQueue.current[from]) {
-          iceCandidatesQueue.current[from] = [];
-        }
-        iceCandidatesQueue.current[from].push(candidate);
       }
     };
 
@@ -166,66 +167,53 @@ const ChatBox = () => {
       Object.values(peersRef.current).forEach((pc) => pc.close());
       peersRef.current = {};
     };
-  }, [currentRoom, isRecording]);
+  }, []);
 
-  const initiateCall = async (targetSocketId, stream) => {
-    const pc = createPeer(targetSocketId);
-
-    stream.getTracks().forEach((track) => {
-      const senders = pc.getSenders();
-      const hasTrack = senders.some((s) => s.track === track);
-      if (!hasTrack) {
-        pc.addTrack(track, stream);
-      }
-    });
-
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-
-    socketService.emit("webrtc-offer", { target: targetSocketId, offer });
-  };
-
+  // 🎤 MIC
   const toggleMic = async () => {
-    if (localStreamRef.current) {
+    if (!localStreamRef.current) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStreamRef.current = stream;
+        setIsRecording(true);
+
+        console.log("🎤 Mic ON");
+
+        users.forEach((user) => {
+          if (!user.socketId || user.username === username) return;
+          sendOffer(user.socketId);
+        });
+
+      } catch (err) {
+        console.error("❌ Mic error:", err);
+      }
+    } else {
       const enabled = !isRecording;
-      localStreamRef.current.getAudioTracks().forEach((track) => {
-        track.enabled = enabled;
-      });
+      localStreamRef.current.getAudioTracks().forEach((t) => t.enabled = enabled);
       setIsRecording(enabled);
-      return;
-    }
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localStreamRef.current = stream;
-      setIsRecording(true);
-
-      users.forEach((user) => {
-        if (!user.socketId || user.username === username) return;
-        initiateCall(user.socketId, stream);
-      });
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
-      alert("Could not access microphone");
+      if (enabled) {
+        users.forEach((user) => {
+          if (!user.socketId || user.username === username) return;
+          sendOffer(user.socketId);
+        });
+      }
     }
   };
 
+  // 🔥 NEW USER FIX
   useEffect(() => {
-    if (isRecording && localStreamRef.current) {
-      users.forEach((user) => {
-        if (!user.socketId || user.username === username) return;
-        if (!peersRef.current[user.socketId]) {
-          initiateCall(user.socketId, localStreamRef.current);
-        }
-      });
-    }
-  }, [users, isRecording]);
+    if (!localStreamRef.current) return;
+
+    users.forEach((user) => {
+      if (!user.socketId || user.username === username) return;
+      sendOffer(user.socketId);
+    });
+  }, [users]);
 
   const handleSend = (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
-
-    console.log("📤 Sending [CHAT]:", currentRoom, username, inputMessage.trim());
     sendMessage(inputMessage.trim());
     setInputMessage("");
   };
@@ -238,14 +226,10 @@ const ChatBox = () => {
 
       <div className="chatbox-messages">
         {messages.map((msg, idx) => {
-          // ✅ FIXED LINE
           const isOwn = username && msg.username === username;
 
           return (
-            <div
-              key={idx}
-              className={`message ${isOwn ? "own-message" : ""}`}
-            >
+            <div key={idx} className={`message ${isOwn ? "own-message" : ""}`}>
               <div className="message-header">
                 <span className="message-username">{msg.username}</span>
               </div>
@@ -253,7 +237,6 @@ const ChatBox = () => {
             </div>
           );
         })}
-
         <div ref={messagesEndRef} />
       </div>
 

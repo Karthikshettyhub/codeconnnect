@@ -29,7 +29,7 @@
     "passcode": null,
     "users": [
       {
-        "socketId": "0Mm5lx6IbtL201bqAAAF",
+        "socketId": null,
         "username": "q"
       }
     ],
@@ -43,5 +43,182 @@
     "code": "console",
     "language": "javascript",
     "createdAt": 1777398276789
+  },
+  "5PYXKK": {
+    "createdBy": "RiIIu7jFUQHtwZx7AAAB",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": "E3dP1yxbarGGHsafAAAD",
+        "username": "hi"
+      }
+    ],
+    "messages": [
+      {
+        "username": "hi",
+        "message": "hi",
+        "timestamp": 1777703749101
+      },
+      {
+        "username": "hi",
+        "message": "hello",
+        "timestamp": 1777703751767
+      }
+    ],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777703742128
+  },
+  "3OPBH8": {
+    "createdBy": "tSO_j9Dt1f6AeRKuAAAB",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": null
+      }
+    ],
+    "messages": [],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777781411347
+  },
+  "NFFHZ9": {
+    "createdBy": "tSO_j9Dt1f6AeRKuAAAB",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": null
+      }
+    ],
+    "messages": [],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777781460581
+  },
+  "36C173": {
+    "createdBy": "BwvdFMz1K9NldhXDAAAD",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": null
+      }
+    ],
+    "messages": [],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777781540212
+  },
+  "GERQM6": {
+    "createdBy": "VVAuZ0OzaIbvpk-gAAAD",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": null,
+        "username": "Rahul Sharma"
+      }
+    ],
+    "messages": [],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777783151286
+  },
+  "WMJPB8": {
+    "createdBy": "9xity77oWKr_evXTAAAL",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": "MwjlxJFBfiRoKTp8AAAP",
+        "username": "Rahul Sharma"
+      }
+    ],
+    "messages": [
+      {
+        "username": "Rahul Sharma",
+        "message": "hi",
+        "timestamp": 1777783671088
+      }
+    ],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777783664895
+  },
+  "HSGNPF": {
+    "createdBy": "m8r4nezlh6E_jeHIAAAV",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": "m8r4nezlh6E_jeHIAAAV",
+        "username": "Chirag Kulal"
+      }
+    ],
+    "messages": [
+      {
+        "username": "Chirag Kulal",
+        "message": "hi",
+        "timestamp": 1777783848925
+      }
+    ],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777783845735
+  },
+  "NM6HI8": {
+    "createdBy": "x2896RsHtJBqfntvAAAX",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": "x2896RsHtJBqfntvAAAX",
+        "username": "Chirag Kulal"
+      }
+    ],
+    "messages": [
+      {
+        "username": "Chirag Kulal",
+        "message": "hi",
+        "timestamp": 1777784158933
+      }
+    ],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777784155571
+  },
+  "0FD9OI": {
+    "createdBy": "Ksms40UwOxI8Oyr8AAAH",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": null,
+        "username": "Chirag"
+      }
+    ],
+    "messages": [
+      {
+        "username": "Chirag",
+        "message": "hi",
+        "timestamp": 1777784192474
+      },
+      {
+        "username": "Chirag",
+        "message": "ho art",
+        "timestamp": 1777784197365
+      }
+    ],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777784188292
+  },
+  "121wsa": {
+    "createdBy": "system",
+    "passcode": null,
+    "users": [
+      {
+        "socketId": null,
+        "username": "Chirag"
+      }
+    ],
+    "messages": [],
+    "code": "",
+    "language": "javascript",
+    "createdAt": 1777784226676
   }
 }
