@@ -59,6 +59,8 @@ class RoomManager {
 
       language: "javascript",
 
+      participants: [userId],
+
       createdAt: Date.now(),
     });
 
@@ -114,6 +116,8 @@ class RoomManager {
 
         language: "javascript",
 
+        participants: [userId],
+
         createdAt: Date.now(),
       });
     }
@@ -138,6 +142,11 @@ class RoomManager {
               u.socketId === user.socketId
           )
       );
+
+    await Room.updateOne(
+      { roomId },
+      { $addToSet: { participants: userId } }
+    );
 
     await room.save();
 

@@ -40,7 +40,6 @@ const RemoteVideo = ({ stream }) => {
       const video =
         videoRef.current;
 
-      // attach only once
       if (
         video.srcObject !== stream
       ) {
@@ -83,6 +82,8 @@ const RemoteVideo = ({ stream }) => {
 
 const VideoGrid = ({
   isVideoEnabled,
+  localAudioStreamRef,
+  isMicEnabled,
 }) => {
 
   const {
@@ -122,7 +123,13 @@ const VideoGrid = ({
       const video =
         localVideoRef.current;
 
-      video.srcObject = localStream;
+      if (
+        video.srcObject !== localStream
+      ) {
+
+        video.srcObject =
+          localStream;
+      }
 
       video.onloadedmetadata =
         async () => {
@@ -176,7 +183,10 @@ const VideoGrid = ({
         ICE_SERVERS
       );
 
+    // =========================
     // ICE
+    // =========================
+
     pc.onicecandidate = (
       event
     ) => {
@@ -196,7 +206,10 @@ const VideoGrid = ({
       }
     };
 
+    // =========================
     // REMOTE TRACK
+    // =========================
+
     pc.ontrack = (
       event
     ) => {
@@ -206,21 +219,51 @@ const VideoGrid = ({
         remoteSocketId
       );
 
-      const stream =
-        event.streams[0];
-
-      if (!stream) return;
-
       setRemoteStreams(
-        (prev) => ({
-          ...prev,
-          [remoteSocketId]:
-            stream,
-        })
+        (prev) => {
+
+          const existingStream =
+            prev[
+              remoteSocketId
+            ] ||
+            new MediaStream();
+
+          event.streams[0]
+            .getTracks()
+            .forEach((track) => {
+
+              const alreadyExists =
+                existingStream
+                  .getTracks()
+                  .some(
+                    (t) =>
+                      t.id ===
+                      track.id
+                  );
+
+              if (
+                !alreadyExists
+              ) {
+
+                existingStream.addTrack(
+                  track
+                );
+              }
+            });
+
+          return {
+            ...prev,
+            [remoteSocketId]:
+              existingStream,
+          };
+        }
       );
     };
 
+    // =========================
     // CONNECTION STATE
+    // =========================
+
     pc.onconnectionstatechange =
       () => {
 
@@ -306,6 +349,50 @@ const VideoGrid = ({
     };
 
   // =========================
+  // RENEGOTIATE
+  // =========================
+
+  const renegotiatePeer =
+    async (
+      pc,
+      targetSocketId
+    ) => {
+
+      try {
+
+        if (
+          pc.signalingState !==
+          "stable"
+        ) {
+          return;
+        }
+
+        const offer =
+          await pc.createOffer();
+
+        await pc.setLocalDescription(
+          offer
+        );
+
+        socketService.emit(
+          "webrtc-offer",
+          {
+            target:
+              targetSocketId,
+            offer,
+          }
+        );
+
+      } catch (err) {
+
+        console.error(
+          "❌ RENEGOTIATION ERROR:",
+          err
+        );
+      }
+    };
+
+  // =========================
   // STOP VIDEO
   // =========================
 
@@ -334,20 +421,47 @@ const VideoGrid = ({
         null;
     }
 
-    Object.values(
+    // REMOVE VIDEO TRACKS
+    Object.entries(
       peersRef.current
-    ).forEach((pc) => {
+    ).forEach(
+      async ([
+        socketId,
+        pc,
+      ]) => {
 
-      try {
-        pc.close();
-      } catch (err) {
-        console.log(err);
+        pc.getSenders()
+          .forEach(
+            (sender) => {
+
+              if (
+                sender.track &&
+                sender.track.kind ===
+                  "video"
+              ) {
+
+                try {
+
+                  pc.removeTrack(
+                    sender
+                  );
+
+                } catch (err) {
+
+                  console.log(
+                    err
+                  );
+                }
+              }
+            }
+          );
+
+        await renegotiatePeer(
+          pc,
+          socketId
+        );
       }
-    });
-
-    peersRef.current = {};
-
-    setRemoteStreams({});
+    );
   };
 
   // =========================
@@ -380,8 +494,12 @@ const VideoGrid = ({
       users
     );
 
-    if (!localStream)
+    if (
+      !localStream &&
+      !localAudioStreamRef?.current
+    ) {
       return;
+    }
 
     users.forEach(
       async (user) => {
@@ -399,14 +517,6 @@ const VideoGrid = ({
           return;
         }
 
-        if (
-          peersRef.current[
-            user.socketId
-          ]
-        ) {
-          return;
-        }
-
         try {
 
           console.log(
@@ -414,38 +524,97 @@ const VideoGrid = ({
             user.username
           );
 
+          const existingPeer =
+            peersRef.current[
+              user.socketId
+            ];
+
           const pc =
+            existingPeer ||
             createPeer(
               user.socketId
             );
 
-          localStream
-            .getTracks()
-            .forEach(
-              (track) => {
+          // =========================
+          // VIDEO TRACKS
+          // =========================
 
-                pc.addTrack(
-                  track,
-                  localStream
-                );
-              }
-            );
+          if (
+            localStream
+          ) {
 
-          const offer =
-            await pc.createOffer();
+            localStream
+              .getTracks()
+              .forEach(
+                (track) => {
 
-          await pc.setLocalDescription(
-            offer
-          );
+                  const alreadyAdded =
+                    pc
+                      .getSenders()
+                      .some(
+                        (
+                          sender
+                        ) =>
+                          sender.track ===
+                          track
+                      );
 
-          socketService.emit(
-            "webrtc-offer",
-            {
-              target:
-                user.socketId,
+                  if (
+                    !alreadyAdded
+                  ) {
 
-              offer,
-            }
+                    pc.addTrack(
+                      track,
+                      localStream
+                    );
+                  }
+                }
+              );
+          }
+
+          // =========================
+          // AUDIO TRACKS
+          // =========================
+
+          if (
+            localAudioStreamRef?.current
+          ) {
+
+            localAudioStreamRef.current
+              .getTracks()
+              .forEach(
+                (track) => {
+
+                  track.enabled =
+                    true;
+
+                  const alreadyAdded =
+                    pc
+                      .getSenders()
+                      .some(
+                        (
+                          sender
+                        ) =>
+                          sender.track ===
+                          track
+                      );
+
+                  if (
+                    !alreadyAdded
+                  ) {
+
+                    pc.addTrack(
+                      track,
+                      localAudioStreamRef.current
+                    );
+                  }
+                }
+              );
+          }
+
+          await renegotiatePeer(
+            pc,
+            user.socketId
           );
 
         } catch (err) {
@@ -457,17 +626,154 @@ const VideoGrid = ({
         }
       }
     );
-
   }, [
     users,
     localStream,
+    isMicEnabled,
+    localAudioStreamRef,
   ]);
+
+  // =========================
+  // REMOVE DISCONNECTED USERS
+  // =========================
+
+  useEffect(() => {
+
+    const activeSocketIds =
+      users.map(
+        (u) => u.socketId
+      );
+
+    Object.keys(
+      peersRef.current
+    ).forEach((socketId) => {
+
+      if (
+        socketId ===
+        socketService.socket.id
+      ) {
+        return;
+      }
+
+      if (
+        !activeSocketIds.includes(
+          socketId
+        )
+      ) {
+
+        console.log(
+          "🗑️ CLEANING DISCONNECTED USER:",
+          socketId
+        );
+
+        peersRef.current[
+          socketId
+        ]?.close();
+
+        delete peersRef.current[
+          socketId
+        ];
+
+        setRemoteStreams(
+          (prev) => {
+
+            const updated = {
+              ...prev,
+            };
+
+            delete updated[
+              socketId
+            ];
+
+            return updated;
+          }
+        );
+      }
+    });
+
+  }, [users]);
+
+  // =========================
+  // AUDIO RENEGOTIATION
+  // =========================
+
+  useEffect(() => {
+
+    if (
+      !isMicEnabled ||
+      !localAudioStreamRef?.current
+    ) {
+      return;
+    }
+
+    const renegotiate =
+      async () => {
+
+        for (const user of users) {
+
+          if (
+            !user.socketId ||
+            user.socketId ===
+              socketService.socket.id
+          ) {
+            continue;
+          }
+
+          const pc =
+            peersRef.current[
+              user.socketId
+            ];
+
+          if (!pc) continue;
+
+          localAudioStreamRef.current
+            .getTracks()
+            .forEach(
+              (track) => {
+
+                const alreadyAdded =
+                  pc
+                    .getSenders()
+                    .some(
+                      (
+                        sender
+                      ) =>
+                        sender.track ===
+                        track
+                    );
+
+                if (
+                  !alreadyAdded
+                ) {
+
+                  pc.addTrack(
+                    track,
+                    localAudioStreamRef.current
+                  );
+                }
+              }
+            );
+
+          await renegotiatePeer(
+            pc,
+            user.socketId
+          );
+        }
+      };
+
+    renegotiate();
+
+  }, [isMicEnabled]);
 
   // =========================
   // SOCKET EVENTS
   // =========================
 
   useEffect(() => {
+
+    // =========================
+    // HANDLE OFFER
+    // =========================
 
     const handleOffer =
       async ({
@@ -483,17 +789,79 @@ const VideoGrid = ({
         const pc =
           createPeer(from);
 
-        if (localStream) {
+        // =========================
+        // VIDEO TRACKS
+        // =========================
+
+        if (
+          localStream
+        ) {
 
           localStream
             .getTracks()
             .forEach(
               (track) => {
 
-                pc.addTrack(
-                  track,
-                  localStream
-                );
+                const alreadyAdded =
+                  pc
+                    .getSenders()
+                    .some(
+                      (
+                        sender
+                      ) =>
+                        sender.track ===
+                        track
+                    );
+
+                if (
+                  !alreadyAdded
+                ) {
+
+                  pc.addTrack(
+                    track,
+                    localStream
+                  );
+                }
+              }
+            );
+        }
+
+        // =========================
+        // AUDIO TRACKS
+        // =========================
+
+        if (
+          localAudioStreamRef?.current
+        ) {
+
+          localAudioStreamRef.current
+            .getTracks()
+            .forEach(
+              (track) => {
+
+                track.enabled =
+                  true;
+
+                const alreadyAdded =
+                  pc
+                    .getSenders()
+                    .some(
+                      (
+                        sender
+                      ) =>
+                        sender.track ===
+                        track
+                    );
+
+                if (
+                  !alreadyAdded
+                ) {
+
+                  pc.addTrack(
+                    track,
+                    localAudioStreamRef.current
+                  );
+                }
               }
             );
         }
@@ -520,6 +888,10 @@ const VideoGrid = ({
         );
       };
 
+    // =========================
+    // HANDLE ANSWER
+    // =========================
+
     const handleAnswer =
       async ({
         from,
@@ -533,12 +905,26 @@ const VideoGrid = ({
 
         if (!pc) return;
 
-        await pc.setRemoteDescription(
-          new RTCSessionDescription(
-            answer
-          )
-        );
+        try {
+
+          await pc.setRemoteDescription(
+            new RTCSessionDescription(
+              answer
+            )
+          );
+
+        } catch (err) {
+
+          console.error(
+            "ANSWER ERROR:",
+            err
+          );
+        }
       };
+
+    // =========================
+    // HANDLE ICE
+    // =========================
 
     const handleIce =
       async ({
@@ -569,6 +955,10 @@ const VideoGrid = ({
           );
         }
       };
+
+    // =========================
+    // SOCKET LISTENERS
+    // =========================
 
     socketService.listen(
       "webrtc-offer",
@@ -603,7 +993,10 @@ const VideoGrid = ({
       );
     };
 
-  }, [localStream]);
+  }, [
+    localStream,
+    isMicEnabled,
+  ]);
 
   // =========================
   // CLEANUP
@@ -616,6 +1009,13 @@ const VideoGrid = ({
       console.log(
         "🧹 CLEANING VIDEO GRID"
       );
+
+      Object.values(
+        peersRef.current
+      ).forEach((pc) => {
+
+        pc.close();
+      });
 
       stopVideo();
     };
@@ -664,7 +1064,7 @@ const VideoGrid = ({
             user.socketId &&
 
             user.socketId !==
-            socketService.socket.id
+              socketService.socket.id
         )
         .map((user) => {
 

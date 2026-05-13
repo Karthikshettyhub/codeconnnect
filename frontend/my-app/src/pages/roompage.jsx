@@ -33,8 +33,11 @@ const RoomPage = () => {
   const [leftWidth, setLeftWidth] = useState(65);
   const [topHeight, setTopHeight] = useState(70);
   const [isVideoEnabled, setIsVideoEnabled] = useState(false);
+  const [isMicEnabled, setIsMicEnabled] = useState(false);
 
-  const [isChatOpen, setIsChatOpen] = useState(true);
+  const localAudioStreamRef = useRef(null);
+
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const [isCompilerCollapsed, setIsCompilerCollapsed] = useState(false);
 
@@ -57,6 +60,63 @@ const RoomPage = () => {
   }, [roomId, currentRoom, joinRoom, navigate, isInitialized]);
 
   if (!roomId) return null;
+
+  // =========================
+  // TOGGLE MIC
+  // =========================
+
+  const toggleMic = async () => {
+
+    try {
+
+      // FIRST TIME
+      if (!localAudioStreamRef.current) {
+
+        const stream =
+          await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+
+        localAudioStreamRef.current =
+          stream;
+
+        setIsMicEnabled(true);
+
+        console.log(
+          "🎤 MIC ENABLED"
+        );
+
+        return;
+      }
+
+      // TOGGLE TRACKS
+      const enabled =
+        !isMicEnabled;
+
+      localAudioStreamRef.current
+        .getAudioTracks()
+        .forEach((track) => {
+
+          track.enabled =
+            enabled;
+        });
+
+      setIsMicEnabled(enabled);
+
+      console.log(
+        enabled
+          ? "🎤 MIC ENABLED"
+          : "🔇 MIC MUTED"
+      );
+
+    } catch (err) {
+
+      console.error(
+        "MIC ERROR:",
+        err
+      );
+    }
+  };
 
   const handleLeave = () => {
     leaveRoom();
@@ -281,19 +341,43 @@ const RoomPage = () => {
           )}
 
           {/* FLOAT VIDEO BUTTON */}
-          <button
-            className={`video-float-btn ${isVideoEnabled ? "active-video" : ""
-              }`}
-            onClick={() =>
-              setIsVideoEnabled(!isVideoEnabled)
-            }
-          >
-            <Video size={22} />
-          </button>
+          {/* FLOAT VIDEO BUTTON */}
+          {/* FLOAT CONTROLS */}
+          <div className="floating-controls">
+
+            {/* MIC BUTTON */}
+            <button
+              className={`mic-float-btn ${isMicEnabled
+                ? "active-mic"
+                : ""
+                }`}
+              onClick={toggleMic}
+            >
+              {isMicEnabled ? "🎤" : "🔇"}
+            </button>
+
+            {/* VIDEO BUTTON */}
+            <button
+              className={`video-float-btn ${isVideoEnabled
+                ? "active-video"
+                : ""
+                }`}
+              onClick={() =>
+                setIsVideoEnabled(
+                  !isVideoEnabled
+                )
+              }
+            >
+              <Video size={22} />
+            </button>
+
+          </div>
 
           {/* VIDEO GRID */}
           <VideoGrid
             isVideoEnabled={isVideoEnabled}
+            localAudioStreamRef={localAudioStreamRef}
+            isMicEnabled={isMicEnabled}
           />
 
           {/* CHAT OVERLAY */}
@@ -314,7 +398,7 @@ const RoomPage = () => {
               </button>
             </div>
 
-            <ChatBox />
+            {isChatOpen && <ChatBox />}
           </div>
         </div>
       </div>

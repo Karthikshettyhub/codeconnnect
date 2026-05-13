@@ -81,6 +81,19 @@ const Homepage = () => {
     <div className="homepage-container">
       <nav className="navbar">
         <h2 className="nav-logo">CodeCollab</h2>
+        <div 
+          className="nav-center-badge" 
+          onClick={() => {
+            if (!user) {
+              alert("⚠️ Please login first to view history");
+              return;
+            }
+            navigate("/my-rooms");
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          ⚡history 
+        </div>
 
         <div className="nav-right">
           {user && (

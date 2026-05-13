@@ -94,6 +94,11 @@ const roomSchema =
       default: "javascript",
     },
 
+    participants: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }],
+
   }, {
     timestamps: true
   });

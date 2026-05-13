@@ -177,6 +177,7 @@
 /* =========================
    FLOAT CHAT BUTTON
 ========================= */
+
 .chat-float-btn {
   position: absolute;
   top: 20px;
@@ -201,38 +202,46 @@
 ========================= */
 .chat-overlay {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 15px;               /* 🔥 gap from room header */
+  right: 15px;             /* 🔥 gap from right edge */
+  bottom: 100px;           /* 🔥 gap for video controls */
   width: 350px;
-  height: 100%;
+  /* height removed to stay fixed between top and bottom */
 
   display: flex;
   flex-direction: column;
 
-  background: #161b22;
+  background: #1e1e1e;     /* 🔥 card background */
   z-index: 20;
+  border-radius: 16px;     /* 🔥 floating card look */
+  overflow: hidden;        /* 🔥 keep children inside radius */
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5); /* 🔥 premium depth */
 
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
+  opacity: 0;              /* 🔥 smooth fade */
+  transform: translateX(40px); /* 🔥 slight offset for entry */
+  will-change: transform, opacity;
+  transition: 
+    transform 0.3s ease-out,
+    opacity 0.3s ease-out;
+  
+  pointer-events: none;    /* 🔥 prevent clicks when hidden */
 }
 
 /* OPEN */
 .chat-overlay.open {
+  opacity: 1;
   transform: translateX(0);
+  pointer-events: auto;    /* 🔥 enable clicks when visible */
 }
 
 /* HEADER */
 .chat-overlay-header {
-  height: 70px;            /* 🔥 increase height */
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: flex-end;   /* 🔥 push content to bottom */
-  justify-content: flex-end;
-
-  padding: 0 12px 10px 12px; /* 🔥 bottom padding pushes button down */
-
-  border-bottom: 1px solid #30363d;
+  height: 0;
+  padding: 0;
+  background: transparent;
+  border-bottom: none;
+  position: relative;
+  z-index: 100;
 }
 
 /* CLOSE BUTTON */
@@ -280,6 +289,10 @@
 
   cursor: pointer;
   transition: all 0.2s ease;
+
+  position: absolute;
+  top: 4px;
+  right: 8px;
 }
 
 .chat-close-btn:hover {
@@ -334,4 +347,68 @@
 
 .active-video {
   background: #dc2626 !important;
+}
+/* =========================
+   FLOAT CONTROLS
+========================= */
+
+.floating-controls {
+  position: absolute;
+
+  bottom: 25px;
+  right: 25px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  z-index: 50;
+}
+
+/* =========================
+   MIC BUTTON
+========================= */
+
+.mic-float-btn {
+  width: 60px;
+  height: 60px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #374151;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 22px;
+
+  cursor: pointer;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+
+  transition: all 0.25s ease;
+}
+
+.mic-float-btn:hover {
+  transform: scale(1.08);
+  background: #4b5563;
+}
+
+.active-mic {
+  background: #2563eb !important;
+}
+
+/* =========================
+   VIDEO BUTTON FIX
+========================= */
+
+.video-float-btn {
+  position: relative !important;
+
+  bottom: unset !important;
+  right: unset !important;
 }
