@@ -136,11 +136,11 @@ module.exports = (io) => {
 
     // ✅ DISCONNECT
     socket.on(
-  "disconnect",
+  "disconnecting",
   async (reason) => {
 
     console.log(
-      "DISCONNECT:",
+      "DISCONNECTING:",
       socket.id,
       reason
     );
