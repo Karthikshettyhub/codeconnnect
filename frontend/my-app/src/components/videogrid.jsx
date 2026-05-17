@@ -585,8 +585,7 @@ const VideoGrid = ({
               .forEach(
                 (track) => {
 
-                  track.enabled =
-                    true;
+                 
 
                   const alreadyAdded =
                     pc
@@ -839,8 +838,7 @@ const VideoGrid = ({
             .forEach(
               (track) => {
 
-                track.enabled =
-                  true;
+                
 
                 const alreadyAdded =
                   pc
