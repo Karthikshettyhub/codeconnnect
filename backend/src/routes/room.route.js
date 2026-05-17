@@ -31,7 +31,7 @@ router.get("/my-rooms", authMiddleware, async (req, res) => {
       roomId: room.roomId,
       createdAt: room.createdAt,
       messageCount: room.messages.length,
-      userCount: room.users.length, // Active users
+      userCount: room.participants.length, // Active users
     }));
 
     res.json(formattedRooms);

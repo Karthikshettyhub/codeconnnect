@@ -129,7 +129,7 @@ export const RoomProvider = ({ children }) => {
 
     setIsInitialized(true);
 
-    return () => socketService.removeAllListeners();
+    return () => {};
   }, []);
 
   useEffect(() => {

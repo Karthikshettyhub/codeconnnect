@@ -136,25 +136,37 @@ module.exports = (io) => {
 
     // ✅ DISCONNECT
     socket.on(
-      "disconnect",
-      async (reason) => {
+  "disconnect",
+  async (reason) => {
 
-        console.log(
-          "DISCONNECT:",
-          socket.id,
-          reason
-        );
-
-        await roomManager.removeUserBySocketId(
-          socket.id
-        );
-
-        // notify room users
-        io.emit("user-left", {
-          socketId: socket.id
-        });
-      }
+    console.log(
+      "DISCONNECT:",
+      socket.id,
+      reason
     );
+
+    // find rooms before removal
+    const joinedRooms =
+      [...socket.rooms].filter(
+        (room) => room !== socket.id
+      );
+
+    await roomManager.removeUserBySocketId(
+      socket.id
+    );
+
+    // emit ONLY to affected rooms
+    joinedRooms.forEach((roomId) => {
+
+      socket.to(roomId).emit(
+        "user-left",
+        {
+          socketId: socket.id
+        }
+      );
+    });
+  }
+);
 
     // WebRTC
     socket.on("webrtc-offer", ({ target, offer }) => {

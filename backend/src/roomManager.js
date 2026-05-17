@@ -29,15 +29,14 @@ class RoomManager {
     let room =
       await Room.findOne({ roomId });
 
-    // if room exists -> join room
+    // room already used before
     if (room) {
 
-      return this.joinRoom(
-        roomId,
-        socketId,
-        username,
-        userId
-      );
+      return {
+        success: false,
+        message:
+          "Room ID already exists",
+      };
     }
 
     room = await Room.create({
@@ -62,6 +61,8 @@ class RoomManager {
       participants: [userId],
 
       createdAt: Date.now(),
+
+      isActive: true,
     });
 
     console.log(
@@ -94,38 +95,29 @@ class RoomManager {
     let room =
       await Room.findOne({ roomId });
 
-    // auto create if missing
-    if (!room) {
+    // =========================
+    // BLOCK INACTIVE ROOMS
+    // =========================
+
+    if (
+      !room ||
+      !room.isActive
+    ) {
 
       console.log(
-        "🔄 AUTO-CREATING MISSING ROOM:",
+        "❌ ROOM NOT ACTIVE:",
         roomId
       );
 
-      room = await Room.create({
-
-        roomId,
-
-        createdBy: userId,
-
-        users: [],
-
-        messages: [],
-
-        code: "",
-
-        language: "javascript",
-
-        participants: [userId],
-
-        createdAt: Date.now(),
-      });
+      return {
+        success: false,
+        message: "Room does not exist",
+      };
     }
 
-    // ====================================
-    // IMPORTANT FIX
-    // allow multiple users/tabs
-    // ====================================
+    // =========================
+    // ADD USER
+    // =========================
 
     room.users.push({
       socketId,
@@ -139,13 +131,24 @@ class RoomManager {
           index ===
           self.findIndex(
             (u) =>
-              u.socketId === user.socketId
+              u.socketId ===
+              user.socketId
           )
       );
 
+    // IMPORTANT
+    // keep room active
+    // when user reconnects
+
+    room.isActive = true;
+
     await Room.updateOne(
       { roomId },
-      { $addToSet: { participants: userId } }
+      {
+        $addToSet: {
+          participants: userId
+        }
+      }
     );
 
     await room.save();
@@ -165,9 +168,12 @@ class RoomManager {
   // REMOVE USER
   // =========================
 
-  async removeUserBySocketId(socketId) {
+  async removeUserBySocketId(
+    socketId
+  ) {
 
-    const rooms = await Room.find();
+    const rooms =
+      await Room.find();
 
     for (const room of rooms) {
 
@@ -176,12 +182,15 @@ class RoomManager {
 
       room.users =
         room.users.filter(
-          (u) => u.socketId !== socketId
+          (u) =>
+            u.socketId !==
+            socketId
         );
 
-      // save only if changed
+      // only if changed
       if (
-        room.users.length !== initialLength
+        room.users.length !==
+        initialLength
       ) {
 
         console.log(
@@ -192,6 +201,75 @@ class RoomManager {
         );
 
         await room.save();
+
+        // =========================
+        // DISCONNECT GRACE
+        // =========================
+
+        if (
+          room.users.length === 0
+        ) {
+
+          console.log(
+            "⏳ WAITING BEFORE ROOM DEACTIVATION:",
+            room.roomId
+          );
+
+          setTimeout(
+            async () => {
+
+              try {
+
+                const latestRoom =
+                  await Room.findOne({
+                    roomId:
+                      room.roomId
+                  });
+
+                if (
+                  !latestRoom
+                ) {
+                  return;
+                }
+
+                // reconnect happened
+                if (
+                  latestRoom
+                    .users
+                    .length > 0
+                ) {
+
+                  console.log(
+                    "✅ USER REJOINED ROOM:",
+                    latestRoom.roomId
+                  );
+
+                  return;
+                }
+
+                latestRoom.isActive =
+                  false;
+
+                await latestRoom.save();
+
+                console.log(
+                  "🛑 ROOM AUTO-DEACTIVATED:",
+                  latestRoom.roomId
+                );
+
+              } catch (err) {
+
+                console.log(
+                  "❌ ROOM DEACTIVATE ERROR:",
+                  err
+                );
+              }
+
+            },
+
+            10000
+          );
+        }
       }
     }
   }
@@ -200,25 +278,48 @@ class RoomManager {
   // LEAVE ROOM
   // =========================
 
-  async leaveRoom(roomId, socketId) {
+  async leaveRoom(
+    roomId,
+    socketId
+  ) {
 
     const room =
-      await Room.findOne({ roomId });
+      await Room.findOne({
+        roomId
+      });
 
     if (!room) return true;
 
     room.users =
       room.users.filter(
-        (u) => u.socketId !== socketId
+        (u) =>
+          u.socketId !==
+          socketId
       );
-
-    await room.save();
 
     console.log(
       "👋 USER LEFT:",
       socketId,
       roomId
     );
+
+    // =========================
+    // INSTANT ROOM CLOSE
+    // =========================
+
+    if (
+      room.users.length === 0
+    ) {
+
+      room.isActive = false;
+
+      console.log(
+        "🛑 ROOM INSTANTLY DEACTIVATED:",
+        room.roomId
+      );
+    }
+
+    await room.save();
 
     return true;
   }
@@ -230,7 +331,9 @@ class RoomManager {
   async getRoomData(roomId) {
 
     const room =
-      await Room.findOne({ roomId });
+      await Room.findOne({
+        roomId
+      });
 
     if (!room) return null;
 
@@ -238,11 +341,13 @@ class RoomManager {
 
       users: room.users,
 
-      messages: room.messages,
+      messages:
+        room.messages,
 
       code: room.code,
 
-      language: room.language,
+      language:
+        room.language,
     };
   }
 
@@ -250,7 +355,10 @@ class RoomManager {
   // ADD MESSAGE
   // =========================
 
-  async addMessage(roomId, message) {
+  async addMessage(
+    roomId,
+    message
+  ) {
 
     await Room.updateOne(
       { roomId },
@@ -266,7 +374,10 @@ class RoomManager {
   // UPDATE CODE
   // =========================
 
-  async updateCode(roomId, code) {
+  async updateCode(
+    roomId,
+    code
+  ) {
 
     await Room.updateOne(
       { roomId },
@@ -290,4 +401,5 @@ class RoomManager {
   }
 }
 
-module.exports = new RoomManager();
+module.exports =
+  new RoomManager();

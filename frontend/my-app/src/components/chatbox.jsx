@@ -6,6 +6,8 @@ import React, {
 
 import { useRoom } from "../contexts/roomcontext";
 
+import socketService from "../services/socket";
+
 import "./chatbox.css";
 
 const ChatBox = () => {
@@ -14,6 +16,7 @@ const ChatBox = () => {
     messages,
     sendMessage,
     username,
+    currentRoom,
   } = useRoom();
 
   const [
@@ -24,7 +27,51 @@ const ChatBox = () => {
   const messagesEndRef =
     useRef(null);
 
+  // =========================
+  // DEBUG LOGS
+  // =========================
+
+  useEffect(() => {
+
+    console.log(
+      "🟢 CHATBOX RENDER"
+    );
+
+    console.log(
+      "currentRoom:",
+      currentRoom
+    );
+
+    console.log(
+      "username:",
+      username
+    );
+
+    console.log(
+      "socket connected:",
+      socketService.socket?.connected
+    );
+
+    console.log(
+      "socket id:",
+      socketService.socket?.id
+    );
+
+    console.log(
+      "messages length:",
+      messages?.length
+    );
+
+  }, [
+    currentRoom,
+    username,
+    messages,
+  ]);
+
+  // =========================
   // AUTO SCROLL
+  // =========================
+
   useEffect(() => {
 
     messagesEndRef.current?.scrollIntoView({
@@ -33,22 +80,73 @@ const ChatBox = () => {
 
   }, [messages]);
 
+  // =========================
   // SEND MESSAGE
-  const handleSend = (e) => {
+  // =========================
+
+  const handleSend = async (e) => {
 
     e.preventDefault();
+
+    console.log(
+      "📤 SEND CLICKED"
+    );
+
+    console.log(
+      "INPUT:",
+      inputMessage
+    );
+
+    console.log(
+      "ROOM:",
+      currentRoom
+    );
+
+    console.log(
+      "USERNAME:",
+      username
+    );
+
+    console.log(
+      "SOCKET CONNECTED:",
+      socketService.socket?.connected
+    );
+
+    console.log(
+      "SOCKET ID:",
+      socketService.socket?.id
+    );
 
     if (
       !inputMessage.trim()
     ) {
+
+      console.log(
+        "❌ EMPTY MESSAGE"
+      );
+
       return;
     }
 
-    sendMessage(
-      inputMessage.trim()
-    );
+    try {
 
-    setInputMessage("");
+      await sendMessage(
+        inputMessage.trim()
+      );
+
+      console.log(
+        "✅ MESSAGE SENT FUNCTION CALLED"
+      );
+
+      setInputMessage("");
+
+    } catch (err) {
+
+      console.error(
+        "❌ SEND ERROR:",
+        err
+      );
+    }
   };
 
   return (

@@ -101,6 +101,19 @@ const VideoGrid = ({
   const [remoteStreams, setRemoteStreams] =
     useState({});
 
+  const [failedSockets, setFailedSockets] = 
+    useState(new Set());
+
+  const activeUsers = React.useMemo(() => {
+    const map = new Map();
+    users.forEach((u) => {
+      if (!failedSockets.has(u.socketId)) {
+        map.set(u.username, u);
+      }
+    });
+    return Array.from(map.values());
+  }, [users, failedSockets]);
+
   // =========================
   // REFS
   // =========================
@@ -284,6 +297,8 @@ const VideoGrid = ({
             "closed"
         ) {
 
+          pc.close();
+
           delete peersRef.current[
             remoteSocketId
           ];
@@ -302,6 +317,12 @@ const VideoGrid = ({
               return updated;
             }
           );
+
+          setFailedSockets((prev) => {
+            const newSet = new Set(prev);
+            newSet.add(remoteSocketId);
+            return newSet;
+          });
         }
       };
 
@@ -491,7 +512,7 @@ const VideoGrid = ({
 
     console.log(
       "👥 CURRENT USERS:",
-      users
+      activeUsers
     );
 
     if (
@@ -501,7 +522,7 @@ const VideoGrid = ({
       return;
     }
 
-    users.forEach(
+    activeUsers.forEach(
       async (user) => {
 
         if (
@@ -627,7 +648,7 @@ const VideoGrid = ({
       }
     );
   }, [
-    users,
+    activeUsers,
     localStream,
     isMicEnabled,
     localAudioStreamRef,
@@ -640,7 +661,7 @@ const VideoGrid = ({
   useEffect(() => {
 
     const activeSocketIds =
-      users.map(
+      activeUsers.map(
         (u) => u.socketId
       );
 
@@ -691,7 +712,7 @@ const VideoGrid = ({
       }
     });
 
-  }, [users]);
+  }, [activeUsers]);
 
   // =========================
   // AUDIO RENEGOTIATION
@@ -709,7 +730,7 @@ const VideoGrid = ({
     const renegotiate =
       async () => {
 
-        for (const user of users) {
+        for (const user of activeUsers) {
 
           if (
             !user.socketId ||
@@ -1057,7 +1078,7 @@ const VideoGrid = ({
       </div>
 
       {/* REMOTE USERS */}
-      {users
+      {activeUsers
         .filter(
           (user) =>
 

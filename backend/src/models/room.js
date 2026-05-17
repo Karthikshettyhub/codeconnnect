@@ -98,6 +98,10 @@ const roomSchema =
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
     }],
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
 
   }, {
     timestamps: true

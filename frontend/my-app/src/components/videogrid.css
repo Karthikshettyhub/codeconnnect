@@ -13,7 +13,7 @@
 
   padding: 12px;
 
-  background: #111827;
+  background: transparent; /* Changed from #111827 to inherit the dark theme from parent */
 
   overflow-y: auto;
 
@@ -28,9 +28,10 @@
 
   aspect-ratio: 16 / 9;
 
-  background: #000;
+  background: #18181b; /* Zinc 900 */
 
-  border-radius: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 
   overflow: hidden;
 
@@ -38,7 +39,7 @@
   align-items: center;
   justify-content: center;
 
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
 }
 
 /* REAL VIDEO */
@@ -50,7 +51,7 @@
 
   display: block;
 
-  background: black;
+  background: #000;
 }
 
 /* USER NAME PLACEHOLDER */
@@ -62,12 +63,44 @@
   align-items: center;
   justify-content: center;
 
-  color: white;
+  color: #e4e4e7;
 
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
 
-  background: #1f2937;
+  background: #18181b; /* matches the tile background */
+  
+  /* ensure placeholder spans full area */
+  position: absolute;
+  inset: 0;
+}
+
+/* GOOGLE MEET STYLE NAME OVERLAY */
+.video-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  
+  /* Smooth gradient fade to black */
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 40%, transparent 100%);
+  
+  padding: 32px 16px 12px 16px;
+  
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  
+  /* Drop shadow for readability on bright video feeds */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  
+  z-index: 10;
+  pointer-events: none;
 }
 
 /* MOBILE */
@@ -85,6 +118,11 @@
   }
 
   .video-tile {
-    border-radius: 12px;
+    border-radius: 8px;
+  }
+  
+  .video-name {
+    padding: 24px 12px 8px 12px;
+    font-size: 12px;
   }
 }

@@ -1,30 +1,37 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useRoom } from "../contexts/roomcontext";
 import { useNavigate, useParams } from "react-router-dom";
+
 import ChatBox from "../components/chatbox";
 import CodeEditor from "../components/codeeditor";
 import CompilerPanel from "../components/CompilerPanel";
+import VideoGrid from "../components/VideoGrid";
 
 import {
   Maximize2,
   Minimize2,
-  GripVertical,
-  GripHorizontal,
   X,
-  Video
+  Video,
+  VideoOff,
+  Mic,
+  MicOff,
+  MessageSquare,
+  LogOut,
+  TerminalSquare
 } from "lucide-react";
 
 import "./roompage.css";
-import VideoGrid from "../components/VideoGrid";
 
 const RoomPage = () => {
+
   const {
     currentRoom,
     joinRoom,
     leaveRoom,
     code,
     language,
-    isInitialized
+    isInitialized,
+    messages
   } = useRoom();
 
   const navigate = useNavigate();
@@ -32,32 +39,101 @@ const RoomPage = () => {
 
   const [leftWidth, setLeftWidth] = useState(65);
   const [topHeight, setTopHeight] = useState(70);
+
   const [isVideoEnabled, setIsVideoEnabled] = useState(false);
   const [isMicEnabled, setIsMicEnabled] = useState(false);
 
-  const localAudioStreamRef = useRef(null);
-
   const [isChatOpen, setIsChatOpen] = useState(false);
 
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const previousMessageCount = useRef(0);
+  const isMessagesInitialized = useRef(false);
+
   const [isCompilerCollapsed, setIsCompilerCollapsed] = useState(false);
+
+  const localAudioStreamRef = useRef(null);
 
   const containerRef = useRef(null);
   const leftPaneRef = useRef(null);
 
+  // =========================
+  // REJOIN AFTER REFRESH
+  // =========================
+
   useEffect(() => {
+
     if (!isInitialized) return;
 
     if (!roomId) return;
 
-    const storedUsername = localStorage.getItem("username");
-    const passcode = localStorage.getItem("passcode");
+    const storedUsername =
+      localStorage.getItem("username");
 
-    if (storedUsername && !currentRoom) {
-      joinRoom(roomId, storedUsername, passcode);
-    } else if (!storedUsername) {
+    const passcode =
+      localStorage.getItem("passcode");
+
+    if (!storedUsername) {
+
       navigate("/");
+      return;
     }
-  }, [roomId, currentRoom, joinRoom, navigate, isInitialized]);
+
+    if (!currentRoom) {
+
+      console.log(
+        "🔄 REJOINING ROOM:",
+        roomId
+      );
+
+      joinRoom(
+        roomId,
+        storedUsername,
+        passcode
+      );
+    }
+
+  }, [
+    roomId,
+    currentRoom,
+    isInitialized
+  ]);
+
+  // =========================
+  // UNREAD MESSAGE COUNTER
+  // =========================
+
+  useEffect(() => {
+
+    if (!messages) return;
+
+    if (!isMessagesInitialized.current) {
+      previousMessageCount.current = messages.length;
+      isMessagesInitialized.current = true;
+      return;
+    }
+
+    if (messages.length > previousMessageCount.current) {
+
+      if (!isChatOpen) {
+
+        const newMessages = messages.length - previousMessageCount.current;
+        
+        setUnreadCount((prev) => prev + newMessages);
+      }
+    }
+
+    previousMessageCount.current = messages.length;
+
+  }, [messages, isChatOpen]);
+
+  // Reset when opened
+  useEffect(() => {
+    if (isChatOpen) {
+      setUnreadCount(0);
+    }
+  }, [isChatOpen]);
+
 
   if (!roomId) return null;
 
@@ -69,7 +145,6 @@ const RoomPage = () => {
 
     try {
 
-      // FIRST TIME
       if (!localAudioStreamRef.current) {
 
         const stream =
@@ -82,14 +157,11 @@ const RoomPage = () => {
 
         setIsMicEnabled(true);
 
-        console.log(
-          "🎤 MIC ENABLED"
-        );
+        console.log("🎤 MIC ENABLED");
 
         return;
       }
 
-      // TOGGLE TRACKS
       const enabled =
         !isMicEnabled;
 
@@ -97,17 +169,10 @@ const RoomPage = () => {
         .getAudioTracks()
         .forEach((track) => {
 
-          track.enabled =
-            enabled;
+          track.enabled = enabled;
         });
 
       setIsMicEnabled(enabled);
-
-      console.log(
-        enabled
-          ? "🎤 MIC ENABLED"
-          : "🔇 MIC MUTED"
-      );
 
     } catch (err) {
 
@@ -118,8 +183,14 @@ const RoomPage = () => {
     }
   };
 
+  // =========================
+  // LEAVE ROOM
+  // =========================
+
   const handleLeave = () => {
+
     leaveRoom();
+
     navigate("/");
   };
 
@@ -128,32 +199,58 @@ const RoomPage = () => {
   // =========================
 
   const startVerticalResize = (e) => {
+
     e.preventDefault();
 
-    document.addEventListener("mousemove", onVerticalResize);
-    document.addEventListener("mouseup", stopVerticalResize);
+    document.addEventListener(
+      "mousemove",
+      onVerticalResize
+    );
 
-    document.body.style.cursor = "col-resize";
+    document.addEventListener(
+      "mouseup",
+      stopVerticalResize
+    );
+
+    document.body.style.cursor =
+      "col-resize";
   };
 
   const onVerticalResize = (e) => {
+
     if (!containerRef.current) return;
 
-    const rect = containerRef.current.getBoundingClientRect();
+    const rect =
+      containerRef.current.getBoundingClientRect();
 
     const newWidth =
-      ((e.clientX - rect.left) / rect.width) * 100;
+      ((e.clientX - rect.left) /
+        rect.width) *
+      100;
 
-    if (newWidth > 20 && newWidth < 80) {
+    if (
+      newWidth > 20 &&
+      newWidth < 80
+    ) {
+
       setLeftWidth(newWidth);
     }
   };
 
   const stopVerticalResize = () => {
-    document.removeEventListener("mousemove", onVerticalResize);
-    document.removeEventListener("mouseup", stopVerticalResize);
 
-    document.body.style.cursor = "default";
+    document.removeEventListener(
+      "mousemove",
+      onVerticalResize
+    );
+
+    document.removeEventListener(
+      "mouseup",
+      stopVerticalResize
+    );
+
+    document.body.style.cursor =
+      "default";
   };
 
   // =========================
@@ -161,32 +258,58 @@ const RoomPage = () => {
   // =========================
 
   const startHorizontalResize = (e) => {
+
     e.preventDefault();
 
-    document.addEventListener("mousemove", onHorizontalResize);
-    document.addEventListener("mouseup", stopHorizontalResize);
+    document.addEventListener(
+      "mousemove",
+      onHorizontalResize
+    );
 
-    document.body.style.cursor = "row-resize";
+    document.addEventListener(
+      "mouseup",
+      stopHorizontalResize
+    );
+
+    document.body.style.cursor =
+      "row-resize";
   };
 
   const onHorizontalResize = (e) => {
+
     if (!leftPaneRef.current) return;
 
-    const rect = leftPaneRef.current.getBoundingClientRect();
+    const rect =
+      leftPaneRef.current.getBoundingClientRect();
 
     const newHeight =
-      ((e.clientY - rect.top) / rect.height) * 100;
+      ((e.clientY - rect.top) /
+        rect.height) *
+      100;
 
-    if (newHeight > 20 && newHeight < 80) {
+    if (
+      newHeight > 20 &&
+      newHeight < 80
+    ) {
+
       setTopHeight(newHeight);
     }
   };
 
   const stopHorizontalResize = () => {
-    document.removeEventListener("mousemove", onHorizontalResize);
-    document.removeEventListener("mouseup", stopHorizontalResize);
 
-    document.body.style.cursor = "default";
+    document.removeEventListener(
+      "mousemove",
+      onHorizontalResize
+    );
+
+    document.removeEventListener(
+      "mouseup",
+      stopHorizontalResize
+    );
+
+    document.body.style.cursor =
+      "default";
   };
 
   // =========================
@@ -194,6 +317,7 @@ const RoomPage = () => {
   // =========================
 
   if (!isInitialized) {
+
     return (
       <div className="loading-container">
         <div className="loader"></div>
@@ -203,202 +327,276 @@ const RoomPage = () => {
   }
 
   return (
+
     <div className="roompage">
 
-      {/* =========================
-          HEADER
-      ========================= */}
-
       <header className="room-header">
-        <div className="room-info">
-          <span className="room-badge">LIVE</span>
 
-          <h2>
-            Room:{" "}
+        <div className="room-header-left">
+          <div className="workspace-brand">
+            CodeCollab
+          </div>
+        </div>
+
+        <div className="room-info">
+
+          <div className="live-status">
+            <div className="status-dot"></div>
+            <span>LIVE</span>
+          </div>
+
+          <div className="room-id-pill">
+            <span className="room-id-label">
+              ID
+            </span>
+
             <span className="room-id-text">
               {roomId}
             </span>
-          </h2>
+          </div>
         </div>
 
-        <button
-          className="leave-btn-header"
-          onClick={handleLeave}
-        >
-          Leave Room
-        </button>
+        <div className="room-header-right">
+
+          <button
+            className="leave-btn-header"
+            onClick={handleLeave}
+          >
+
+            <LogOut size={15} />
+
+            <span>Leave</span>
+
+          </button>
+        </div>
       </header>
 
-      {/* =========================
-          MAIN LAYOUT
-      ========================= */}
+      <div
+        className="room-layout"
+        ref={containerRef}
+      >
 
-      <div className="room-layout" ref={containerRef}>
-
-        {/* =========================
-            LEFT PANE
-        ========================= */}
-
+        {/* LEFT */}
         <div
           className="left-pane"
           ref={leftPaneRef}
-          style={{ width: `${leftWidth}%` }}
+          style={{
+            width: `${leftWidth}%`
+          }}
         >
 
-          {/* EDITOR */}
           <div
             className="editor-section"
             style={{
-              height: isCompilerCollapsed
-                ? "96%"
-                : `${topHeight}%`
+              height:
+                isCompilerCollapsed
+                  ? "calc(100% - 44px)"
+                  : `${topHeight}%`
             }}
           >
             <CodeEditor />
           </div>
 
-          {/* HORIZONTAL RESIZER */}
           {!isCompilerCollapsed && (
             <div
               className="resizer-horizontal"
-              onMouseDown={startHorizontalResize}
+              onMouseDown={
+                startHorizontalResize
+              }
             >
-              <GripHorizontal size={14} />
+              <div className="resizer-line-h"></div>
             </div>
           )}
 
-          {/* COMPILER */}
           <div
-            className={`compiler-section ${isCompilerCollapsed ? "collapsed" : ""
-              }`}
+            className={`compiler-section ${
+              isCompilerCollapsed
+                ? "collapsed"
+                : ""
+            }`}
             style={{
-              height: isCompilerCollapsed
-                ? "30px"
-                : `calc(${100 - topHeight}% - 8px)`
+              height:
+                isCompilerCollapsed
+                  ? "44px"
+                  : `calc(${100 - topHeight}% - 4px)`
             }}
           >
 
-            <div className="section-controls">
-              <button
-                className="toggle-btn"
-                onClick={() =>
-                  setIsCompilerCollapsed(
-                    !isCompilerCollapsed
-                  )
-                }
-              >
-                {isCompilerCollapsed ? (
-                  <Maximize2 size={14} />
-                ) : (
-                  <Minimize2 size={14} />
-                )}
-              </button>
+            <div className="compiler-header">
+
+              <div className="compiler-tab">
+
+                <TerminalSquare
+                  size={14}
+                  className="compiler-icon"
+                />
+
+                <span>Terminal</span>
+
+              </div>
+
+              <div className="compiler-actions">
+
+                <button
+                  className="toggle-btn"
+                  onClick={() =>
+                    setIsCompilerCollapsed(
+                      !isCompilerCollapsed
+                    )
+                  }
+                >
+
+                  {isCompilerCollapsed
+                    ? <Maximize2 size={14} />
+                    : <Minimize2 size={14} />
+                  }
+
+                </button>
+              </div>
             </div>
 
-            {!isCompilerCollapsed ? (
-              <CompilerPanel
-                language={language}
-                code={code}
-              />
-            ) : (
-              <div className="collapsed-placeholder">
-                Terminal / Executor
+            {!isCompilerCollapsed && (
+
+              <div className="compiler-body">
+                <CompilerPanel
+                  language={language}
+                  code={code}
+                />
               </div>
+
             )}
           </div>
         </div>
 
-        {/* =========================
-            VERTICAL RESIZER
-        ========================= */}
-
+        {/* VERTICAL RESIZER */}
         <div
           className="resizer-vertical"
           onMouseDown={startVerticalResize}
         >
-          <GripVertical size={14} />
+          <div className="resizer-line-v"></div>
         </div>
 
-        {/* =========================
-            RIGHT PANE
-        ========================= */}
-
+        {/* RIGHT */}
         <div
           className="right-pane"
           style={{
-            width: `calc(${100 - leftWidth}% - 8px)`
+            width: `calc(${100 - leftWidth}% - 4px)`
           }}
         >
 
-          {/* FLOAT CHAT BUTTON */}
-          {!isChatOpen && (
-            <button
-              className="chat-float-btn"
-              onClick={() => setIsChatOpen(true)}
-            >
-              💬
-            </button>
-          )}
-
-          {/* FLOAT VIDEO BUTTON */}
-          {/* FLOAT VIDEO BUTTON */}
-          {/* FLOAT CONTROLS */}
-          <div className="floating-controls">
-
-            {/* MIC BUTTON */}
-            <button
-              className={`mic-float-btn ${isMicEnabled
-                ? "active-mic"
-                : ""
-                }`}
-              onClick={toggleMic}
-            >
-              {isMicEnabled ? "🎤" : "🔇"}
-            </button>
-
-            {/* VIDEO BUTTON */}
-            <button
-              className={`video-float-btn ${isVideoEnabled
-                ? "active-video"
-                : ""
-                }`}
-              onClick={() =>
-                setIsVideoEnabled(
-                  !isVideoEnabled
-                )
-              }
-            >
-              <Video size={22} />
-            </button>
-
-          </div>
-
-          {/* VIDEO GRID */}
           <VideoGrid
             isVideoEnabled={isVideoEnabled}
             localAudioStreamRef={localAudioStreamRef}
             isMicEnabled={isMicEnabled}
           />
 
-          {/* CHAT OVERLAY */}
-          <div
-            className={`chat-overlay ${isChatOpen ? "open" : ""
+          {/* DOCK */}
+          <div className="unified-dock">
+
+            <button
+              className={`dock-btn ${
+                isMicEnabled
+                  ? "active-dock-btn"
+                  : "inactive-dock-btn"
               }`}
+              onClick={toggleMic}
+            >
+
+              {isMicEnabled
+                ? <Mic size={20} />
+                : <MicOff size={20} />
+              }
+
+            </button>
+
+            <button
+              className={`dock-btn ${
+                isVideoEnabled
+                  ? "active-dock-btn"
+                  : "inactive-dock-btn"
+              }`}
+              onClick={() =>
+                setIsVideoEnabled(
+                  !isVideoEnabled
+                )
+              }
+            >
+
+              {isVideoEnabled
+                ? <Video size={20} />
+                : <VideoOff size={20} />
+              }
+
+            </button>
+
+            <div className="dock-divider"></div>
+
+            <button
+              className={`dock-btn ${
+                isChatOpen
+                  ? "active-chat-btn"
+                  : "inactive-chat-btn"
+              }`}
+              onClick={() => {
+
+                const nextState =
+                  !isChatOpen;
+
+                setIsChatOpen(nextState);
+
+                if (nextState) {
+                  setUnreadCount(0);
+                }
+              }}
+            >
+
+              <MessageSquare size={20} />
+
+              {unreadCount > 0 &&
+                !isChatOpen && (
+
+                <span className="chat-notification-badge">
+                  {unreadCount}
+                </span>
+
+              )}
+
+            </button>
+          </div>
+
+          {/* CHAT */}
+          <div
+            className={`chat-overlay ${
+              isChatOpen
+                ? "open"
+                : ""
+            }`}
           >
 
             <div className="chat-overlay-header">
+
+              <span className="chat-title">
+                Workspace Chat
+              </span>
+
               <button
                 className="chat-close-btn"
-                onClick={() => setIsChatOpen(false)}
+                onClick={() =>
+                  setIsChatOpen(false)
+                }
               >
-                <X
-                  size={20}
-                  strokeWidth={2.5}
-                />
+                <X size={16} />
               </button>
+
             </div>
 
-            {isChatOpen && <ChatBox />}
+            <div className="chat-overlay-body">
+
+              {isChatOpen && (
+                <ChatBox />
+              )}
+
+            </div>
           </div>
         </div>
       </div>
