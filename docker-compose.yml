@@ -11,8 +11,15 @@ services:
       - "5005:5005"
     env_file:
       - ./backend/.env
+    environment:
+      - DOCKER_HOST=tcp://dind:2376
+      - DOCKER_TLS_VERIFY=1
+      - DOCKER_CERT_PATH=/certs/client
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - dind-certs-client:/certs/client
+    depends_on:
+      dind:
+        condition: service_healthy
     restart: always
 
   frontend:
@@ -29,3 +36,26 @@ services:
     depends_on:
       - backend
     restart: always
+
+  dind:
+    image: docker:dind
+    container_name: codeconnect-dind
+    hostname: dind
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    expose:
+      - "2376"
+    volumes:
+      - dind-storage:/var/lib/docker
+      - dind-certs-client:/certs/client
+    healthcheck:
+      test: ["CMD", "sh", "-c", "test -f /certs/client/ca.pem"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    restart: always
+
+volumes:
+  dind-storage:
+  dind-certs-client:

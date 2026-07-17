@@ -3,6 +3,9 @@
 # Use Node 18 on Alpine Linux (tiny, production standard)
 FROM node:18-alpine
 
+# Install Docker CLI so the backend can communicate with DinD
+RUN apk add --no-cache docker-cli
+
 # Set working directory
 WORKDIR /app
 

@@ -53,11 +53,11 @@ app.get("/health", (req, res) => {
 });
 
 // compiler route
-const compilerRoutes = require("./src/routes/compiler.route");
+const compilerRoutes = require("./src/routes/compiler.route.js");
 app.use("/api/compiler", compilerRoutes);
 
 // room history routes
-app.use("/api/rooms", require("./src/routes/room.route"));
+app.use("/api/rooms", require("./src/routes/room.route.js"));
 
 // ── STATIC FRONTEND ──────────────────────────────────────────
 const frontendPath = path.join(__dirname, "../frontend/my-app/dist");

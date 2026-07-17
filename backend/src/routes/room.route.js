@@ -1,6 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const Room = require("../models/Room");
+const Room = require("../models/room");
 const router = express.Router();
 
 // 🔐 Middleware to protect routes
