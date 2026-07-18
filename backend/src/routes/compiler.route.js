@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { runCode } = require("../dockerService");
+const { runCode } = require("../services/dockerService");
 
 /**
  * POST /api/compiler/run

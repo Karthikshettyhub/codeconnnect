@@ -1,124 +1,101 @@
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const { exec } = require('child_process');
-const os = require('os');
+const { exec } = require("child_process");
+const { v4: uuidv4 } = require("uuid");
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
 
-const DOCKER_IMAGES = {
-  python: 'python:3.11-alpine',
-  c: 'gcc',
-  cpp: 'gcc',
-  java: 'eclipse-temurin:17-alpine',
-  javascript: 'node:alpine',
+const LANGUAGE_CONFIG = {
+  javascript: {
+    image: "node:18-alpine",
+    filename: "code.js",
+    runCmd: "node /app/code.js",
+  },
+  python: {
+    image: "python:3.10-alpine",
+    filename: "code.py",
+    runCmd: "python /app/code.py",
+  },
+  c: {
+    image: "gcc",
+    filename: "code.c",
+    runCmd: 'bash -c "gcc /app/code.c -o /tmp/code && /tmp/code"',
+  },
+  cpp: {
+    image: "gcc",
+    filename: "code.cpp",
+    runCmd: 'bash -c "g++ /app/code.cpp -o /tmp/code && /tmp/code"',
+  },
+  java: {
+    image: "eclipse-temurin:17",
+    filename: "Main.java",
+    runCmd: 'bash -c "javac /app/Main.java -d /tmp && java -cp /tmp Main"',
+  },
 };
 
-const RUN_COMMANDS = {
-  python: 'python3 /code/code.py',
-  c: 'gcc /code/code.c -o /code/out && /code/out',
-  cpp: 'g++ /code/code.cpp -o /code/out && /code/out',
-  java: 'javac /code/Main.java && java -cp /code Main',
-  javascript: 'node /code/code.js',
+const cleanup = (dir) => {
+  try { fs.rmSync(dir, { recursive: true, force: true }); } catch (_) {}
 };
 
-const FILE_NAMES = {
-  python: 'code.py',
-  c: 'code.c',
-  cpp: 'code.cpp',
-  java: 'Main.java',
-  javascript: 'code.js',
-};
-
-const projectRoot = path.join(__dirname, '../../');
-const tempDir = path.join(projectRoot, '.code-temp');
-
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir, { recursive: true });
-}
-
-const writeCodeToFolder = (code, language, input) => {
-  const id = crypto.randomBytes(6).toString('hex');
-  const folder = path.join(tempDir, `${language}_${id}`);
-  fs.mkdirSync(folder, { recursive: true });
-  const filepath = path.join(folder, FILE_NAMES[language]);
-  fs.writeFileSync(filepath, code);
-  
-  if (input !== undefined && input !== null) {
-    fs.writeFileSync(path.join(folder, 'input.txt'), input);
-  } else {
-    fs.writeFileSync(path.join(folder, 'input.txt'), '');
-  }
-  
-  return folder;
-};
-
-const cleanup = (folder) => {
-  try {
-    if (fs.existsSync(folder)) {
-      fs.rmSync(folder, { recursive: true, force: true });
-    }
-  } catch (err) {
-    console.error('Cleanup error:', err.message);
-  }
-};
-
-const buildDockerCommand = (language, folder) => {
-  const image = DOCKER_IMAGES[language];
-  const runCmd = RUN_COMMANDS[language] + ' < /code/input.txt';
-  const absolutePath = path.resolve(folder);
-  let dockerPath = absolutePath;
-
-  if (os.platform() === 'win32') {
-    dockerPath = absolutePath.replace(/\\/g, '/');
-  }
-
-  return `docker run --rm --memory=128m --cpus=0.5 --network=none --ulimit nofile=50:50 -v "${dockerPath}:/code" ${image} sh -c "${runCmd}"`;
-};
-
-const runInDocker = async (code, language, input) => {
-  if (!DOCKER_IMAGES[language]) {
-    return {
-      success: false,
-      output: '',
-      error: `Language "${language}" is not supported`,
-    };
-  }
-
-  const isDockerRunning = await new Promise((resolve) => {
-    exec('docker ps', (error) => {
-      resolve(!error);
-    });
-  });
-
-  if (!isDockerRunning) {
-    return {
-      success: false,
-      output: '',
-      error: "Docker is not running",
-    };
-  }
-
+const runCode = (code, language, stdin = "") => {
   return new Promise((resolve) => {
-    const folder = writeCodeToFolder(code, language, input);
-    const cmd = buildDockerCommand(language, folder);
+    const config = LANGUAGE_CONFIG[language.toLowerCase()];
+    if (!config) {
+      return resolve({
+        output: "",
+        error: `Language "${language}" not supported.`,
+        executionTime: 0,
+      });
+    }
 
-    exec(cmd, { timeout: 90000, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
-      cleanup(folder);
+    const execId = uuidv4();
+    const execDir = path.join(os.tmpdir(), execId);
+    fs.mkdirSync(execDir, { recursive: true });
+    fs.writeFileSync(path.join(execDir, config.filename), code);
+    fs.writeFileSync(path.join(execDir, "input.txt"), stdin || "");
 
-      if (error && error.killed) {
-        return resolve({ success: false, output: stdout || '', error: 'Timeout' });
+    const containerName = `sandbox_${execId}`;
+    const startTime = Date.now();
+
+    const createCmd = `docker create \
+      --name ${containerName} \
+      --memory=256m \
+      --cpus=0.5 \
+      --pids-limit=64 \
+      --network=none \
+      ${config.image} \
+      sh -c 'timeout 5 ${config.runCmd} < /app/input.txt'`;
+
+    exec(createCmd, (err) => {
+      if (err) {
+        cleanup(execDir);
+        return resolve({ output: "", error: "Container create failed: " + err.message, executionTime: 0 });
       }
 
-      if (error) {
-        return resolve({ success: false, output: stdout || '', error: error.message });
-      }
+      exec(`docker cp ${execDir}/. ${containerName}:/app/`, (err) => {
+        if (err) {
+          cleanup(execDir);
+          exec(`docker rm -f ${containerName}`, () => {});
+          return resolve({ output: "", error: "File copy failed: " + err.message, executionTime: 0 });
+        }
 
-      if (stderr && stderr.trim()) {
-        return resolve({ success: false, output: stdout || '', error: stderr });
-      }
+        exec(`docker start -a ${containerName}`, { timeout: 10000 }, (error, stdout, stderr) => {
+          const executionTime = Date.now() - startTime;
+          cleanup(execDir);
+          exec(`docker rm -f ${containerName}`, () => {});
 
-      resolve({ success: true, output: stdout || '', error: '' });
+          if (error && error.code === 124) {
+            return resolve({ output: stdout || "", error: "Time Limit Exceeded (5s)", executionTime });
+          }
+
+          resolve({
+            output: stdout || "",
+            error: stderr || (error && !stdout ? error.message : ""),
+            executionTime,
+          });
+        });
+      });
     });
   });
 };
 
-module.exports = { runInDocker };
+module.exports = { runCode };
