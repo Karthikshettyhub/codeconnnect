@@ -26,18 +26,43 @@ class RoomManager {
       userId
     );
 
-    let room =
-      await Room.findOne({ roomId });
+    // Check if a room with this ID already exists
+    let room = await Room.findOne({ roomId });
 
-    // room already used before
-    if (room) {
-
-      return {
-        success: false,
-        message:
-          "Room ID already exists",
-      };
+    // If room exists and is active, reject creation
+    if (room && room.isActive) {
+      return { success: false, message: "Room ID already exists" };
     }
+
+    // If room exists but is inactive, reactivate it
+    if (room && !room.isActive) {
+      // Add creator to users list
+      room.users.push({ socketId, username });
+      // Ensure creator is in participants array
+      if (!room.participants.includes(userId)) {
+        room.participants.push(userId);
+      }
+      // Mark room as active
+      room.isActive = true;
+      await room.save();
+      console.log("✅ REACTIVATED ROOM:", roomId);
+      return { success: true, reactivated: true };
+    }
+
+    // No existing room, create a new one
+    room = await Room.create({
+      roomId,
+      createdBy: userId,
+      users: [{ socketId, username }],
+      messages: [],
+      code: "",
+      language: "javascript",
+      participants: [userId],
+      createdAt: Date.now(),
+      isActive: true,
+    });
+    console.log("ROOM CREATED:", roomId);
+    return { success: true };
 
     room = await Room.create({
 
