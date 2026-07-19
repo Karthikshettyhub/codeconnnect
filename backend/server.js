@@ -14,6 +14,8 @@ const connectDB = require("./src/config/db"); // adjust path if needed
 const app = express();
 const server = http.createServer(app);
 
+app.set("trust proxy", 1); // 🔥 needed since Nginx sits in front now
+
 // 🔥 CONNECT DB
 connectDB();
 
