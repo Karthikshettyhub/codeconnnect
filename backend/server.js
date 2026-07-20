@@ -9,7 +9,7 @@ const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 // 🔥 DB
-const connectDB = require("./src/config/db"); // adjust path if needed
+const connectDB = require("./src/config/Db"); // adjust path if needed
 
 const app = express();
 const server = http.createServer(app);

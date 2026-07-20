@@ -16,6 +16,17 @@ services:
     depends_on:
       dind:
         condition: service_healthy
+      mongo:
+        condition: service_started
+    restart: always
+
+  mongo:
+    image: mongo:7
+    container_name: codeconnect-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
     restart: always
 
   nginx:
@@ -65,3 +76,4 @@ services:
 volumes:
   dind-storage:
   dind-certs-client:
+  mongo-data:
