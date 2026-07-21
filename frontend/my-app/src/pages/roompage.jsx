@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ChatBox from "../components/chatbox";
 import CodeEditor from "../components/codeeditor";
 import CompilerPanel from "../components/CompilerPanel";
-import VideoGrid from "../components/videogrid";
+import VideoGrid from "../components/VideoGrid";
 
 import {
   Maximize2,
@@ -118,7 +118,7 @@ const RoomPage = () => {
       if (!isChatOpen) {
 
         const newMessages = messages.length - previousMessageCount.current;
-        
+
         setUnreadCount((prev) => prev + newMessages);
       }
     }
@@ -409,11 +409,10 @@ const RoomPage = () => {
           )}
 
           <div
-            className={`compiler-section ${
-              isCompilerCollapsed
-                ? "collapsed"
-                : ""
-            }`}
+            className={`compiler-section ${isCompilerCollapsed
+              ? "collapsed"
+              : ""
+              }`}
             style={{
               height:
                 isCompilerCollapsed
@@ -494,11 +493,10 @@ const RoomPage = () => {
           <div className="unified-dock">
 
             <button
-              className={`dock-btn ${
-                isMicEnabled
-                  ? "active-dock-btn"
-                  : "inactive-dock-btn"
-              }`}
+              className={`dock-btn ${isMicEnabled
+                ? "active-dock-btn"
+                : "inactive-dock-btn"
+                }`}
               onClick={toggleMic}
             >
 
@@ -510,11 +508,10 @@ const RoomPage = () => {
             </button>
 
             <button
-              className={`dock-btn ${
-                isVideoEnabled
-                  ? "active-dock-btn"
-                  : "inactive-dock-btn"
-              }`}
+              className={`dock-btn ${isVideoEnabled
+                ? "active-dock-btn"
+                : "inactive-dock-btn"
+                }`}
               onClick={() =>
                 setIsVideoEnabled(
                   !isVideoEnabled
@@ -532,11 +529,10 @@ const RoomPage = () => {
             <div className="dock-divider"></div>
 
             <button
-              className={`dock-btn ${
-                isChatOpen
-                  ? "active-chat-btn"
-                  : "inactive-chat-btn"
-              }`}
+              className={`dock-btn ${isChatOpen
+                ? "active-chat-btn"
+                : "inactive-chat-btn"
+                }`}
               onClick={() => {
 
                 const nextState =
@@ -555,22 +551,21 @@ const RoomPage = () => {
               {unreadCount > 0 &&
                 !isChatOpen && (
 
-                <span className="chat-notification-badge">
-                  {unreadCount}
-                </span>
+                  <span className="chat-notification-badge">
+                    {unreadCount}
+                  </span>
 
-              )}
+                )}
 
             </button>
           </div>
 
           {/* CHAT */}
           <div
-            className={`chat-overlay ${
-              isChatOpen
-                ? "open"
-                : ""
-            }`}
+            className={`chat-overlay ${isChatOpen
+              ? "open"
+              : ""
+              }`}
           >
 
             <div className="chat-overlay-header">

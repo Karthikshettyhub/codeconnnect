@@ -18,6 +18,8 @@ services:
         condition: service_healthy
       mongo:
         condition: service_started
+      redis:
+        condition: service_started
     restart: always
 
   mongo:
@@ -27,6 +29,13 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: codeconnect-redis
+    expose:
+      - "6379"
     restart: always
 
   nginx:

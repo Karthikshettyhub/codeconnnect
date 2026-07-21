@@ -5,77 +5,93 @@ const cors = require("cors");
 const path = require("path");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
+const { createClient } = require("redis");
+const { createAdapter } = require("@socket.io/redis-adapter");
 
 require("dotenv").config();
 
-// 🔥 DB
-const connectDB = require("./src/config/Db"); // adjust path if needed
+// Database connection
+const connectDB = require("./src/config/Db");
 
 const app = express();
 const server = http.createServer(app);
 
-app.set("trust proxy", 1); // 🔥 needed since Nginx sits in front now
+// Trust the Nginx reverse proxy in front of this server
+app.set("trust proxy", 1);
 
-// 🔥 CONNECT DB
+// Connect to MongoDB
 connectDB();
 
-// 🔐 PASSPORT CONFIG
+// Load passport strategy config
 require("./src/config/passport");
 
-// ── CORS CONFIG ──────────────────────────────────────────────
+// CORS configuration
 const corsOptions = {
   origin: [
     process.env.FRONTEND_URL,
     process.env.VERCEL_URL,
   ],
   methods: ["GET", "POST"],
-  credentials: true, // 🔥 REQUIRED FOR COOKIES
+  credentials: true, // required so cookies are sent cross-origin
 };
 
-// ── SOCKET SERVER ────────────────────────────────────────────
+// Socket.IO server setup
 const io = new Server(server, {
   cors: corsOptions,
   transports: ["websocket", "polling"],
 });
 
-// ── MIDDLEWARES ──────────────────────────────────────────────
+// Redis adapter: lets multiple backend instances share Socket.IO events
+const pubClient = createClient({ url: "redis://redis:6379" });
+const subClient = pubClient.duplicate();
+
+Promise.all([pubClient.connect(), subClient.connect()])
+  .then(() => {
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log("Redis adapter connected - Socket.IO synced across instances");
+  })
+  .catch((err) => {
+    console.error("Redis adapter connection failed:", err);
+  });
+
+// Middlewares
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cookieParser()); // 🔥 for reading cookies
-app.use(passport.initialize()); // 🔥 passport
+app.use(cookieParser());
+app.use(passport.initialize());
 
 const PORT = process.env.PORT || 5005;
 
-// ── AUTH ROUTES (NEW) ────────────────────────────────────────
+// Auth routes
 app.use("/auth", require("./src/routes/auth"));
 
-// ── API ROUTES ───────────────────────────────────────────────
+// Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// compiler route
+// Compiler route
 const compilerRoutes = require("./src/routes/compiler.route.js");
 app.use("/api/compiler", compilerRoutes);
 
-// room history routes
+// Room history routes
 app.use("/api/rooms", require("./src/routes/room.route.js"));
 
-// ── STATIC FRONTEND ──────────────────────────────────────────
+// Serve the built frontend
 const frontendPath = path.join(__dirname, "../frontend/my-app/dist");
 app.use(express.static(frontendPath));
 
-// SPA fallback
+// SPA fallback - send index.html for any non-API route
 app.use((req, res, next) => {
   if (req.method === "GET" && !req.path.startsWith("/api") && !req.path.startsWith("/auth")) {
     return res.sendFile(path.join(frontendPath, "index.html"));
   }
 });
 
-// ── SOCKET HANDLER ───────────────────────────────────────────
+// Socket event handlers
 require("./src/socketHandler")(io);
 
-// ── START SERVER ─────────────────────────────────────────────
+// Start server
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
