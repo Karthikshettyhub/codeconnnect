@@ -1,0 +1,144 @@
+/* =========================================================
+   GLOBAL THEME TOKENS
+   Dark is the default (matches your current design 1:1).
+   Light overrides kick in via [data-theme="light"] on <html>,
+   set by ThemeContext. Every color used across homepage.css
+   and roompage.css should route through one of these vars.
+========================================================= */
+
+:root {
+  color-scheme: dark;
+
+  /* Base surfaces */
+  --bg-base: #050505;
+  --bg-surface: #0a0a0a;
+  --bg-elevated: #111111;
+  --bg-overlay: rgba(5, 5, 5, 0.7);
+  --surface-subtle: rgba(255, 255, 255, 0.03);
+
+  /* Interactive surfaces */
+  --bg-input: rgba(0, 0, 0, 0.4);
+  --bg-input-hover: rgba(255, 255, 255, 0.05);
+  --bg-hover-soft: rgba(255, 255, 255, 0.05);
+  --bg-hover-medium: rgba(255, 255, 255, 0.1);
+  --bg-hover-strong: rgba(255, 255, 255, 0.15);
+
+  /* Borders */
+  --border-dim: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(255, 255, 255, 0.16);
+  --border-focus: rgba(255, 255, 255, 0.3);
+
+  /* Text */
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+
+  /* Brand / accent (unchanged across themes) */
+  --brand-primary: #ffffff;
+  --brand-secondary: #e4e4e7;
+  --accent-color: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.2);
+
+  /* Radius (unchanged across themes) */
+  --radius-lg: 24px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  /* Ambient glows on homepage */
+  --glow-1: rgba(99, 102, 241, 0.15);
+  --glow-2: rgba(168, 85, 247, 0.1);
+
+  /* ---- Room page specific tokens ---- */
+  --room-bg: #09090b;
+  --room-panel-bg: #18181b;
+  --room-header-bg: #09090b;
+  --room-right-bg: #050505;
+  --room-border: rgba(255, 255, 255, 0.06);
+  --room-border-soft: rgba(255, 255, 255, 0.04);
+  --room-text-primary: #ffffff;
+  --room-text-secondary: #a1a1aa;
+  --room-text-tertiary: #71717a;
+  --room-id-bg: rgba(255, 255, 255, 0.04);
+  --room-id-border: rgba(255, 255, 255, 0.1);
+  --room-id-label-bg: rgba(255, 255, 255, 0.03);
+
+  --dock-bg: rgba(10, 10, 10, 0.6);
+  --dock-border: rgba(255, 255, 255, 0.1);
+  --chat-bg: rgba(24, 24, 27, 0.94);
+  --chat-header-bg: rgba(255, 255, 255, 0.03);
+  --chat-border: rgba(255, 255, 255, 0.08);
+
+  /* Shadow intensity + subtle brand-color glows for the room's video stage */
+  --shadow-strong: rgba(0, 0, 0, 0.4);
+  --shadow-soft: rgba(0, 0, 0, 0.2);
+  --room-glow-1: transparent;
+  --room-glow-2: transparent;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Base surfaces */
+  --bg-base: #ffffff;
+  --bg-surface: #f7f7f8;
+  --bg-elevated: #ffffff;
+  --bg-overlay: rgba(255, 255, 255, 0.75);
+  --surface-subtle: rgba(0, 0, 0, 0.03);
+
+  /* Interactive surfaces */
+  --bg-input: rgba(0, 0, 0, 0.03);
+  --bg-input-hover: rgba(0, 0, 0, 0.04);
+  --bg-hover-soft: rgba(0, 0, 0, 0.04);
+  --bg-hover-medium: rgba(0, 0, 0, 0.07);
+  --bg-hover-strong: rgba(0, 0, 0, 0.1);
+
+  /* Borders */
+  --border-dim: rgba(0, 0, 0, 0.1);
+  --border-bright: rgba(0, 0, 0, 0.18);
+  --border-focus: rgba(0, 0, 0, 0.3);
+
+  /* Text */
+  --text-primary: #0a0a0a;
+  --text-secondary: #52525b;
+  --text-tertiary: #71717a;
+
+  --brand-primary: #0a0a0a;
+  --brand-secondary: #27272a;
+  --accent-color: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.15);
+
+  --glow-1: rgba(99, 102, 241, 0.08);
+  --glow-2: rgba(168, 85, 247, 0.06);
+
+  /* ---- Room page specific tokens ---- */
+  --room-bg: #ffffff;
+  --room-panel-bg: #f4f4f5;
+  --room-header-bg: #ffffff;
+  --room-right-bg: #f0f0f1;
+  --room-border: rgba(0, 0, 0, 0.08);
+  --room-border-soft: rgba(0, 0, 0, 0.05);
+  --room-text-primary: #0a0a0a;
+  --room-text-secondary: #52525b;
+  --room-text-tertiary: #71717a;
+  --room-id-bg: rgba(0, 0, 0, 0.04);
+  --room-id-border: rgba(0, 0, 0, 0.1);
+  --room-id-label-bg: rgba(0, 0, 0, 0.03);
+
+  --dock-bg: rgba(255, 255, 255, 0.85);
+  --dock-border: rgba(0, 0, 0, 0.14);
+  --chat-bg: rgba(255, 255, 255, 0.97);
+  --chat-header-bg: rgba(0, 0, 0, 0.03);
+  --chat-border: rgba(0, 0, 0, 0.1);
+
+  /* Shadow intensity + subtle brand-color glows for the room's video stage */
+  --shadow-strong: rgba(0, 0, 0, 0.14);
+  --shadow-soft: rgba(0, 0, 0, 0.08);
+  --room-glow-1: rgba(99, 102, 241, 0.12);
+  --room-glow-2: rgba(168, 85, 247, 0.1);
+}
+
+html,
+body {
+  background-color: var(--bg-base);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}

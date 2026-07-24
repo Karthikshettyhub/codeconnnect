@@ -6,6 +6,7 @@ import ChatBox from "../components/chatbox";
 import CodeEditor from "../components/codeeditor";
 import CompilerPanel from "../components/CompilerPanel";
 import VideoGrid from "../components/videogrid";
+import ThemeToggle from "../components/ThemeToggle";
 
 import {
   Maximize2,
@@ -357,6 +358,8 @@ const RoomPage = () => {
         </div>
 
         <div className="room-header-right">
+
+          <ThemeToggle />
 
           <button
             className="leave-btn-header"

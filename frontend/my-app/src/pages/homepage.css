@@ -1,22 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-:root {
-  --bg-base: #050505;
-  --bg-surface: #0a0a0a;
-  --bg-elevated: #111111;
-  --border-dim: rgba(255, 255, 255, 0.08);
-  --border-bright: rgba(255, 255, 255, 0.16);
-  --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --text-tertiary: #71717a;
-  --brand-primary: #ffffff;
-  --brand-secondary: #e4e4e7;
-  --accent-color: #3b82f6; 
-  --accent-glow: rgba(59, 130, 246, 0.2);
-  --radius-lg: 24px;
-  --radius-md: 12px;
-  --radius-sm: 8px;
-}
+/* Theme variables now live in src/theme.css (imported globally in App.jsx)
+   so the same tokens apply here and in roompage.css. Nothing below was
+   removed except the old duplicate :root block. */
 
 * {
   box-sizing: border-box;
@@ -35,6 +21,8 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
 }
 
 /* Subtle glowing background orbs */
@@ -42,7 +30,7 @@ body {
   position: absolute;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0,0,0,0) 70%);
+  background: radial-gradient(circle, var(--glow-1) 0%, rgba(0,0,0,0) 70%);
   top: -200px;
   left: 50%;
   transform: translateX(-50%);
@@ -52,7 +40,7 @@ body {
 }
 
 .ambient-glow.glow-2 {
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, rgba(0,0,0,0) 70%);
+  background: radial-gradient(circle, var(--glow-2) 0%, rgba(0,0,0,0) 70%);
   top: 40%;
   left: 10%;
   width: 800px;
@@ -68,8 +56,8 @@ body {
   justify-content: space-between;
   padding: 0 40px;
   height: 80px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  background: rgba(5, 5, 5, 0.7);
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg-overlay);
   backdrop-filter: blur(16px);
 }
 
@@ -81,6 +69,37 @@ body {
 
 .nav-right {
   justify-content: flex-end;
+  gap: 12px;
+}
+
+.guest-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 16px;
+
+  background: var(--bg-hover-soft);
+  border: 1px solid var(--border-dim);
+  border-radius: 999px;
+
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.guest-nav-btn:hover {
+  background: var(--bg-hover-medium);
+  border-color: var(--border-bright);
+  color: var(--text-primary);
+}
+
+.guest-nav-btn:active {
+  transform: scale(0.96);
 }
 
 .nav-center {
@@ -96,6 +115,7 @@ body {
   font-weight: 700;
   font-size: 18px;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
 .logo-icon {
@@ -107,10 +127,10 @@ body {
   align-items: center;
   gap: 8px;
   padding: 8px 18px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-hover-soft);
+  border: 1px solid var(--border-bright);
   border-radius: 99px;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -119,16 +139,16 @@ body {
 }
 
 .history-badge:hover, .history-badge:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--bg-hover-strong);
+  border-color: var(--border-bright);
   transform: translateY(-2px) scale(1.02);
   outline: none;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .history-badge:active {
   transform: translateY(0) scale(0.96);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-hover-medium);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -219,7 +239,7 @@ body {
   display: inline-block;
   padding: 6px 14px;
   border-radius: 99px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-subtle);
   border: 1px solid var(--border-dim);
   font-size: 13px;
   font-weight: 500;
@@ -233,7 +253,7 @@ body {
   font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0 0 20px 0;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .text-gradient {
@@ -257,7 +277,7 @@ body {
 }
 
 .glass-card {
-  background: rgba(10, 10, 10, 0.6);
+  background: var(--bg-overlay);
   backdrop-filter: blur(24px);
   border: 1px solid var(--border-dim);
   border-radius: var(--radius-lg);
@@ -278,7 +298,7 @@ body {
   gap: 12px;
   background: white;
   color: black;
-  border: none;
+  border: 1px solid var(--border-dim);
   padding: 12px;
   border-radius: var(--radius-md);
   font-size: 15px;
@@ -293,7 +313,7 @@ body {
 }
 
 .oauth-btn:hover {
-  box-shadow: 0 0 0 4px rgba(255,255,255,0.1);
+  box-shadow: 0 0 0 4px var(--bg-hover-medium);
 }
 
 .oauth-btn:active {
@@ -311,7 +331,7 @@ body {
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: rgba(255,255,255,0.03);
+  background: var(--surface-subtle);
   border: 1px solid var(--border-dim);
   border-radius: var(--radius-md);
   margin-bottom: 24px;
@@ -327,6 +347,7 @@ body {
   justify-content: center;
   font-size: 18px;
   font-weight: 600;
+  color: white;
 }
 
 .greeting-text {
@@ -339,6 +360,7 @@ body {
   margin: 2px 0 0 0;
   font-size: 16px;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .divider {
@@ -372,7 +394,7 @@ body {
 .mode-selector {
   display: flex;
   position: relative;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-input);
   border-radius: var(--radius-md);
   padding: 4px;
   border: 1px solid var(--border-dim);
@@ -392,7 +414,7 @@ body {
 }
 
 .mode-tab.active {
-  color: white;
+  color: var(--text-primary);
 }
 
 .tab-indicator {
@@ -401,7 +423,7 @@ body {
   bottom: 4px;
   left: 4px;
   width: calc(50% - 4px);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-hover-medium);
   border-radius: calc(var(--radius-md) - 4px);
   z-index: 1;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -423,11 +445,11 @@ body {
 
 .join-form input {
   width: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-input);
   border: 1px solid var(--border-dim);
   border-radius: var(--radius-md);
   padding: 12px 16px;
-  color: white;
+  color: var(--text-primary);
   font-size: 15px;
   font-family: inherit;
   transition: all 0.2s;
@@ -439,8 +461,8 @@ body {
 
 .join-form input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-focus);
+  background: var(--bg-input-hover);
 }
 
 .room-input-row {
@@ -469,7 +491,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-hover-soft);
   border: 1px solid var(--border-dim);
   color: var(--text-secondary);
   width: 46px;
@@ -479,8 +501,8 @@ body {
 }
 
 .generate-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--bg-hover-medium);
+  color: var(--text-primary);
 }
 
 .primary-submit-btn {
@@ -489,8 +511,8 @@ body {
   justify-content: center;
   gap: 8px;
   width: 100%;
-  background: white;
-  color: black;
+  background: var(--brand-primary);
+  color: var(--bg-base);
   border: none;
   padding: 14px;
   border-radius: var(--radius-md);
@@ -502,7 +524,7 @@ body {
 }
 
 .primary-submit-btn:hover {
-  box-shadow: 0 0 20px rgba(255,255,255,0.15);
+  box-shadow: 0 0 20px var(--bg-hover-strong);
 }
 
 .primary-submit-btn:active {

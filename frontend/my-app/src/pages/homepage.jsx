@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRoom } from "../contexts/roomcontext";
 import { useNavigate } from "react-router-dom";
+import ThemeToggle from "../components/ThemeToggle";
 import "./homepage.css";
 
 const Homepage = () => {
@@ -136,6 +137,18 @@ const Homepage = () => {
         </div>
 
         <div className="nav-right">
+          {!user && (
+            <button
+              type="button"
+              className="guest-nav-btn"
+              onClick={handleGuestLogin}
+            >
+              Continue as Guest
+            </button>
+          )}
+
+          <ThemeToggle />
+
           {user ? (
             <div className="user-menu">
               <div className="avatar">{user.username.charAt(0).toUpperCase()}</div>
@@ -177,14 +190,7 @@ const Homepage = () => {
                   Continue with Google
                 </button>
 
-                {/* 🆕 GUEST BUTTON */}
-                <button
-                  type="button"
-                  className="oauth-btn guest-btn"
-                  onClick={handleGuestLogin}
-                >
-                  Continue as Guest
-                </button>
+                {/* Guest sign-in now lives in the top nav */}
 
                 <p className="auth-hint">Sign in to start collaborating</p>
               </div>
