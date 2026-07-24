@@ -1,6 +1,7 @@
 const express = require("express");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 const router = express.Router();
 
@@ -51,6 +52,36 @@ router.get(
     }
   }
 );
+
+/* =========================
+   GUEST LOGIN
+========================= */
+router.post("/guest", (req, res) => {
+  const guestId = new mongoose.Types.ObjectId().toString(); // ✅ valid ObjectId string
+  const username = (req.body?.username?.trim()) || "Guest";
+
+  const token = jwt.sign(
+    {
+      id: guestId,
+      username,
+      email: null,
+      provider: "guest",
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  res.json({
+    user: { id: guestId, username, email: null, provider: "guest" },
+  });
+});
 
 /* =========================
    CHECK LOGIN

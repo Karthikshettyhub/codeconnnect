@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRoom } from "../contexts/roomcontext";
 import { useNavigate } from "react-router-dom";
 import "./homepage.css";
@@ -9,6 +9,7 @@ const Homepage = () => {
   const [mode, setMode] = useState("join");
 
   const [user, setUser] = useState(null);
+  const userRef = useRef(null); // 🆕 mirrors `user` synchronously, avoids stale state right after login
 
   const { createRoom, joinRoom } = useRoom();
   const navigate = useNavigate();
@@ -21,13 +22,17 @@ const Homepage = () => {
       .then((res) => res.json())
       .then((data) => {
         setUser(data.user);
+        userRef.current = data.user; // 🆕 keep ref in sync
 
         // 🔥 AUTO FILL USERNAME (ONLY IF EMPTY)
         if (data.user && !username) {
           setUsername(data.user.username);
         }
       })
-      .catch(() => setUser(null));
+      .catch(() => {
+        setUser(null);
+        userRef.current = null; // 🆕
+      });
   }, []);
 
   // 🔥 LOGOUT
@@ -38,14 +43,38 @@ const Homepage = () => {
     });
 
     setUser(null);
+    userRef.current = null; // 🆕
+    setUsername("");
     window.location.reload();
+  };
+
+  // 🆕 GUEST LOGIN
+  const handleGuestLogin = async () => {
+    try {
+      const res = await fetch("http://localhost:5005/auth/guest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username: "Guest" }),
+      });
+
+      const data = await res.json();
+
+      if (data.user) {
+        setUser(data.user);
+        userRef.current = data.user; // 🆕 fixes race condition: available immediately, no refresh needed
+        setUsername(data.user.username); // pre-fill "Guest", still editable
+      }
+    } catch (err) {
+      alert("Unable to continue as guest. Please try again.");
+    }
   };
 
   // 🔥 SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!user) {
+    if (!userRef.current) {
       alert("⚠️ Please login first to continue");
       return;
     }
@@ -147,13 +176,25 @@ const Homepage = () => {
                   />
                   Continue with Google
                 </button>
+
+                {/* 🆕 GUEST BUTTON */}
+                <button
+                  type="button"
+                  className="oauth-btn guest-btn"
+                  onClick={handleGuestLogin}
+                >
+                  Continue as Guest
+                </button>
+
                 <p className="auth-hint">Sign in to start collaborating</p>
               </div>
             ) : (
               <div className="user-greeting">
                 <div className="greeting-avatar">{user.username.charAt(0).toUpperCase()}</div>
                 <div>
-                  <p className="greeting-text">Welcome back,</p>
+                  <p className="greeting-text">
+                    {user.provider === "guest" ? "Joined as" : "Welcome back,"}
+                  </p>
                   <p className="greeting-name">{user.username}</p>
                 </div>
               </div>

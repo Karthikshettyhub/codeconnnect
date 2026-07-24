@@ -44,6 +44,19 @@ class SocketService {
         "❌ Socket disconnected:",
         reason
       );
+
+      // 🆕 SELF-HEAL FIX
+      // Socket.IO intentionally does NOT auto-reconnect when the SERVER
+      // calls socket.disconnect() (e.g. no auth cookie found yet, before login).
+      // Without this, the dead socket object stays in memory forever, and
+      // createRoom/joinRoom silently hang waiting for a "connect" event
+      // that will never fire — only a full page refresh fixed it before.
+      // By nulling it here, the next waitForConnection() call below will
+      // detect there's no active socket and transparently reconnect with
+      // the now-valid cookie (e.g. right after guest/Google login).
+      if (reason === "io server disconnect") {
+        this.socket = null;
+      }
     });
 
     this.socket.on("connect_error", (error) => {
@@ -57,6 +70,13 @@ class SocketService {
   waitForConnection() {
 
     return new Promise((resolve) => {
+
+      // 🆕 SELF-HEAL FIX: if the previous socket was killed by the server
+      // (auth failure before login) and nulled out above, reconnect now
+      // that a valid cookie should be present (post-login).
+      if (!this.socket) {
+        this.connect();
+      }
 
       if (this.socket?.connected) {
         resolve();

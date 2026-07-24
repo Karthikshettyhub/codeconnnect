@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ChatBox from "../components/chatbox";
 import CodeEditor from "../components/codeeditor";
 import CompilerPanel from "../components/CompilerPanel";
-import VideoGrid from "../components/VideoGrid";
+import VideoGrid from "../components/videogrid";
 
 import {
   Maximize2,
