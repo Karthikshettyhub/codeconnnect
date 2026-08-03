@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import "./codeeditor.css";
 import { useRoom } from "../contexts/roomcontext";
+import { useTheme } from "../contexts/ThemeContext";
 
 const EXTENSIONS = {
   javascript: "js",
@@ -43,6 +44,9 @@ const CodeEditor = () => {
     acceptLanguageChange,
     rejectLanguageChange,
   } = useRoom();
+
+  const { theme } = useTheme();
+  const monacoTheme = theme === "light" ? "light" : "vs-dark";
 
   const [localCode, setLocalCode] = useState(code);
   const [localLanguage, setLocalLanguage] = useState(language);
@@ -136,7 +140,7 @@ const CodeEditor = () => {
       <Editor
         language={localLanguage}
         value={localCode}
-        theme="vs-dark"
+        theme={monacoTheme}
         onChange={handleEditorChange}
         options={{ automaticLayout: true, minimap: { enabled: false } }}
       />

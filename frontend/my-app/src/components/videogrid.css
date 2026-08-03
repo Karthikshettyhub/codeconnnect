@@ -28,7 +28,7 @@
 
   aspect-ratio: 16 / 9;
 
-  background: #18181b; /* Zinc 900 */
+  background: var(--room-video-bg);
 
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -63,12 +63,12 @@
   align-items: center;
   justify-content: center;
 
-  color: #e4e4e7;
+  color: var(--room-video-text);
 
   font-size: 20px;
   font-weight: 600;
 
-  background: #18181b; /* matches the tile background */
+  background: var(--room-video-bg); /* matches the tile background */
   
   /* ensure placeholder spans full area */
   position: absolute;

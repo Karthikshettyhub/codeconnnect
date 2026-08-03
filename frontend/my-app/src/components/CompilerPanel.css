@@ -1,6 +1,6 @@
 .compiler-panel {
-  background: #252526;
-  color: white;
+  background: var(--room-terminal-panel-bg);
+  color: var(--room-terminal-title-text);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -12,7 +12,7 @@
   display: flex;
   justify-content: space-between;
   padding: 8px 16px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--room-terminal-header-border);
   align-items: center;
   flex-shrink: 0;
 }
@@ -23,19 +23,19 @@
   gap: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #c9d1d9;
+  color: var(--room-terminal-title-text);
 }
 
 .compiler-tabs {
   display: flex;
   flex-shrink: 0;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--room-terminal-header-border);
 }
 
 .compiler-tabs .tab {
   padding: 6px 16px;
   background: transparent;
-  color: #8b949e;
+  color: var(--room-terminal-tab-text);
   border: none;
   border-bottom: 2px solid transparent;
   cursor: pointer;
@@ -45,18 +45,18 @@
 }
 
 .compiler-tabs .tab:hover {
-  color: #c9d1d9;
+  color: var(--room-terminal-tab-hover-text);
 }
 
 .compiler-tabs .tab.active {
-  color: #58a6ff;
-  border-bottom-color: #58a6ff;
+  color: var(--room-compiler-accent);
+  border-bottom-color: var(--room-compiler-accent);
 }
 
 .compiler-content {
   flex: 1;
   overflow-y: auto;
-  background: #1e1e1e;
+  background: var(--room-terminal-content-bg);
   padding: 10px;
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 13px;
@@ -66,7 +66,7 @@
 .output-area {
   white-space: pre-wrap;
   word-break: break-word;
-  color: #d4d4d4;
+  color: var(--room-terminal-output-text);
   min-height: 100%;
 }
 
@@ -74,9 +74,9 @@
   width: 100%;
   height: 100%;
   resize: none;
-  background: #1e1e1e;
-  border: 1px solid #333;
-  color: #fff;
+  background: var(--room-terminal-content-bg);
+  border: 1px solid var(--room-terminal-input-border);
+  color: var(--room-terminal-input-text);
   padding: 10px;
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 13px;
@@ -111,11 +111,12 @@
 }
 
 .btn-compiler.run {
-  background: #238636;
+  background: var(--room-compiler-run-bg);
+  color: var(--room-compiler-accent-text);
 }
 
 .btn-compiler.run:hover {
-  background: #2ea043;
+  background: var(--room-compiler-run-hover-bg);
 }
 
 .btn-compiler.running {
@@ -142,10 +143,10 @@
 .compiler-content::-webkit-scrollbar-thumb,
 .output-area::-webkit-scrollbar-thumb,
 .input-textarea::-webkit-scrollbar-thumb {
-  background: #3c3c3c;
+  background: var(--room-terminal-scrollbar);
   border-radius: 4px;
 }
 
 .compiler-content::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--room-terminal-scrollbar-hover);
 }

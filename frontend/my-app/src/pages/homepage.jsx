@@ -163,7 +163,7 @@ const Homepage = () => {
 
       <main className="main-content">
         <div className="hero-section">
-          <div className="badge-pill">✨ Code in real-time, instantly</div>
+          <div className="badge-pill"> Code in real-time, instantly</div>
           <h1 className="hero-title">
             Collaborate on code.<br/>
             <span className="text-gradient">Without friction.</span>

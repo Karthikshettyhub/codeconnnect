@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  background: #1e1e1e;
+  background: var(--room-editor-body-bg);
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   animation: editorFadeIn 0.25s ease-in-out;
 }
@@ -14,18 +14,18 @@
   justify-content: space-between;
   gap: 16px;
   padding: 10px 16px;
-  background: #252526;
-  border-bottom: 1px solid #2a2a2a;
+  background: var(--room-editor-header-bg);
+  border-bottom: 1px solid var(--room-editor-header-border);
   flex-shrink: 0;
 }
 
 .editor-header select {
   padding: 6px 12px;
-  background: #2a2d2e;
-  color: #ffffff;
+  background: var(--room-editor-select-bg);
+  color: var(--room-editor-select-text);
   border-radius: 6px;
   cursor: pointer;
-  border: 1px solid #3c3c3c;
+  border: 1px solid var(--room-editor-select-border);
   font-size: 13px;
   font-weight: 500;
   outline: none;
@@ -33,16 +33,16 @@
 }
 
 .editor-header select:hover {
-  background: #333;
+  background: var(--room-editor-select-hover-bg);
 }
 
 .editor-header select:focus {
-  border-color: #0078ff;
-  box-shadow: 0 0 0 2px rgba(0, 120, 255, 0.25);
+  border-color: var(--room-editor-select-focus-border);
+  box-shadow: 0 0 0 2px var(--room-editor-select-focus-glow);
 }
 
 .file-label {
-  color: #9da5b4;
+  color: var(--room-editor-file-label);
   font-size: 12px;
   letter-spacing: 0.4px;
   user-select: none;

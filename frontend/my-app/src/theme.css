@@ -52,6 +52,8 @@
   --room-bg: #09090b;
   --room-panel-bg: #18181b;
   --room-header-bg: #09090b;
+  --room-header-text: #ffffff;
+  --room-header-text-secondary: #a1a1aa;
   --room-right-bg: #050505;
   --room-border: rgba(255, 255, 255, 0.06);
   --room-border-soft: rgba(255, 255, 255, 0.04);
@@ -61,6 +63,66 @@
   --room-id-bg: rgba(255, 255, 255, 0.04);
   --room-id-border: rgba(255, 255, 255, 0.1);
   --room-id-label-bg: rgba(255, 255, 255, 0.03);
+
+  /* Accent used for live badge, resize-hover, run button etc */
+  --room-accent: #3b82f6;
+  --room-accent-text: #3b82f6;
+
+  /* Live status pill (dark mode keeps its current green) */
+  --room-live-bg: rgba(34, 197, 94, 0.1);
+  --room-live-border: rgba(34, 197, 94, 0.2);
+  --room-live-dot: #22c55e;
+  --room-live-text: #22c55e;
+
+  /* Leave button (dark mode keeps its current red) */
+  --room-leave-bg: rgba(239, 68, 68, 0.1);
+  --room-leave-border: rgba(239, 68, 68, 0.2);
+  --room-leave-text: #ef4444;
+  --room-leave-hover-bg: #ef4444;
+  --room-leave-hover-text: #ffffff;
+  --room-leave-hover-border: #ef4444;
+
+  /* Dock buttons when mic/video are OFF (dark mode keeps current red) */
+  --room-dock-inactive-bg: rgba(239, 68, 68, 0.15);
+  --room-dock-inactive-border: rgba(239, 68, 68, 0.2);
+  --room-dock-inactive-text: #ef4444;
+  --room-dock-inactive-hover-bg: #ef4444;
+  --room-dock-inactive-hover-text: #ffffff;
+
+  /* Video tile (dark mode keeps its current zinc-900 look) */
+  --room-video-bg: #18181b;
+  --room-video-text: #e4e4e7;
+
+  /* Code editor's top strip (language dropdown + filename) — dark mode keeps current colors */
+  --room-editor-header-bg: #252526;
+  --room-editor-header-border: #2a2a2a;
+  --room-editor-file-label: #9da5b4;
+  --room-editor-select-bg: #2a2d2e;
+  --room-editor-select-hover-bg: #333333;
+  --room-editor-select-border: #3c3c3c;
+  --room-editor-select-text: #ffffff;
+  --room-editor-select-focus-border: #0078ff;
+  --room-editor-select-focus-glow: rgba(0, 120, 255, 0.25);
+  --room-editor-body-bg: #1e1e1e;
+
+  /* Compiler panel accent: active tab underline + run button (dark mode keeps current blue/green) */
+  --room-compiler-accent: #58a6ff;
+  --room-compiler-accent-text: #ffffff;
+  --room-compiler-run-bg: #238636;
+  --room-compiler-run-hover-bg: #2ea043;
+
+  /* Terminal / Code Executor surfaces (dark mode keeps current VS Code look) */
+  --room-terminal-panel-bg: #252526;
+  --room-terminal-header-border: #333333;
+  --room-terminal-title-text: #c9d1d9;
+  --room-terminal-tab-text: #8b949e;
+  --room-terminal-tab-hover-text: #c9d1d9;
+  --room-terminal-content-bg: #1e1e1e;
+  --room-terminal-output-text: #d4d4d4;
+  --room-terminal-input-border: #333333;
+  --room-terminal-input-text: #ffffff;
+  --room-terminal-scrollbar: #3c3c3c;
+  --room-terminal-scrollbar-hover: #555555;
 
   --dock-bg: rgba(10, 10, 10, 0.6);
   --dock-border: rgba(255, 255, 255, 0.1);
@@ -111,18 +173,80 @@
   --glow-2: rgba(168, 85, 247, 0.06);
 
   /* ---- Room page specific tokens ---- */
-  --room-bg: #ffffff;
-  --room-panel-bg: #f4f4f5;
-  --room-header-bg: #ffffff;
-  --room-right-bg: #f0f0f1;
+  --room-bg: #f3efe3;
+  --room-panel-bg: #fbf8f2;
+  --room-header-bg: #241f33;
+  --room-header-text: #f3efe3;
+  --room-header-text-secondary: #a79fc0;
+  --room-right-bg: #f3efe3;
   --room-border: rgba(0, 0, 0, 0.08);
   --room-border-soft: rgba(0, 0, 0, 0.05);
-  --room-text-primary: #0a0a0a;
-  --room-text-secondary: #52525b;
-  --room-text-tertiary: #71717a;
-  --room-id-bg: rgba(0, 0, 0, 0.04);
-  --room-id-border: rgba(0, 0, 0, 0.1);
-  --room-id-label-bg: rgba(0, 0, 0, 0.03);
+  --room-text-primary: #201b2e;
+  --room-text-secondary: #6b6560;
+  --room-text-tertiary: #8a8378;
+  --room-id-bg: rgba(255, 255, 255, 0.06);
+  --room-id-border: rgba(255, 255, 255, 0.14);
+  --room-id-label-bg: rgba(255, 255, 255, 0.04);
+
+  /* Gold accent replaces blue in light mode */
+  --room-accent: #d9a24b;
+  --room-accent-text: #b8863a;
+
+  /* Live status pill goes gold instead of green */
+  --room-live-bg: rgba(217, 162, 75, 0.16);
+  --room-live-border: rgba(217, 162, 75, 0.3);
+  --room-live-dot: #d9a24b;
+  --room-live-text: #d9a24b;
+
+  /* Leave button becomes a neutral chip on the navy header, no red */
+  --room-leave-bg: rgba(255, 255, 255, 0.06);
+  --room-leave-border: rgba(255, 255, 255, 0.16);
+  --room-leave-text: #f3efe3;
+  --room-leave-hover-bg: rgba(255, 255, 255, 0.14);
+  --room-leave-hover-text: #f3efe3;
+  --room-leave-hover-border: rgba(255, 255, 255, 0.24);
+
+  /* Dock buttons when mic/video are OFF become a neutral chip, no red */
+  --room-dock-inactive-bg: rgba(0, 0, 0, 0.04);
+  --room-dock-inactive-border: rgba(0, 0, 0, 0.1);
+  --room-dock-inactive-text: #6b6560;
+  --room-dock-inactive-hover-bg: rgba(0, 0, 0, 0.08);
+  --room-dock-inactive-hover-text: #201b2e;
+
+  /* Video tile becomes navy with a gold name, matching the header */
+  --room-video-bg: #241f33;
+  --room-video-text: #d9a24b;
+
+  /* Code editor's top strip goes light/cream, matching the rest of the page */
+  --room-editor-header-bg: #fbf8f2;
+  --room-editor-header-border: rgba(0, 0, 0, 0.08);
+  --room-editor-file-label: #8a8378;
+  --room-editor-select-bg: #ffffff;
+  --room-editor-select-hover-bg: #f3efe3;
+  --room-editor-select-border: rgba(0, 0, 0, 0.12);
+  --room-editor-select-text: #201b2e;
+  --room-editor-select-focus-border: #d9a24b;
+  --room-editor-select-focus-glow: rgba(217, 162, 75, 0.25);
+  --room-editor-body-bg: #ffffff;
+
+  /* Compiler panel accent goes gold instead of blue/green */
+  --room-compiler-accent: #d9a24b;
+  --room-compiler-accent-text: #241f33;
+  --room-compiler-run-bg: #d9a24b;
+  --room-compiler-run-hover-bg: #e6b567;
+
+  /* Terminal / Code Executor surfaces go light/cream instead of black */
+  --room-terminal-panel-bg: #fbf8f2;
+  --room-terminal-header-border: rgba(0, 0, 0, 0.08);
+  --room-terminal-title-text: #201b2e;
+  --room-terminal-tab-text: #8a8378;
+  --room-terminal-tab-hover-text: #201b2e;
+  --room-terminal-content-bg: #ffffff;
+  --room-terminal-output-text: #201b2e;
+  --room-terminal-input-border: rgba(0, 0, 0, 0.1);
+  --room-terminal-input-text: #201b2e;
+  --room-terminal-scrollbar: rgba(0, 0, 0, 0.12);
+  --room-terminal-scrollbar-hover: rgba(0, 0, 0, 0.2);
 
   --dock-bg: rgba(255, 255, 255, 0.85);
   --dock-border: rgba(0, 0, 0, 0.14);
@@ -133,8 +257,8 @@
   /* Shadow intensity + subtle brand-color glows for the room's video stage */
   --shadow-strong: rgba(0, 0, 0, 0.14);
   --shadow-soft: rgba(0, 0, 0, 0.08);
-  --room-glow-1: rgba(99, 102, 241, 0.12);
-  --room-glow-2: rgba(168, 85, 247, 0.1);
+  --room-glow-1: rgba(217, 162, 75, 0.1);
+  --room-glow-2: rgba(36, 31, 51, 0.06);
 }
 
 html,
