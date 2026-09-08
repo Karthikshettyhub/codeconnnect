@@ -180,7 +180,7 @@ const Homepage = () => {
                 <button
                   className="oauth-btn"
                   onClick={() => {
-                    window.location.href = "http://localhost:5005/auth/google";
+                    window.location.href = "/auth/google";
                   }}
                 >
                   <img
