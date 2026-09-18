@@ -12,7 +12,7 @@ const RoomHistory = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await fetch(`http://localhost:5005/api/rooms/history/${roomId}`, {
+        const res = await fetch(`https://13.49.23.159.nip.io:5005/api/rooms/history/${roomId}`, {
           credentials: "include",
         });
 

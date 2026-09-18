@@ -11,7 +11,7 @@ const MyRooms = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const res = await fetch("http://localhost:5005/api/rooms/my-rooms", {
+        const res = await fetch("https://13.49.23.159.nip.io:5005/api/rooms/my-rooms", {
           credentials: "include",
         });
         

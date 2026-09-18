@@ -55,4 +55,5 @@ coverage/
 .pnp.*
 
 # Deployment
-.vercel
+.vercelfrontend/my-app/.env
+

@@ -10,6 +10,10 @@ WORKDIR /app
 # VITE_ variables are baked into the JS bundle at build time
 # They are NOT runtime variables - Vite embeds them during npm run build
 ARG VITE_BACKEND_URL=http://localhost:5005
+ARG VITE_TURN_USERNAME
+ENV VITE_TURN_USERNAME=$VITE_TURN_USERNAME
+ARG VITE_TURN_CREDENTIAL
+ENV VITE_TURN_CREDENTIAL=$VITE_TURN_CREDENTIAL
 ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 
 # Copy package files first for layer caching
