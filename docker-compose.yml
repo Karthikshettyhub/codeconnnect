@@ -43,6 +43,8 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     container_name: codeconnect-nginx
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     ports:
       - "5005:5005"
     depends_on:
@@ -54,11 +56,18 @@ services:
       context: ./frontend/my-app
       dockerfile: Dockerfile
       args:
-        VITE_BACKEND_URL: http://localhost:5005
+        VITE_BACKEND_URL: https://13.49.23.159.nip.io:5005
+        VITE_TURN_USERNAME: ${VITE_TURN_USERNAME}
+        VITE_TURN_CREDENTIAL: ${VITE_TURN_CREDENTIAL}
     image: karthiksdumb/codeconnect-frontend:latest
     container_name: codeconnect-frontend
+    env_file:
+      - ./frontend/my-app/.env
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
     restart: always

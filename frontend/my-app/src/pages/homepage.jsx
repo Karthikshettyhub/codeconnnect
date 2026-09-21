@@ -17,7 +17,7 @@ const Homepage = () => {
 
   // 🔥 CHECK LOGIN
   useEffect(() => {
-    fetch("http://localhost:5005/auth/me", {
+    fetch("https://13.49.23.159.nip.io:5005/auth/me", {
       credentials: "include",
     })
       .then((res) => res.json())
@@ -38,7 +38,7 @@ const Homepage = () => {
 
   // 🔥 LOGOUT
   const handleLogout = async () => {
-    await fetch("http://localhost:5005/auth/logout", {
+    await fetch("https://13.49.23.159.nip.io:5005/auth/logout", {
       method: "GET",
       credentials: "include",
     });
@@ -52,7 +52,7 @@ const Homepage = () => {
   // 🆕 GUEST LOGIN
   const handleGuestLogin = async () => {
     try {
-      const res = await fetch("http://localhost:5005/auth/guest", {
+      const res = await fetch("https://13.49.23.159.nip.io:5005/auth/guest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -180,7 +180,7 @@ const Homepage = () => {
                 <button
                   className="oauth-btn"
                   onClick={() => {
-                    window.location.href = "/auth/google";
+                    window.location.href = "https://13.49.23.159.nip.io:5005/auth/google";
                   }}
                 >
                   <img
